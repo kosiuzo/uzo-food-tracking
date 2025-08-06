@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Recipe } from '../types';
+import { useFoodInventory } from '../hooks/useFoodInventory';
+import { Recipe, RecipeIngredient } from '../types';
 
 interface AddRecipeDialogProps {
   open: boolean;
@@ -15,20 +19,71 @@ interface AddRecipeDialogProps {
 
 export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogProps) {
   const { toast } = useToast();
+  const { allItems } = useFoodInventory();
   
   const [formData, setFormData] = useState({
     name: '',
     instructions: '',
     servings: 1,
     prep_time_minutes: 0,
-    ingredients: [],
-    nutrition: {
-      calories_per_serving: 0,
-      protein_per_serving: 0,
-      carbs_per_serving: 0,
-      fat_per_serving: 0,
-    },
+    ingredients: [] as RecipeIngredient[],
   });
+
+  // Calculate nutrition based on ingredients
+  const calculateNutrition = () => {
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    formData.ingredients.forEach(ingredient => {
+      const item = allItems.find(item => item.id === ingredient.item_id);
+      if (item) {
+        // Convert quantity to grams based on unit
+        let quantityInGrams = ingredient.quantity;
+        if (ingredient.unit === 'cup') quantityInGrams *= 240; // approximate
+        if (ingredient.unit === 'tbsp') quantityInGrams *= 15;
+        if (ingredient.unit === 'tsp') quantityInGrams *= 5;
+        
+        // Calculate nutrition per 100g, then scale to actual quantity
+        const factor = quantityInGrams / 100;
+        totalCalories += item.nutrition.calories_per_100g * factor;
+        totalProtein += item.nutrition.protein_per_100g * factor;
+        totalCarbs += item.nutrition.carbs_per_100g * factor;
+        totalFat += item.nutrition.fat_per_100g * factor;
+      }
+    });
+
+    return {
+      calories_per_serving: Math.round(totalCalories / formData.servings),
+      protein_per_serving: Math.round(totalProtein / formData.servings),
+      carbs_per_serving: Math.round(totalCarbs / formData.servings),
+      fat_per_serving: Math.round(totalFat / formData.servings),
+    };
+  };
+
+  const addIngredient = () => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: [...prev.ingredients, { item_id: '', quantity: 100, unit: 'g' }]
+    }));
+  };
+
+  const removeIngredient = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateIngredient = (index: number, updates: Partial<RecipeIngredient>) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.map((ingredient, i) => 
+        i === index ? { ...ingredient, ...updates } : ingredient
+      )
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +97,21 @@ export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogP
       return;
     }
 
-    onSave(formData);
+    if (formData.ingredients.length === 0) {
+      toast({
+        title: "No ingredients",
+        description: "Please add at least one ingredient.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const recipeData = {
+      ...formData,
+      nutrition: calculateNutrition()
+    };
+
+    onSave(recipeData);
     
     // Reset form
     setFormData({
@@ -51,12 +120,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogP
       servings: 1,
       prep_time_minutes: 0,
       ingredients: [],
-      nutrition: {
-        calories_per_serving: 0,
-        protein_per_serving: 0,
-        carbs_per_serving: 0,
-        fat_per_serving: 0,
-      },
     });
 
     toast({
@@ -117,64 +180,104 @@ export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogP
             />
           </div>
 
-          {/* Nutrition per serving */}
+          {/* Ingredients */}
           <div className="space-y-3">
-            <Label>Nutrition (per serving)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="calories" className="text-xs">Calories</Label>
-                <Input
-                  id="calories"
-                  type="number"
-                  value={formData.nutrition.calories_per_serving || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { ...prev.nutrition, calories_per_serving: parseInt(e.target.value) || 0 }
-                  }))}
-                  min="0"
-                />
-              </div>
-              <div>
-                <Label htmlFor="protein" className="text-xs">Protein (g)</Label>
-                <Input
-                  id="protein"
-                  type="number"
-                  value={formData.nutrition.protein_per_serving || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { ...prev.nutrition, protein_per_serving: parseInt(e.target.value) || 0 }
-                  }))}
-                  min="0"
-                />
-              </div>
-              <div>
-                <Label htmlFor="carbs" className="text-xs">Carbs (g)</Label>
-                <Input
-                  id="carbs"
-                  type="number"
-                  value={formData.nutrition.carbs_per_serving || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { ...prev.nutrition, carbs_per_serving: parseInt(e.target.value) || 0 }
-                  }))}
-                  min="0"
-                />
-              </div>
-              <div>
-                <Label htmlFor="fat" className="text-xs">Fat (g)</Label>
-                <Input
-                  id="fat"
-                  type="number"
-                  value={formData.nutrition.fat_per_serving || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { ...prev.nutrition, fat_per_serving: parseInt(e.target.value) || 0 }
-                  }))}
-                  min="0"
-                />
+            <div className="flex items-center justify-between">
+              <Label>Ingredients *</Label>
+              <Button type="button" size="sm" onClick={addIngredient}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
+            
+            {formData.ingredients.map((ingredient, index) => (
+              <Card key={index} className="p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Ingredient {index + 1}</Label>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => removeIngredient(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <Select
+                  value={ingredient.item_id}
+                  onValueChange={(value) => updateIngredient(index, { item_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select food item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allItems.map(item => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} {item.brand && `(${item.brand})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Quantity</Label>
+                    <Input
+                      type="number"
+                      value={ingredient.quantity}
+                      onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Unit</Label>
+                    <Select
+                      value={ingredient.unit}
+                      onValueChange={(value) => updateIngredient(index, { unit: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="g">grams (g)</SelectItem>
+                        <SelectItem value="cup">cup</SelectItem>
+                        <SelectItem value="tbsp">tablespoon</SelectItem>
+                        <SelectItem value="tsp">teaspoon</SelectItem>
+                        <SelectItem value="piece">piece</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Calculated Nutrition Preview */}
+          {formData.ingredients.length > 0 && (
+            <div className="space-y-2">
+              <Label>Calculated Nutrition (per serving)</Label>
+              <div className="grid grid-cols-4 gap-2 text-sm">
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-medium">{calculateNutrition().calories_per_serving}</div>
+                  <div className="text-xs text-muted-foreground">cal</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-medium">{calculateNutrition().protein_per_serving}g</div>
+                  <div className="text-xs text-muted-foreground">protein</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-medium">{calculateNutrition().carbs_per_serving}g</div>
+                  <div className="text-xs text-muted-foreground">carbs</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-medium">{calculateNutrition().fat_per_serving}g</div>
+                  <div className="text-xs text-muted-foreground">fat</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">

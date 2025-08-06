@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { useRecipes } from '../hooks/useRecipes';
+import { useFoodInventory } from '../hooks/useFoodInventory';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, addRecipe } = useRecipes();
+  const { allItems } = useFoodInventory();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   return (
@@ -76,10 +78,23 @@ export default function Recipes() {
                     </span>
                   </div>
 
-                  {/* Ingredients count */}
-                  <p className="text-sm text-muted-foreground">
-                    {recipe.ingredients.length} ingredients
-                  </p>
+                  {/* Ingredients list */}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Ingredients ({recipe.ingredients.length}):</p>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      {recipe.ingredients.slice(0, 3).map((ingredient, idx) => {
+                        const item = allItems.find(item => item.id === ingredient.item_id);
+                        return (
+                          <div key={idx}>
+                            {ingredient.quantity} {ingredient.unit} {item?.name || 'Unknown item'}
+                          </div>
+                        );
+                      })}
+                      {recipe.ingredients.length > 3 && (
+                        <div className="text-xs">+ {recipe.ingredients.length - 3} more ingredients</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </Card>
             ))

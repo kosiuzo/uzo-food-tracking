@@ -14,6 +14,12 @@ export function useMealLogs() {
     return newMealLog;
   };
 
+  const updateMealLog = (id: string, updatedData: Omit<MealLog, 'id'>) => {
+    setMealLogs(prev => prev.map(log => 
+      log.id === id ? { ...updatedData, id } : log
+    ));
+  };
+
   const deleteMealLog = (id: string) => {
     setMealLogs(prev => prev.filter(log => log.id !== id));
   };
@@ -33,6 +39,7 @@ export function useMealLogs() {
   return {
     mealLogs,
     addMealLog,
+    updateMealLog,
     deleteMealLog,
     getMealLogsByDateRange,
     getRecentMealLogs,

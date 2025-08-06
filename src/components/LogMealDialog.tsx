@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,10 @@ interface LogMealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (mealLog: Omit<MealLog, 'id'>) => void;
+  editingMealLog?: MealLog;
 }
 
-export function LogMealDialog({ open, onOpenChange, onSave }: LogMealDialogProps) {
+export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: LogMealDialogProps) {
   const { toast } = useToast();
   const { allRecipes } = useRecipes();
   
@@ -32,6 +33,35 @@ export function LogMealDialog({ open, onOpenChange, onSave }: LogMealDialogProps
     },
     estimated_cost: 0,
   });
+
+  // Update form data when editingMealLog changes
+  useEffect(() => {
+    if (editingMealLog) {
+      setFormData({
+        recipe_id: editingMealLog.recipe_id || '',
+        date: editingMealLog.date,
+        meal_name: editingMealLog.meal_name,
+        notes: editingMealLog.notes || '',
+        nutrition: editingMealLog.nutrition,
+        estimated_cost: editingMealLog.estimated_cost || 0,
+      });
+    } else if (open) {
+      // Reset form when opening for new meal log
+      setFormData({
+        recipe_id: '',
+        date: new Date().toISOString().split('T')[0],
+        meal_name: '',
+        notes: '',
+        nutrition: {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+        },
+        estimated_cost: 0,
+      });
+    }
+  }, [editingMealLog, open]);
 
   const selectedRecipe = formData.recipe_id ? allRecipes.find(r => r.id === formData.recipe_id) : null;
 
@@ -91,7 +121,7 @@ export function LogMealDialog({ open, onOpenChange, onSave }: LogMealDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Log a Meal</DialogTitle>
+          <DialogTitle>{editingMealLog ? 'Edit Meal' : 'Log a Meal'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -218,7 +248,7 @@ export function LogMealDialog({ open, onOpenChange, onSave }: LogMealDialogProps
               Cancel
             </Button>
             <Button type="submit" className="flex-1">
-              Log Meal
+              {editingMealLog ? 'Update Meal' : 'Log Meal'}
             </Button>
           </div>
         </form>

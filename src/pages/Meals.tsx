@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Calendar, Utensils } from 'lucide-react';
+import { Plus, Calendar, Utensils, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +9,10 @@ import { useMealLogs } from '../hooks/useMealLogs';
 import { useRecipes } from '../hooks/useRecipes';
 
 export default function Meals() {
-  const { mealLogs, addMealLog } = useMealLogs();
+  const { mealLogs, addMealLog, updateMealLog } = useMealLogs();
   const { getRecipeById } = useRecipes();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
+  const [editingMealLog, setEditingMealLog] = useState(null);
 
   const recentLogs = mealLogs.slice(0, 20); // Show last 20 meals
 
@@ -82,11 +83,23 @@ export default function Meals() {
                           </Badge>
                         )}
                       </div>
-                      {log.estimated_cost && (
-                        <Badge variant="secondary">
-                          ${log.estimated_cost.toFixed(2)}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingMealLog(log);
+                            setIsLogDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {log.estimated_cost && (
+                          <Badge variant="secondary">
+                            ${log.estimated_cost.toFixed(2)}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     {/* Nutrition */}
@@ -126,10 +139,21 @@ export default function Meals() {
         {/* Log Meal Dialog */}
         <LogMealDialog
           open={isLogDialogOpen}
-          onOpenChange={setIsLogDialogOpen}
+          onOpenChange={(open) => {
+            setIsLogDialogOpen(open);
+            if (!open) {
+              setEditingMealLog(null);
+            }
+          }}
+          editingMealLog={editingMealLog}
           onSave={(mealData) => {
-            addMealLog(mealData);
+            if (editingMealLog) {
+              updateMealLog(editingMealLog.id, mealData);
+            } else {
+              addMealLog(mealData);
+            }
             setIsLogDialogOpen(false);
+            setEditingMealLog(null);
           }}
         />
       </div>

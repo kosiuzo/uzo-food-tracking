@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,12 +23,34 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   const { allItems } = useFoodInventory();
   
   const [formData, setFormData] = useState({
-    name: editingRecipe?.name || '',
-    instructions: editingRecipe?.instructions || '',
-    servings: editingRecipe?.servings || 1,
-    prep_time_minutes: editingRecipe?.prep_time_minutes || 0,
-    ingredients: editingRecipe?.ingredients || [] as RecipeIngredient[],
+    name: '',
+    instructions: '',
+    servings: 1,
+    prep_time_minutes: 0,
+    ingredients: [] as RecipeIngredient[],
   });
+
+  // Update form data when editingRecipe changes
+  useEffect(() => {
+    if (editingRecipe) {
+      setFormData({
+        name: editingRecipe.name,
+        instructions: editingRecipe.instructions,
+        servings: editingRecipe.servings,
+        prep_time_minutes: editingRecipe.prep_time_minutes,
+        ingredients: editingRecipe.ingredients,
+      });
+    } else if (open) {
+      // Reset form when opening for new recipe
+      setFormData({
+        name: '',
+        instructions: '',
+        servings: 1,
+        prep_time_minutes: 0,
+        ingredients: [],
+      });
+    }
+  }, [editingRecipe, open]);
 
   // Calculate nutrition based on ingredients
   const calculateNutrition = () => {

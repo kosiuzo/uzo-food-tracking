@@ -15,18 +15,19 @@ interface AddRecipeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (recipe: Omit<Recipe, 'id'>) => void;
+  editingRecipe?: Recipe;
 }
 
-export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogProps) {
+export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: AddRecipeDialogProps) {
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
   
   const [formData, setFormData] = useState({
-    name: '',
-    instructions: '',
-    servings: 1,
-    prep_time_minutes: 0,
-    ingredients: [] as RecipeIngredient[],
+    name: editingRecipe?.name || '',
+    instructions: editingRecipe?.instructions || '',
+    servings: editingRecipe?.servings || 1,
+    prep_time_minutes: editingRecipe?.prep_time_minutes || 0,
+    ingredients: editingRecipe?.ingredients || [] as RecipeIngredient[],
   });
 
   // Calculate nutrition based on ingredients
@@ -132,7 +133,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Recipe</DialogTitle>
+          <DialogTitle>{editingRecipe ? 'Edit Recipe' : 'Add New Recipe'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -284,7 +285,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave }: AddRecipeDialogP
               Cancel
             </Button>
             <Button type="submit" className="flex-1">
-              Add Recipe
+              {editingRecipe ? 'Update Recipe' : 'Add Recipe'}
             </Button>
           </div>
         </form>

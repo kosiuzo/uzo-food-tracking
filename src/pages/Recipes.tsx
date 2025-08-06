@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -10,9 +10,28 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 
 export default function Recipes() {
-  const { recipes, searchQuery, setSearchQuery, addRecipe } = useRecipes();
+  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe } = useRecipes();
   const { allItems } = useFoodInventory();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
+  const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
+
+  const toggleRecipeExpansion = (recipeId: string) => {
+    setExpandedRecipes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recipeId)) {
+        newSet.delete(recipeId);
+      } else {
+        newSet.add(recipeId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleEditRecipe = (recipe: any) => {
+    setEditingRecipe(recipe.id);
+    setIsAddDialogOpen(true);
+  };
 
   return (
     <Layout>
@@ -45,7 +64,7 @@ export default function Recipes() {
               <Card key={recipe.id} className="p-4">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-medium">{recipe.name}</h3>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -59,6 +78,26 @@ export default function Recipes() {
                           </div>
                         )}
                       </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditRecipe(recipe)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRecipeExpansion(recipe.id)}
+                      >
+                        {expandedRecipes.has(recipe.id) ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   </div>
 
@@ -82,7 +121,7 @@ export default function Recipes() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Ingredients ({recipe.ingredients.length}):</p>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      {recipe.ingredients.slice(0, 3).map((ingredient, idx) => {
+                      {(expandedRecipes.has(recipe.id) ? recipe.ingredients : recipe.ingredients.slice(0, 3)).map((ingredient, idx) => {
                         const item = allItems.find(item => item.id === ingredient.item_id);
                         return (
                           <div key={idx}>
@@ -90,11 +129,28 @@ export default function Recipes() {
                           </div>
                         );
                       })}
-                      {recipe.ingredients.length > 3 && (
+                      {!expandedRecipes.has(recipe.id) && recipe.ingredients.length > 3 && (
                         <div className="text-xs">+ {recipe.ingredients.length - 3} more ingredients</div>
                       )}
                     </div>
                   </div>
+
+                  {/* Instructions - only show when expanded */}
+                  {expandedRecipes.has(recipe.id) && (
+                    <div className="space-y-2 border-t pt-3">
+                      <p className="text-sm font-medium">Instructions:</p>
+                      <div className="space-y-2">
+                        {recipe.instructions.split('\n').filter(step => step.trim()).map((step, idx) => (
+                          <div key={idx} className="flex gap-3 text-sm">
+                            <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
+                              {idx + 1}
+                            </div>
+                            <div className="text-muted-foreground">{step.trim()}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             ))
@@ -109,14 +165,23 @@ export default function Recipes() {
           <Plus className="h-6 w-6" />
         </Button>
 
-        {/* Add Recipe Dialog */}
+        {/* Add/Edit Recipe Dialog */}
         <AddRecipeDialog
           open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onSave={(recipeData) => {
-            addRecipe(recipeData);
-            setIsAddDialogOpen(false);
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) setEditingRecipe(null);
           }}
+          onSave={(recipeData) => {
+            if (editingRecipe) {
+              updateRecipe(editingRecipe, recipeData);
+            } else {
+              addRecipe(recipeData);
+            }
+            setIsAddDialogOpen(false);
+            setEditingRecipe(null);
+          }}
+          editingRecipe={editingRecipe ? recipes.find(r => r.id === editingRecipe) : undefined}
         />
       </div>
     </Layout>

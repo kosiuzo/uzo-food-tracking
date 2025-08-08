@@ -1,13 +1,14 @@
-import { ShoppingCart, Check, Package } from 'lucide-react';
+import { ShoppingCart, Check, Package, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Layout } from '../components/Layout';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Shopping() {
-  const { shoppingItems, summary, markAsPurchased, getItemTotal } = useShoppingList();
+  const { shoppingItems, summary, markAsPurchased, updateItemQuantity, getItemTotal } = useShoppingList();
   const { toast } = useToast();
 
   const handleMarkAsPurchased = async (item: typeof shoppingItems[0]) => {
@@ -26,6 +27,28 @@ export default function Shopping() {
     }
   };
 
+  const handleQuantityChange = async (item: typeof shoppingItems[0], newQuantity: number) => {
+    try {
+      await updateItemQuantity(item.id, newQuantity);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update quantity.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const incrementQuantity = (item: typeof shoppingItems[0]) => {
+    handleQuantityChange(item, item.quantity + 1);
+  };
+
+  const decrementQuantity = (item: typeof shoppingItems[0]) => {
+    if (item.quantity > 1) {
+      handleQuantityChange(item, item.quantity - 1);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -36,14 +59,10 @@ export default function Shopping() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">{summary.totalItems}</div>
             <div className="text-sm text-muted-foreground">Items to buy</div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{summary.totalUnits}</div>
-            <div className="text-sm text-muted-foreground">Total units</div>
           </Card>
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">${summary.estimatedTotal.toFixed(2)}</div>
@@ -87,9 +106,6 @@ export default function Shopping() {
                       <Badge variant="secondary" className="text-xs">
                         {item.category}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {item.quantity} {item.unit}
-                      </span>
                       {item.price && (
                         <>
                           <span className="text-sm text-muted-foreground">
@@ -101,6 +117,30 @@ export default function Shopping() {
                         </>
                       )}
                     </div>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => decrementQuantity(item)}
+                      disabled={item.quantity <= 1}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium min-w-[2rem] text-center">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => incrementQuantity(item)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   </div>
 
                   {/* Mark as purchased button */}
@@ -124,10 +164,6 @@ export default function Shopping() {
             <div className="flex justify-between text-sm">
               <span>Items to buy:</span>
               <span>{summary.totalItems}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Total units:</span>
-              <span>{summary.totalUnits}</span>
             </div>
             <div className="border-t pt-3 flex justify-between items-center">
               <span className="font-medium">Estimated Total:</span>

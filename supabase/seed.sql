@@ -7,8 +7,8 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Broccoli', 'Fresh Market', 'Vegetables', true, 3.49, 6, 0.3, 2.5, 4, 'cup', 1, 'manual', NOW()),
 ('Salmon', 'Wild Alaskan', 'Protein', false, 18.99, 0, 12, 22, 2, 'piece', 1, 'manual', NOW()),
 ('Sweet Potato', 'Organic', 'Vegetables', true, 2.99, 27, 0.1, 2, 4, 'piece', 1, 'manual', NOW()),
-('Greek Yogurt', 'Chobani', 'Dairy', true, 5.99, 9, 0.5, 15, 6, 'cup', 1, 'manual', NOW()),
-('Quinoa', 'Ancient Harvest', 'Grains', true, 6.99, 39, 4, 8, 4, 'cup', 1, 'manual', NOW()),
+('Greek Yogurt', 'Chobani', 'Dairy', false, 5.99, 9, 0.5, 15, 6, 'cup', 1, 'manual', NOW()),
+('Quinoa', 'Ancient Harvest', 'Grains', false, 6.99, 39, 4, 8, 4, 'cup', 1, 'manual', NOW()),
 ('Spinach', 'Fresh Market', 'Vegetables', true, 2.49, 1, 0.1, 0.9, 4, 'cup', 1, 'manual', NOW()),
 ('Eggs', 'Farm Fresh', 'Protein', true, 4.99, 0.6, 5, 6, 12, 'piece', 1, 'manual', NOW()),
 ('Avocado', 'Organic', 'Fruits', false, 1.99, 9, 15, 2, 1, 'piece', 1, 'manual', NOW());

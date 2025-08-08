@@ -68,12 +68,25 @@ export function useShoppingList() {
     return (item.price || 0) * item.quantity;
   };
 
+  // Update item quantity in shopping list
+  const updateItemQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      // If quantity is 0 or negative, remove from shopping list
+      await removeFromShoppingList(itemId);
+    } else {
+      await updateItem(itemId, {
+        quantity: newQuantity,
+      });
+    }
+  };
+
   return {
     shoppingItems: outOfStockItems,
     summary: getSummary(),
     markAsPurchased,
     addToShoppingList,
     removeFromShoppingList,
+    updateItemQuantity,
     getItemTotal,
   };
 }

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { addDays, addWeeks, eachDayOfInterval, format, startOfWeek } from 'date-fns';
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner'];
@@ -50,6 +51,13 @@ const Planner = () => {
     return entry?.recipeId;
   };
 
+  // Build a quick lookup for recipe names
+  const recipeMap = useMemo(() => {
+    const m = new Map<string, { id: string; name: string }>();
+    for (const r of allRecipes) m.set(r.id, { id: r.id, name: r.name });
+    return m;
+  }, [allRecipes]);
+
   return (
     <Layout>
       <section className="space-y-6">
@@ -59,7 +67,10 @@ const Planner = () => {
             <Button variant="outline" onClick={() => setWeekStart((d) => addWeeks(d, -1))}>
               Previous
             </Button>
-            <Button variant="secondary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
+            <Button
+              variant="secondary"
+              onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+            >
               This Week
             </Button>
             <Button variant="outline" onClick={() => setWeekStart((d) => addWeeks(d, 1))}>
@@ -68,6 +79,7 @@ const Planner = () => {
           </div>
         </header>
 
+        {/* Editable grid planner */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
@@ -77,7 +89,10 @@ const Planner = () => {
           <CardContent>
             <div className="w-full overflow-x-auto">
               <div className="min-w-[800px]">
-                <div className="grid" style={{ gridTemplateColumns: `160px repeat(${days.length}, minmax(120px, 1fr))` }}>
+                <div
+                  className="grid"
+                  style={{ gridTemplateColumns: `160px repeat(${days.length}, minmax(120px, 1fr))` }}
+                >
                   <div className="px-3 py-2 text-sm font-medium text-muted-foreground">Meal</div>
                   {days.map((d) => (
                     <div key={d.toISOString()} className="px-3 py-2 text-sm font-medium">
@@ -88,7 +103,10 @@ const Planner = () => {
 
                   {mealTypes.map((meal) => (
                     <>
-                      <div key={`label-${meal}`} className="border-t px-3 py-3 text-sm capitalize text-muted-foreground">
+                      <div
+                        key={`label-${meal}`}
+                        className="border-t px-3 py-3 text-sm capitalize text-muted-foreground"
+                      >
                         {meal}
                       </div>
                       {days.map((d) => {
@@ -97,10 +115,7 @@ const Planner = () => {
                         return (
                           <div key={`${dateISO}-${meal}`} className="border-t p-2">
                             <div className="flex items-center gap-2">
-                              <Select
-                                value={currentValue}
-                                onValueChange={(val) => setMeal(dateISO, meal, val)}
-                              >
+                              <Select value={currentValue} onValueChange={(val) => setMeal(dateISO, meal, val)}>
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Select a recipe" />
                                 </SelectTrigger>
@@ -126,11 +141,7 @@ const Planner = () => {
                                 </SelectContent>
                               </Select>
                               {currentValue && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => clearMeal(dateISO, meal)}
-                                >
+                                <Button variant="ghost" size="sm" onClick={() => clearMeal(dateISO, meal)}>
                                   Clear
                                 </Button>
                               )}
@@ -142,6 +153,43 @@ const Planner = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Weekly overview - visual summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Weekly Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+              {days.map((d) => {
+                const dateISO = toISODate(d);
+                return (
+                  <article key={`overview-${dateISO}`} className="rounded-md border p-3">
+                    <div className="mb-2 text-sm font-medium">
+                      {format(d, 'EEE, MMM d')}
+                    </div>
+                    <ul className="space-y-2">
+                      {mealTypes.map((meal) => {
+                        const rid = valueFor(dateISO, meal);
+                        const name = rid ? recipeMap.get(rid)?.name : undefined;
+                        return (
+                          <li key={`ovr-${dateISO}-${meal}`} className="flex items-center gap-2">
+                            <Badge variant="secondary" className="capitalize">
+                              {meal}
+                            </Badge>
+                            <span className={name ? 'text-sm' : 'text-sm text-muted-foreground'}>
+                              {name ?? 'Not planned'}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </article>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

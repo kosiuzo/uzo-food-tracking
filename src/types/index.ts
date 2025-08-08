@@ -31,6 +31,7 @@ export interface Recipe {
     carbs_per_serving: number;
     fat_per_serving: number;
   };
+  is_favorite?: boolean;
 }
 
 export interface RecipeIngredient {

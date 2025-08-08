@@ -1,21 +1,25 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 
 export default function Recipes() {
-  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe } = useRecipes();
+  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite } = useRecipes();
   const { allItems } = useFoodInventory();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
+  const displayedRecipes = (favoritesOnly ? recipes.filter(r => r.is_favorite) : recipes);
   const toggleRecipeExpansion = (recipeId: string) => {
     setExpandedRecipes(prev => {
       const newSet = new Set(prev);
@@ -38,8 +42,8 @@ export default function Recipes() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold">Recipes</h1>
-          <p className="text-muted-foreground">Manage your favorite recipes</p>
+<h1 className="text-2xl font-bold">Recipes</h1>
+           <p className="text-muted-foreground">Manage your recipes and favorites</p>
         </div>
 
         {/* Search */}
@@ -52,15 +56,21 @@ export default function Recipes() {
             className="pl-10"
           />
         </div>
+<div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Switch id="favorites-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
+            <Label htmlFor="favorites-only" className="text-sm">Favorites only</Label>
+          </div>
+        </div>
 
         {/* Recipes List */}
         <div className="space-y-3">
-          {recipes.length === 0 ? (
+{displayedRecipes.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No recipes found</p>
             </div>
           ) : (
-            recipes.map(recipe => (
+            displayedRecipes.map(recipe => (
               <Card key={recipe.id} className="p-4">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
@@ -79,7 +89,18 @@ export default function Recipes() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+<div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleFavorite(recipe.id)}
+                        aria-label="Toggle favorite"
+                      >
+                        <Heart
+                          className={`h-4 w-4 ${recipe.is_favorite ? 'text-primary' : ''}`}
+                          fill={recipe.is_favorite ? 'currentColor' : 'none'}
+                        />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -118,9 +139,9 @@ export default function Recipes() {
                   </div>
 
                   {/* Ingredients list */}
-                  <div className="space-y-1">
+<div className="space-y-1">
                     <p className="text-sm font-medium">Ingredients ({recipe.ingredients.length}):</p>
-                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="text-sm text-muted-foreground space-y-1" aria-live="polite">
                       {(expandedRecipes.has(recipe.id) ? recipe.ingredients : recipe.ingredients.slice(0, 3)).map((ingredient, idx) => {
                         const item = allItems.find(item => item.id === ingredient.item_id);
                         return (

@@ -7,23 +7,34 @@ export function useRecipes() {
   const [recipes, setRecipes] = useLocalStorage<Recipe[]>('recipes', mockRecipes);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredRecipes = recipes.filter(recipe =>
+const filteredRecipes = recipes.filter(recipe =>
     recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const addRecipe = (recipe: Omit<Recipe, 'id'>) => {
+  const favoriteRecipes = filteredRecipes.filter(r => r.is_favorite);
+
+const addRecipe = (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
     const newRecipe: Recipe = {
       ...recipe,
       id: Date.now().toString(),
+      is_favorite: false,
     };
     setRecipes(prev => [...prev, newRecipe]);
     return newRecipe;
   };
 
-  const updateRecipe = (id: string, updates: Partial<Recipe>) => {
-    setRecipes(prev => prev.map(recipe => 
-      recipe.id === id ? { ...recipe, ...updates } : recipe
-    ));
+const updateRecipe = (id: string, updates: Partial<Recipe>) => {
+    setRecipes(prev =>
+      prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+    );
+  };
+
+  const toggleFavorite = (id: string) => {
+    setRecipes(prev =>
+      prev.map(recipe =>
+        recipe.id === id ? { ...recipe, is_favorite: !recipe.is_favorite } : recipe
+      )
+    );
   };
 
   const deleteRecipe = (id: string) => {
@@ -34,13 +45,15 @@ export function useRecipes() {
     return recipes.find(recipe => recipe.id === id);
   };
 
-  return {
+return {
     recipes: filteredRecipes,
+    favorites: favoriteRecipes,
     allRecipes: recipes,
     searchQuery,
     setSearchQuery,
     addRecipe,
     updateRecipe,
+    toggleFavorite,
     deleteRecipe,
     getRecipeById,
   };

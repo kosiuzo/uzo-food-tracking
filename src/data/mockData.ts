@@ -18,6 +18,7 @@ export const mockFoodItems: FoodItem[] = [
       fat_per_100g: 0.3,
       fiber_per_100g: 2.6,
     },
+    last_purchased: '2024-01-14',
     last_edited: '2024-01-15T10:30:00Z',
   },
   {
@@ -37,6 +38,7 @@ export const mockFoodItems: FoodItem[] = [
       fat_per_100g: 3.6,
       fiber_per_100g: 0,
     },
+    last_purchased: '2024-01-10',
     last_edited: '2024-01-14T15:20:00Z',
   },
   {
@@ -56,6 +58,7 @@ export const mockFoodItems: FoodItem[] = [
       fat_per_100g: 0.9,
       fiber_per_100g: 1.8,
     },
+    last_purchased: '2023-12-28',
     last_edited: '2024-01-13T09:15:00Z',
   },
   {
@@ -74,6 +77,7 @@ export const mockFoodItems: FoodItem[] = [
       fat_per_100g: 0.4,
       fiber_per_100g: 0,
     },
+    last_purchased: '2024-01-15',
     last_edited: '2024-01-16T08:45:00Z',
   },
   {
@@ -92,6 +96,7 @@ export const mockFoodItems: FoodItem[] = [
       fat_per_100g: 100,
       fiber_per_100g: 0,
     },
+    last_purchased: '2023-12-15',
     last_edited: '2024-01-12T14:30:00Z',
   },
 ];

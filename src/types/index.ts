@@ -15,6 +15,7 @@ export interface FoodItem {
     fat_per_100g: number;
     fiber_per_100g: number;
   };
+  last_purchased?: string;
   last_edited: string;
 }
 

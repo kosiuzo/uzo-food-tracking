@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FoodItem } from '../types';
+import { format, parseISO } from 'date-fns';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -53,6 +54,11 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete }: FoodItem
                   </span>
                 )}
               </div>
+              {item.last_purchased && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Last purchased: {format(parseISO(item.last_purchased), 'MMM d, yyyy')}
+                </p>
+              )}
             </div>
 
             {/* Actions */}

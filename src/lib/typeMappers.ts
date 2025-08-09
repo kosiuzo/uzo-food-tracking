@@ -10,7 +10,7 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     in_stock: dbItem.in_stock ?? true,
     unit: dbItem.unit_of_measure || 'unit',
     quantity: dbItem.unit_quantity || 0,
-    price: dbItem.price || undefined,
+    price: dbItem.price !== null ? Number(dbItem.price) : undefined,
     image_url: dbItem.image_url || undefined,
     nutrition: {
       calories_per_100g: calculateCaloriesPer100g(dbItem),
@@ -19,6 +19,7 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
       fat_per_100g: (dbItem.fat_per_serving || 0) * 100 / (dbItem.servings_per_container || 1),
       fiber_per_100g: 0, // Not in database schema
     },
+    last_purchased: dbItem.last_purchased || undefined,
     last_edited: dbItem.last_edited || new Date().toISOString(),
   };
 }

@@ -36,6 +36,8 @@ export interface DbItem {
   image_url?: string | null;
   nutrition_source?: string | null;
   barcode?: string | null;
+  last_purchased?: string | null;
+  purchase_count?: number | null;
   last_edited?: string | null;
   normalized_name?: string | null;
 }
@@ -114,7 +116,4 @@ export interface DbMealLog {
   created_at?: string | null;
 }
 
-export interface ShoppingListItem {
-  item_id: string;
-  added_at: string;
-}
+// ShoppingListItem interface removed - using in_stock toggle instead of separate shopping_list table

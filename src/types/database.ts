@@ -18,6 +18,8 @@ export interface Database {
           image_url: string | null
           nutrition_source: string | null
           barcode: string | null
+          last_purchased: string | null
+          purchase_count: number | null
           last_edited: string | null
           normalized_name: string | null
         }
@@ -37,6 +39,8 @@ export interface Database {
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
+          last_purchased?: string | null
+          purchase_count?: number | null
           last_edited?: string | null
           normalized_name?: never
         }
@@ -56,6 +60,8 @@ export interface Database {
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
+          last_purchased?: string | null
+          purchase_count?: number | null
           last_edited?: string | null
           normalized_name?: never
         }
@@ -181,20 +187,6 @@ export interface Database {
           macros?: Record<string, unknown> | null
           cost?: number | null
           created_at?: string | null
-        }
-      }
-      shopping_list: {
-        Row: {
-          item_id: number
-          added_at: string | null
-        }
-        Insert: {
-          item_id: number
-          added_at?: string | null
-        }
-        Update: {
-          item_id?: number
-          added_at?: string | null
         }
       }
       meal_plans: {

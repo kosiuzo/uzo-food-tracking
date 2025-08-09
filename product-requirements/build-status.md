@@ -132,7 +132,7 @@ This document analyzes the current implementation status of the Uzo Food Trackin
    - ✅ Set up database connection
 
 2. ✅ **Implement PostgreSQL schema**
-   - ✅ Create tables (items, recipes, meal_logs, shopping_list, meal_plans)
+   - ✅ Create tables (items, recipes, meal_logs, meal_plans) - shopping_list removed (using in_stock toggle)
    - ✅ Add indexes and constraints
    - ✅ Implement `upsert_item_by_name` RPC function
    - ✅ Add `batch_upsert_items` and analytics functions

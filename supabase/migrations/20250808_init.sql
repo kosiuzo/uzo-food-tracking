@@ -19,6 +19,8 @@ CREATE TABLE items (
     image_url TEXT,
     nutrition_source TEXT,
     barcode TEXT,
+    last_purchased DATE,
+    purchase_count INTEGER DEFAULT 0,
     last_edited TIMESTAMP DEFAULT NOW(),
     normalized_name TEXT
 );
@@ -87,11 +89,11 @@ CREATE TABLE meal_logs (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create shopping_list table
-CREATE TABLE shopping_list (
-    item_id BIGINT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE,
-    added_at TIMESTAMP DEFAULT NOW()
-);
+-- Remove shopping_list table since we're using in_stock toggle
+-- CREATE TABLE shopping_list (
+--     item_id BIGINT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE,
+--     added_at TIMESTAMP DEFAULT NOW()
+-- );
 
 -- Create meal_plans table
 CREATE TABLE meal_plans (
@@ -366,7 +368,6 @@ ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipe_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shopping_list ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_plans ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (since this is a single-user app)
@@ -374,5 +375,4 @@ CREATE POLICY "Allow public access to items" ON items FOR ALL USING (true);
 CREATE POLICY "Allow public access to recipes" ON recipes FOR ALL USING (true);
 CREATE POLICY "Allow public access to recipe_items" ON recipe_items FOR ALL USING (true);
 CREATE POLICY "Allow public access to meal_logs" ON meal_logs FOR ALL USING (true);
-CREATE POLICY "Allow public access to shopping_list" ON shopping_list FOR ALL USING (true);
 CREATE POLICY "Allow public access to meal_plans" ON meal_plans FOR ALL USING (true);

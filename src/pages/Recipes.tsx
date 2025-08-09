@@ -125,16 +125,16 @@ const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
                   {/* Nutrition per serving */}
                   <div className="flex gap-4 text-xs">
                     <Badge variant="secondary">
-                      {recipe.nutrition.calories_per_serving} cal
+                      {recipe.nutrition.calories_per_serving.toFixed(1)} cal
                     </Badge>
                     <span className="text-muted-foreground">
-                      P: {recipe.nutrition.protein_per_serving}g
+                      P: {recipe.nutrition.protein_per_serving.toFixed(1)}g
                     </span>
                     <span className="text-muted-foreground">
-                      C: {recipe.nutrition.carbs_per_serving}g
+                      C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g
                     </span>
                     <span className="text-muted-foreground">
-                      F: {recipe.nutrition.fat_per_serving}g
+                      F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
                     </span>
                   </div>
 

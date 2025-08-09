@@ -97,10 +97,10 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete }: FoodItem
           {/* Nutrition Info */}
           {item.nutrition.calories_per_100g && (
             <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-              <span>{item.nutrition.calories_per_100g} cal/100g</span>
-              <span>P: {item.nutrition.protein_per_100g}g</span>
-              <span>C: {item.nutrition.carbs_per_100g}g</span>
-              <span>F: {item.nutrition.fat_per_100g}g</span>
+              <span>{item.nutrition.calories_per_100g.toFixed(1)} cal/100g</span>
+              <span>P: {item.nutrition.protein_per_100g.toFixed(1)}g</span>
+              <span>C: {item.nutrition.carbs_per_100g.toFixed(1)}g</span>
+              <span>F: {item.nutrition.fat_per_100g.toFixed(1)}g</span>
             </div>
           )}
         </div>

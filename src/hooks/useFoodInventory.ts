@@ -75,22 +75,26 @@ export function useFoodInventory() {
   const updateItem = async (id: string, updates: Partial<FoodItem>) => {
     try {
       const numericId = parseInt(id);
+      // Build update object, only including fields that are actually being updated
+      const updateData: any = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.brand !== undefined) updateData.brand = updates.brand || null;
+      if (updates.category !== undefined) updateData.category = updates.category;
+      if (updates.in_stock !== undefined) updateData.in_stock = updates.in_stock;
+      if (updates.price !== undefined) updateData.price = updates.price;
+      if (updates.unit !== undefined) updateData.unit_of_measure = updates.unit;
+      if (updates.quantity !== undefined) updateData.unit_quantity = updates.quantity;
+      if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
+      if (updates.nutrition) {
+        updateData.carbs_per_serving = updates.nutrition.carbs_per_100g / 100;
+        updateData.fat_per_serving = updates.nutrition.fat_per_100g / 100;
+        updateData.protein_per_serving = updates.nutrition.protein_per_100g / 100;
+      }
+      updateData.last_edited = new Date().toISOString();
+      
       const { error } = await supabase
         .from('items')
-        .update({
-          name: updates.name,
-          brand: updates.brand || null,
-          category: updates.category,
-          in_stock: updates.in_stock,
-          price: updates.price || null,
-          unit_of_measure: updates.unit,
-          unit_quantity: updates.quantity,
-          image_url: updates.image_url || null,
-          carbs_per_serving: updates.nutrition ? updates.nutrition.carbs_per_100g / 100 : undefined,
-          fat_per_serving: updates.nutrition ? updates.nutrition.fat_per_100g / 100 : undefined,
-          protein_per_serving: updates.nutrition ? updates.nutrition.protein_per_100g / 100 : undefined,
-          last_edited: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', numericId);
 
       if (error) throw error;

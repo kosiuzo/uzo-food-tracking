@@ -48,7 +48,7 @@ export default function Meals() {
           </Card>
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {mealLogs.reduce((sum, log) => sum + log.nutrition.calories, 0)}
+              {mealLogs.reduce((sum, log) => sum + log.nutrition.calories, 0).toFixed(1)}
             </div>
             <div className="text-sm text-muted-foreground">Total Calories</div>
           </Card>
@@ -105,16 +105,16 @@ export default function Meals() {
                     {/* Nutrition */}
                     <div className="flex gap-4 text-xs">
                       <span className="font-medium">
-                        {log.nutrition.calories} cal
+                        {log.nutrition.calories.toFixed(1)} cal
                       </span>
                       <span className="text-muted-foreground">
-                        P: {log.nutrition.protein}g
+                        P: {log.nutrition.protein.toFixed(1)}g
                       </span>
                       <span className="text-muted-foreground">
-                        C: {log.nutrition.carbs}g
+                        C: {log.nutrition.carbs.toFixed(1)}g
                       </span>
                       <span className="text-muted-foreground">
-                        F: {log.nutrition.fat}g
+                        F: {log.nutrition.fat.toFixed(1)}g
                       </span>
                     </div>
 

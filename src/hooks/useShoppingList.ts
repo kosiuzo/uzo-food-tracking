@@ -52,7 +52,7 @@ export function useShoppingList() {
 
       if (fetchError) throw fetchError;
       
-      // Update with incremented purchase count
+      // Update with incremented purchase count (preserve price)
       const { error } = await supabase
         .from('items')
         .update({
@@ -65,11 +65,12 @@ export function useShoppingList() {
 
       if (error) throw error;
 
-      // Also update the local state through the hook
+      // Also update the local state through the hook (preserve price)
       await updateItem(item.id, {
         in_stock: true,
         quantity: quantityToSet,
         last_purchased: purchaseDate,
+        price: item.price, // Preserve the original price
       });
     } catch (err) {
       throw new Error(`Failed to update purchase: ${err instanceof Error ? err.message : 'Unknown error'}`);

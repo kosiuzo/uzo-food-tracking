@@ -16,6 +16,7 @@ export interface FoodItem {
     fiber_per_100g: number;
   };
   last_purchased?: string;
+  rating?: number;
   last_edited: string;
 }
 
@@ -38,6 +39,7 @@ export interface DbItem {
   barcode?: string | null;
   last_purchased?: string | null;
   purchase_count?: number | null;
+  rating?: number | null;
   last_edited?: string | null;
   normalized_name?: string | null;
 }

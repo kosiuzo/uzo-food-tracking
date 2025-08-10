@@ -17,6 +17,8 @@ export function InventoryPage() {
     setCategoryFilter,
     stockFilter,
     setStockFilter,
+    ratingFilter,
+    setRatingFilter,
     categories,
     addItem,
     updateItem,
@@ -79,6 +81,21 @@ export function InventoryPage() {
               <SelectItem value="out-of-stock">Out of Stock</SelectItem>
             </SelectContent>
           </Select>
+          
+          <Select value={ratingFilter} onValueChange={setRatingFilter}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Rating" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Ratings</SelectItem>
+              <SelectItem value="unrated">Unrated</SelectItem>
+              <SelectItem value="5">5 Stars</SelectItem>
+              <SelectItem value="4">4 Stars</SelectItem>
+              <SelectItem value="3">3 Stars</SelectItem>
+              <SelectItem value="2">2 Stars</SelectItem>
+              <SelectItem value="1">1 Star</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -96,6 +113,7 @@ export function InventoryPage() {
               onToggleStock={() => toggleStock(item.id)}
               onEdit={() => setEditingItem(item.id)}
               onDelete={() => deleteItem(item.id)}
+              onRatingChange={(rating) => updateItem(item.id, { rating })}
             />
           ))
         )}

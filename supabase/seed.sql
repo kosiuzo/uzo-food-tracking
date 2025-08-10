@@ -1,17 +1,17 @@
 -- Seed data for the food tracking app
 
 -- Insert sample food items
-INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fat_per_serving, protein_per_serving, servings_per_container, unit_of_measure, unit_quantity, nutrition_source, last_edited) VALUES
-('Chicken Breast', 'Organic Valley', 'Protein', true, 12.99, 0, 3.5, 31, 4, 'piece', 1, 'manual', NOW()),
-('Brown Rice', 'Uncle Bens', 'Grains', true, 4.99, 45, 1, 5, 6, 'cup', 1, 'manual', NOW()),
-('Broccoli', 'Fresh Market', 'Vegetables', true, 3.49, 6, 0.3, 2.5, 4, 'cup', 1, 'manual', NOW()),
-('Salmon', 'Wild Alaskan', 'Protein', false, 18.99, 0, 12, 22, 2, 'piece', 1, 'manual', NOW()),
-('Sweet Potato', 'Organic', 'Vegetables', true, 2.99, 27, 0.1, 2, 4, 'piece', 1, 'manual', NOW()),
-('Greek Yogurt', 'Chobani', 'Dairy', false, 5.99, 9, 0.5, 15, 6, 'cup', 1, 'manual', NOW()),
-('Quinoa', 'Ancient Harvest', 'Grains', false, 6.99, 39, 4, 8, 4, 'cup', 1, 'manual', NOW()),
-('Spinach', 'Fresh Market', 'Vegetables', true, 2.49, 1, 0.1, 0.9, 4, 'cup', 1, 'manual', NOW()),
-('Eggs', 'Farm Fresh', 'Protein', true, 4.99, 0.6, 5, 6, 12, 'piece', 1, 'manual', NOW()),
-('Avocado', 'Organic', 'Fruits', false, 1.99, 9, 15, 2, 1, 'piece', 1, 'manual', NOW());
+INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fat_per_serving, protein_per_serving, servings_per_container, unit_of_measure, unit_quantity, rating, nutrition_source, last_edited) VALUES
+('Chicken Breast', 'Organic Valley', 'Protein', true, 12.99, 0, 3.5, 31, 4, 'piece', 1, 5, 'manual', NOW()),
+('Brown Rice', 'Uncle Bens', 'Grains', true, 4.99, 45, 1, 5, 6, 'cup', 1, 4, 'manual', NOW()),
+('Broccoli', 'Fresh Market', 'Vegetables', true, 3.49, 6, 0.3, 2.5, 4, 'cup', 1, 5, 'manual', NOW()),
+('Salmon', 'Wild Alaskan', 'Protein', false, 18.99, 0, 12, 22, 2, 'piece', 1, 5, 'manual', NOW()),
+('Sweet Potato', 'Organic', 'Vegetables', true, 2.99, 27, 0.1, 2, 4, 'piece', 1, 4, 'manual', NOW()),
+('Greek Yogurt', 'Chobani', 'Dairy', false, 5.99, 9, 0.5, 15, 6, 'cup', 1, 4, 'manual', NOW()),
+('Quinoa', 'Ancient Harvest', 'Grains', false, 6.99, 39, 4, 8, 4, 'cup', 1, 3, 'manual', NOW()),
+('Spinach', 'Fresh Market', 'Vegetables', true, 2.49, 1, 0.1, 0.9, 4, 'cup', 1, 5, 'manual', NOW()),
+('Eggs', 'Farm Fresh', 'Protein', true, 4.99, 0.6, 5, 6, 12, 'piece', 1, 4, 'manual', NOW()),
+('Avocado', 'Organic', 'Fruits', false, 1.99, 9, 15, 2, 1, 'piece', 1, 3, 'manual', NOW());
 
 -- Insert sample recipes
 INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, nutrition_per_serving, tags, rating, cost_per_serving, notes, created_at, updated_at) VALUES

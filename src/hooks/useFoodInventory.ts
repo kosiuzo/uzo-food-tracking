@@ -10,6 +10,7 @@ export function useFoodInventory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
+  const [ratingFilter, setRatingFilter] = useState<string>('all');
 
   // Load items from database
   useEffect(() => {
@@ -42,8 +43,11 @@ export function useFoodInventory() {
     const matchesStock = stockFilter === 'all' || 
                         (stockFilter === 'in-stock' && item.in_stock) ||
                         (stockFilter === 'out-of-stock' && !item.in_stock);
+    const matchesRating = ratingFilter === 'all' ||
+                         (ratingFilter === 'unrated' && !item.rating) ||
+                         (ratingFilter !== 'unrated' && item.rating === parseInt(ratingFilter));
     
-    return matchesSearch && matchesCategory && matchesStock;
+    return matchesSearch && matchesCategory && matchesStock && matchesRating;
   });
 
   const categories = Array.from(new Set(items.map(item => item.category)));
@@ -85,6 +89,7 @@ export function useFoodInventory() {
       if (updates.unit !== undefined) updateData.unit_of_measure = updates.unit;
       if (updates.quantity !== undefined) updateData.unit_quantity = updates.quantity;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
+      if (updates.rating !== undefined) updateData.rating = updates.rating;
       if (updates.nutrition) {
         updateData.carbs_per_serving = updates.nutrition.carbs_per_100g / 100;
         updateData.fat_per_serving = updates.nutrition.fat_per_100g / 100;
@@ -147,6 +152,8 @@ export function useFoodInventory() {
     setCategoryFilter,
     stockFilter,
     setStockFilter,
+    ratingFilter,
+    setRatingFilter,
     categories,
     addItem,
     updateItem,

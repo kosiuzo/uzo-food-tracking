@@ -20,6 +20,7 @@ export interface Database {
           barcode: string | null
           last_purchased: string | null
           purchase_count: number | null
+          rating: number | null
           last_edited: string | null
           normalized_name: string | null
         }
@@ -41,6 +42,7 @@ export interface Database {
           barcode?: string | null
           last_purchased?: string | null
           purchase_count?: number | null
+          rating?: number | null
           last_edited?: string | null
           normalized_name?: never
         }
@@ -62,6 +64,7 @@ export interface Database {
           barcode?: string | null
           last_purchased?: string | null
           purchase_count?: number | null
+          rating?: number | null
           last_edited?: string | null
           normalized_name?: never
         }

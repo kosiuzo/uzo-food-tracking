@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { FoodItem } from '../types';
+import { StarRating } from './StarRating';
 
 interface AddEditItemDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     quantity: 0,
     price: 0,
     image_url: '',
+    rating: 0,
     nutrition: {
       calories_per_100g: 0,
       protein_per_100g: 0,
@@ -52,6 +54,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         quantity: item.quantity,
         price: item.price || 0,
         image_url: item.image_url || '',
+        rating: item.rating || 0,
         nutrition: { ...item.nutrition },
       });
     } else {
@@ -64,6 +67,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         quantity: 0,
         price: 0,
         image_url: '',
+        rating: 0,
         nutrition: {
           calories_per_100g: 0,
           protein_per_100g: 0,
@@ -232,6 +236,15 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                 min="0"
                 step="0.01"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Rating</Label>
+              <StarRating
+                rating={formData.rating}
+                onRatingChange={(rating) => setFormData(prev => ({ ...prev, rating }))}
+                size="md"
               />
             </div>
           </div>

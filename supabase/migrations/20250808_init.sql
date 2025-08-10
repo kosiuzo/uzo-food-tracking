@@ -21,6 +21,7 @@ CREATE TABLE items (
     barcode TEXT,
     last_purchased DATE,
     purchase_count INTEGER DEFAULT 0,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     last_edited TIMESTAMP DEFAULT NOW(),
     normalized_name TEXT
 );
@@ -110,6 +111,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_items_normalized_name ON items(normalized_n
 CREATE UNIQUE INDEX IF NOT EXISTS ux_items_barcode ON items(barcode);
 CREATE INDEX IF NOT EXISTS idx_items_category ON items(category);
 CREATE INDEX IF NOT EXISTS idx_items_in_stock ON items(in_stock);
+CREATE INDEX IF NOT EXISTS idx_items_rating ON items(rating);
 CREATE INDEX IF NOT EXISTS idx_recipes_meal_type ON recipes USING GIN(meal_type);
 CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_cooked_at ON meal_logs(cooked_at);
@@ -159,6 +161,7 @@ BEGIN
             image_url,
             nutrition_source,
             barcode,
+            rating,
             last_edited
         )
         VALUES (
@@ -176,6 +179,7 @@ BEGIN
             item_data->>'image_url',
             item_data->>'nutrition_source',
             item_data->>'barcode',
+            (item_data->>'rating')::INTEGER,
             NOW()
         )
         ON CONFLICT (normalized_name) DO UPDATE
@@ -193,6 +197,7 @@ BEGIN
             image_url = EXCLUDED.image_url,
             nutrition_source = EXCLUDED.nutrition_source,
             barcode = EXCLUDED.barcode,
+            rating = EXCLUDED.rating,
             last_edited = NOW()
         RETURNING * INTO result_item;
         

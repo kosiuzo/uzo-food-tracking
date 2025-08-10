@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FoodItem } from '../types';
+import { StarRating } from './StarRating';
 import { format, parseISO } from 'date-fns';
 
 interface FoodItemCardProps {
@@ -12,9 +13,10 @@ interface FoodItemCardProps {
   onToggleStock: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onRatingChange?: (rating: number) => void;
 }
 
-export function FoodItemCard({ item, onToggleStock, onEdit, onDelete }: FoodItemCardProps) {
+export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingChange }: FoodItemCardProps) {
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">
@@ -59,6 +61,14 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete }: FoodItem
                   Last purchased: {format(parseISO(item.last_purchased), 'MMM d, yyyy')}
                 </p>
               )}
+              {/* Rating */}
+              <div className="mt-2">
+                <StarRating
+                  rating={item.rating}
+                  onRatingChange={onRatingChange}
+                  size="sm"
+                />
+              </div>
             </div>
 
             {/* Actions */}

@@ -20,6 +20,7 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
       fiber_per_100g: 0, // Not in database schema
     },
     last_purchased: dbItem.last_purchased || undefined,
+    rating: dbItem.rating || undefined,
     last_edited: dbItem.last_edited || new Date().toISOString(),
   };
 }
@@ -41,6 +42,7 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     image_url: item.image_url || null,
     nutrition_source: 'manual',
     barcode: null,
+    rating: item.rating || null,
     last_edited: item.last_edited,
   };
 }

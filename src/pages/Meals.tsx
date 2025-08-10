@@ -1,18 +1,22 @@
 import { useState } from 'react';
-import { Plus, Calendar, Utensils, Edit } from 'lucide-react';
+import { Plus, Calendar, Utensils, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layout } from '../components/Layout';
 import { LogMealDialog } from '../components/LogMealDialog';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useMealLogs } from '../hooks/useMealLogs';
 import { useRecipes } from '../hooks/useRecipes';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Meals() {
-  const { mealLogs, addMealLog, updateMealLog } = useMealLogs();
+  const { mealLogs, addMealLog, updateMealLog, deleteMealLog } = useMealLogs();
   const { getRecipeById } = useRecipes();
+  const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: any }>({ open: false, mealLog: null });
 
   const recentLogs = mealLogs.slice(0, 20); // Show last 20 meals
 
@@ -28,6 +32,24 @@ export default function Meals() {
       return 'Yesterday';
     } else {
       return date.toLocaleDateString();
+    }
+  };
+
+  const handleDeleteMealLog = async () => {
+    if (!deleteConfirm.mealLog) return;
+    
+    try {
+      await deleteMealLog(deleteConfirm.mealLog.id);
+      toast({
+        title: 'Meal deleted',
+        description: `${deleteConfirm.mealLog.meal_name} has been deleted successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete meal log. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -94,6 +116,14 @@ export default function Meals() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteConfirm({ open: true, mealLog: log })}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                         {log.estimated_cost && (
                           <Badge variant="secondary">
                             ${log.estimated_cost.toFixed(2)}
@@ -155,6 +185,17 @@ export default function Meals() {
             setIsLogDialogOpen(false);
             setEditingMealLog(null);
           }}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteConfirm.open}
+          onOpenChange={(open) => setDeleteConfirm({ open, mealLog: open ? deleteConfirm.mealLog : null })}
+          title="Delete Meal Log"
+          description={`Are you sure you want to delete "${deleteConfirm.mealLog?.meal_name}"? This action cannot be undone.`}
+          onConfirm={handleDeleteMealLog}
+          confirmText="Delete"
+          variant="destructive"
         />
       </div>
     </Layout>

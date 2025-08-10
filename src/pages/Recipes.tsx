@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -8,16 +8,21 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Recipes() {
-  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite } = useRecipes();
+  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite, deleteRecipe } = useRecipes();
   const { allItems } = useFoodInventory();
-const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: any }>({ open: false, recipe: null });
 
   const displayedRecipes = (favoritesOnly ? recipes.filter(r => r.is_favorite) : recipes);
   const toggleRecipeExpansion = (recipeId: string) => {
@@ -35,6 +40,24 @@ const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const handleEditRecipe = (recipe: any) => {
     setEditingRecipe(recipe.id);
     setIsAddDialogOpen(true);
+  };
+
+  const handleDeleteRecipe = async () => {
+    if (!deleteConfirm.recipe) return;
+    
+    try {
+      await deleteRecipe(deleteConfirm.recipe.id);
+      toast({
+        title: 'Recipe deleted',
+        description: `${deleteConfirm.recipe.name} has been deleted successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete recipe. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -107,6 +130,14 @@ const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
                         onClick={() => handleEditRecipe(recipe)}
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirm({ open: true, recipe })}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -203,6 +234,17 @@ const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
             setEditingRecipe(null);
           }}
           editingRecipe={editingRecipe ? recipes.find(r => r.id === editingRecipe) : undefined}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteConfirm.open}
+          onOpenChange={(open) => setDeleteConfirm({ open, recipe: open ? deleteConfirm.recipe : null })}
+          title="Delete Recipe"
+          description={`Are you sure you want to delete "${deleteConfirm.recipe?.name}"? This action cannot be undone.`}
+          onConfirm={handleDeleteRecipe}
+          confirmText="Delete"
+          variant="destructive"
         />
       </div>
     </Layout>

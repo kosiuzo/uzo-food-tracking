@@ -86,6 +86,8 @@ export interface Database {
           rating: number | null
           source_link: string | null
           cost_per_serving: number | null
+          total_cost: number | null
+          cost_last_calculated: string | null
           notes: string | null
           times_cooked: number | null
           average_rating: number | null
@@ -109,6 +111,8 @@ export interface Database {
           rating?: number | null
           source_link?: string | null
           cost_per_serving?: number | null
+          total_cost?: number | null
+          cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
           average_rating?: number | null
@@ -132,6 +136,8 @@ export interface Database {
           rating?: number | null
           source_link?: string | null
           cost_per_serving?: number | null
+          total_cost?: number | null
+          cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
           average_rating?: number | null
@@ -146,18 +152,27 @@ export interface Database {
           item_id: number
           quantity: number | null
           unit: string | null
+          cost_per_unit: number | null
+          total_cost: number | null
+          cost_calculated_at: string | null
         }
         Insert: {
           recipe_id: number
           item_id: number
           quantity?: number | null
           unit?: string | null
+          cost_per_unit?: number | null
+          total_cost?: number | null
+          cost_calculated_at?: string | null
         }
         Update: {
           recipe_id?: number
           item_id?: number
           quantity?: number | null
           unit?: string | null
+          cost_per_unit?: number | null
+          total_cost?: number | null
+          cost_calculated_at?: string | null
         }
       }
       meal_logs: {
@@ -267,6 +282,12 @@ export interface Database {
           p_recipe_id: number
         }
         Returns: void
+      }
+      calculate_recipe_cost: {
+        Args: {
+          p_recipe_id: number
+        }
+        Returns: number
       }
     }
     Enums: {

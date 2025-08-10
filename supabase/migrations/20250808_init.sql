@@ -61,6 +61,8 @@ CREATE TABLE recipes (
     rating NUMERIC(2,1),
     source_link TEXT,
     cost_per_serving NUMERIC(10,2),
+    total_cost NUMERIC(10,4),
+    cost_last_calculated TIMESTAMP,
     notes TEXT,
     times_cooked INT DEFAULT 0,
     average_rating NUMERIC(2,1),
@@ -75,6 +77,9 @@ CREATE TABLE recipe_items (
     item_id BIGINT REFERENCES items(id) ON DELETE CASCADE,
     quantity NUMERIC(10,2),
     unit TEXT,
+    cost_per_unit NUMERIC(10,4),
+    total_cost NUMERIC(10,4),
+    cost_calculated_at TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (recipe_id, item_id)
 );
 
@@ -299,6 +304,77 @@ BEGIN
     CROSS JOIN LATERAL (
         SELECT * FROM top_recipes_stats
     ) trs;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create RPC function for calculating recipe costs
+CREATE OR REPLACE FUNCTION calculate_recipe_cost(
+    p_recipe_id BIGINT
+) RETURNS NUMERIC AS $$
+DECLARE
+    total_cost NUMERIC(10,4) := 0;
+    cost_per_serving NUMERIC(10,2) := 0;
+    servings_count INT := 1;
+BEGIN
+    -- Calculate total cost from recipe ingredients
+    SELECT COALESCE(SUM(
+        CASE 
+            WHEN ri.unit = i.unit_of_measure THEN
+                -- Same unit, direct calculation
+                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1))
+            ELSE
+                -- Different units, assume 1:1 conversion for simplicity
+                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1))
+        END
+    ), 0) INTO total_cost
+    FROM recipe_items ri
+    JOIN items i ON ri.item_id = i.id
+    WHERE ri.recipe_id = p_recipe_id;
+
+    -- Get number of servings
+    SELECT COALESCE(servings, 1) INTO servings_count
+    FROM recipes
+    WHERE id = p_recipe_id;
+
+    -- Calculate cost per serving
+    cost_per_serving := total_cost / servings_count;
+
+    -- Update the recipe with calculated costs
+    UPDATE recipes 
+    SET 
+        total_cost = total_cost,
+        cost_per_serving = cost_per_serving,
+        cost_last_calculated = NOW()
+    WHERE id = p_recipe_id;
+
+    -- Update recipe_items with individual costs
+    UPDATE recipe_items 
+    SET 
+        cost_per_unit = (
+            SELECT CASE 
+                WHEN ri.unit = i.unit_of_measure THEN
+                    COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                ELSE
+                    COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+            END
+            FROM items i 
+            WHERE i.id = recipe_items.item_id
+        ),
+        total_cost = (
+            SELECT CASE 
+                WHEN ri.unit = i.unit_of_measure THEN
+                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                ELSE
+                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+            END
+            FROM recipe_items ri
+            JOIN items i ON ri.item_id = i.id
+            WHERE ri.recipe_id = recipe_items.recipe_id AND ri.item_id = recipe_items.item_id
+        ),
+        cost_calculated_at = NOW()
+    WHERE recipe_id = p_recipe_id;
+
+    RETURN total_cost;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

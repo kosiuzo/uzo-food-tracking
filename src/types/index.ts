@@ -57,6 +57,9 @@ export interface Recipe {
     carbs_per_serving: number;
     fat_per_serving: number;
   };
+  cost_per_serving?: number;
+  total_cost?: number;
+  cost_last_calculated?: string;
   is_favorite?: boolean;
 }
 
@@ -77,6 +80,8 @@ export interface DbRecipe {
   rating?: number | null;
   source_link?: string | null;
   cost_per_serving?: number | null;
+  total_cost?: number | null;
+  cost_last_calculated?: string | null;
   notes?: string | null;
   times_cooked?: number | null;
   average_rating?: number | null;
@@ -89,6 +94,9 @@ export interface RecipeIngredient {
   item_id: string;
   quantity: number;
   unit: string;
+  cost_per_unit?: number;
+  total_cost?: number;
+  cost_calculated_at?: string;
 }
 
 export interface MealLog {

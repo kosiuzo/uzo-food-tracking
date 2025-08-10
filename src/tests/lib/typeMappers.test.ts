@@ -123,6 +123,7 @@ describe('typeMappers', () => {
         image_url: 'https://example.com/apple.jpg',
         nutrition_source: 'manual',
         barcode: null,
+        rating: null,
         last_edited: '2025-01-01T00:00:00Z',
       });
     });
@@ -204,6 +205,9 @@ describe('typeMappers', () => {
           fat_per_serving: 12,
         },
         is_favorite: true, // average_rating >= 4
+        cost_per_serving: 2.50,
+        total_cost: undefined,
+        cost_last_calculated: undefined,
       });
     });
 

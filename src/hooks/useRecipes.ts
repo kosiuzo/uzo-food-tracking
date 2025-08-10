@@ -84,6 +84,13 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
         if (ingredientsError) throw ingredientsError;
       }
       
+      // Calculate recipe cost after ingredients are inserted
+      try {
+        await supabase.rpc('calculate_recipe_cost', { p_recipe_id: recipeData.id });
+      } catch (costError) {
+        console.warn('Failed to calculate recipe cost:', costError);
+      }
+      
       const newRecipe = dbRecipeToRecipe(recipeData, recipe.ingredients);
       setRecipes(prev => [...prev, newRecipe]);
       return newRecipe;
@@ -134,6 +141,15 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
             .insert(recipeIngredients);
           
           if (ingredientsError) throw ingredientsError;
+        }
+      }
+      
+      // Recalculate recipe cost if ingredients were updated
+      if (updates.ingredients) {
+        try {
+          await supabase.rpc('calculate_recipe_cost', { p_recipe_id: numericId });
+        } catch (costError) {
+          console.warn('Failed to calculate recipe cost:', costError);
         }
       }
       

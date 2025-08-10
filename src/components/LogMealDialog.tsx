@@ -78,6 +78,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           carbs: recipe.nutrition.carbs_per_serving,
           fat: recipe.nutrition.fat_per_serving,
         },
+        estimated_cost: recipe.cost_per_serving || 0,
       }));
     }
   };

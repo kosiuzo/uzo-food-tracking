@@ -64,6 +64,9 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
       carbs_per_serving: nutrition.carbs || 0,
       fat_per_serving: nutrition.fat || 0,
     },
+    cost_per_serving: dbRecipe.cost_per_serving || undefined,
+    total_cost: dbRecipe.total_cost || undefined,
+    cost_last_calculated: dbRecipe.cost_last_calculated || undefined,
     is_favorite: dbRecipe.average_rating ? dbRecipe.average_rating >= 4 : false,
   };
 }

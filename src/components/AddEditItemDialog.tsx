@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -127,10 +127,12 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.category || !formData.unit) {
+    // When editing, only name and category are required
+    // When adding new, name, category, and unit are required
+    if (!formData.name.trim() || !formData.category || (!item && !formData.unit)) {
       toast({
         title: "Missing required fields",
-        description: "Please fill in name, category, and unit.",
+        description: item ? "Please fill in name and category." : "Please fill in name, category, and unit.",
         variant: "destructive",
       });
       return;
@@ -148,6 +150,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+          <DialogDescription>
+            {item ? 'Update the details of your food item.' : 'Add a new food item to your inventory with nutritional information.'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -200,33 +205,38 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                value={formData.quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
-                min="0"
-                step="0.1"
-              />
-            </div>
+          {/* Only show quantity and unit when adding new items */}
+          {!item && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
+                  min="0"
+                  step="0.1"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit *</Label>
-              <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {units.map(unit => (
-                    <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label htmlFor="unit">Unit *</Label>
+                <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map(unit => (
+                      <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          )}
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Price ($)</Label>
               <Input

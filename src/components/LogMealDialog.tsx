@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -132,6 +132,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingMealLog ? 'Edit Meal' : 'Log a Meal'}</DialogTitle>
+          <DialogDescription>
+            {editingMealLog ? 'Update your meal log entry.' : 'Log a meal from your recipe collection with nutritional information.'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

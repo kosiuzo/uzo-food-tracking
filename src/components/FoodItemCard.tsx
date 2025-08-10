@@ -47,9 +47,6 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
                 <Badge variant="secondary" className="text-xs">
                   {item.category}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {item.quantity} {item.unit}
-                </span>
                 {item.price && (
                   <span className="text-sm text-muted-foreground">
                     ${item.price.toFixed(2)}

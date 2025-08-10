@@ -124,9 +124,9 @@ export default function Meals() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        {log.estimated_cost && (
+                        {recipe && recipe.total_cost && (
                           <Badge variant="secondary">
-                            ${log.estimated_cost.toFixed(2)}
+                            ${recipe.total_cost.toFixed(2)}
                           </Badge>
                         )}
                       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FoodItem, DbItem } from '../types';
 import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/typeMappers';
+import { mockFoodItems } from '../data/mockData';
 
 export function useFoodInventory() {
   const [items, setItems] = useState<FoodItem[]>([]);
@@ -11,6 +12,7 @@ export function useFoodInventory() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [usingMockData, setUsingMockData] = useState(false);
 
   // Load items from database
   useEffect(() => {
@@ -20,17 +22,44 @@ export function useFoodInventory() {
   const loadItems = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Attempting to load items from Supabase...');
+      
+      // Try to connect to Supabase first
       const { data, error } = await supabase
         .from('items')
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
+        // Fall back to mock data
+        setItems(mockFoodItems);
+        setUsingMockData(true);
+        console.log('✅ Loaded mock data:', mockFoodItems.length, 'items');
+        return;
+      }
       
-      const mappedItems = data.map(dbItemToFoodItem);
-      setItems(mappedItems);
+      if (data && data.length > 0) {
+        console.log('✅ Loaded data from Supabase:', data.length, 'items');
+        const mappedItems = data.map(dbItemToFoodItem);
+        setItems(mappedItems);
+        setUsingMockData(false);
+      } else {
+        // Database is empty, use mock data
+        console.log('ℹ️ Database is empty, using mock data');
+        setItems(mockFoodItems);
+        setUsingMockData(true);
+        console.log('✅ Loaded mock data:', mockFoodItems.length, 'items');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load items');
+      console.warn('❌ Failed to load from Supabase, using mock data:', err);
+      // Fall back to mock data on any error
+      setItems(mockFoodItems);
+      setUsingMockData(true);
+      setError('Using mock data - database connection unavailable');
+      console.log('✅ Loaded mock data:', mockFoodItems.length, 'items');
     } finally {
       setLoading(false);
     }
@@ -146,6 +175,7 @@ export function useFoodInventory() {
     allItems: items,
     loading,
     error,
+    usingMockData,
     searchQuery,
     setSearchQuery,
     categoryFilter,

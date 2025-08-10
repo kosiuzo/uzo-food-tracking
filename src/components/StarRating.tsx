@@ -57,11 +57,6 @@ export function StarRating({
           />
         </button>
       ))}
-      {rating > 0 && (
-        <span className="ml-1 text-xs text-muted-foreground">
-          ({rating}/5)
-        </span>
-      )}
     </div>
   );
 }

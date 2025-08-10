@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Recipe, RecipeIngredient, DbRecipe } from '../types';
 import { dbRecipeToRecipe, recipeToDbInsert } from '../lib/typeMappers';
+import { mockRecipes } from '../data/mockData';
 
 export function useRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     loadRecipes();
@@ -16,8 +18,11 @@ export function useRecipes() {
   const loadRecipes = async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Load recipes with their ingredients
+      console.log('🔄 Attempting to load recipes from Supabase...');
+      
+      // Try to connect to Supabase first
       const { data: recipesData, error: recipesError } = await supabase
         .from('recipes')
         .select(`
@@ -30,21 +35,42 @@ export function useRecipes() {
         `)
         .order('name');
       
-      if (recipesError) throw recipesError;
+      if (recipesError) {
+        console.warn('⚠️ Supabase connection failed, falling back to mock data:', recipesError.message);
+        // Fall back to mock data
+        setRecipes(mockRecipes);
+        setUsingMockData(true);
+        console.log('✅ Loaded mock data:', mockRecipes.length, 'recipes');
+        return;
+      }
       
-      const mappedRecipes = recipesData.map((dbRecipe: Record<string, unknown>) => {
-        const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as Record<string, unknown>[]).map((ri: Record<string, unknown>) => ({
-          item_id: ri.item_id.toString(),
-          quantity: ri.quantity,
-          unit: ri.unit,
-        }));
-        
-        return dbRecipeToRecipe(dbRecipe, ingredients);
-      });
-      
-      setRecipes(mappedRecipes);
+      if (recipesData && recipesData.length > 0) {
+        console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
+        const mappedRecipes = recipesData.map((dbRecipe: Record<string, unknown>) => {
+          const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as Record<string, unknown>[]).map((ri: Record<string, unknown>) => ({
+            item_id: ri.item_id.toString(),
+            quantity: ri.quantity,
+            unit: ri.unit,
+          }));
+          
+          return dbRecipeToRecipe(dbRecipe, ingredients);
+        });
+        setRecipes(mappedRecipes);
+        setUsingMockData(false);
+      } else {
+        // Database is empty, use mock data
+        console.log('ℹ️ Database is empty, using mock data');
+        setRecipes(mockRecipes);
+        setUsingMockData(true);
+        console.log('✅ Loaded mock data:', mockRecipes.length, 'recipes');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load recipes');
+      console.warn('❌ Failed to load from Supabase, using mock data:', err);
+      // Fall back to mock data on any error
+      setRecipes(mockRecipes);
+      setUsingMockData(true);
+      setError('Using mock data - database connection unavailable');
+      console.log('✅ Loaded mock data:', mockRecipes.length, 'recipes');
     } finally {
       setLoading(false);
     }
@@ -230,12 +256,13 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
     return recipes.find(recipe => recipe.id === id);
   };
 
-return {
+  return {
     recipes: filteredRecipes,
     favorites: favoriteRecipes,
     allRecipes: recipes,
     loading,
     error,
+    usingMockData,
     searchQuery,
     setSearchQuery,
     addRecipe,

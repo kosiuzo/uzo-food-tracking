@@ -14,7 +14,7 @@ import { useFoodInventory } from '../hooks/useFoodInventory';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Recipes() {
-  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite, deleteRecipe } = useRecipes();
+  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
   const { allItems } = useFoodInventory();
   const { toast } = useToast();
 
@@ -67,6 +67,47 @@ export default function Recipes() {
         <div>
 <h1 className="text-2xl font-bold">Recipes</h1>
            <p className="text-muted-foreground">Manage your recipes and favorites</p>
+        </div>
+
+        {/* Mock Data Indicator */}
+        {usingMockData && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+              <p className="text-sm text-amber-800">
+                <strong>Demo Mode:</strong> Showing sample recipes with beautiful food images. 
+                Connect to Supabase to see your real recipes.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && !usingMockData && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{recipes.length}</div>
+            <div className="text-sm text-muted-foreground">Total Recipes</div>
+          </div>
+          <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="text-2xl font-bold text-pink-600">{recipes.filter(r => r.is_favorite).length}</div>
+            <div className="text-sm text-muted-foreground">Favorites</div>
+          </div>
+          <div className="rounded-lg border bg-card p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {recipes.length > 0 
+                ? Math.round(recipes.reduce((sum, r) => sum + (r.prep_time_minutes || 0), 0) / recipes.length)
+                : 0
+              }
+            </div>
+            <div className="text-sm text-muted-foreground">Avg Prep Time (min)</div>
+          </div>
         </div>
 
         {/* Search */}

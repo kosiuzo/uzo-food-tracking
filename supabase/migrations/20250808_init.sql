@@ -86,7 +86,7 @@ CREATE TABLE recipe_items (
 -- Create meal_logs table
 CREATE TABLE meal_logs (
     id BIGSERIAL PRIMARY KEY,
-    recipe_id BIGINT REFERENCES recipes(id) ON DELETE SET NULL,
+    recipe_id BIGINT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
     cooked_at DATE,
     notes TEXT,
     rating NUMERIC(2,1),
@@ -321,10 +321,10 @@ BEGIN
         CASE 
             WHEN ri.unit = i.unit_of_measure THEN
                 -- Same unit, direct calculation
-                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1))
+                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1))
             ELSE
                 -- Different units, assume 1:1 conversion for simplicity
-                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1))
+                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1))
         END
     ), 0) INTO total_cost
     FROM recipe_items ri
@@ -342,8 +342,8 @@ BEGIN
     -- Update the recipe with calculated costs
     UPDATE recipes 
     SET 
-        total_cost = total_cost,
-        cost_per_serving = cost_per_serving,
+        total_cost = calculate_recipe_cost.total_cost,
+        cost_per_serving = calculate_recipe_cost.cost_per_serving,
         cost_last_calculated = NOW()
     WHERE id = p_recipe_id;
 
@@ -353,9 +353,9 @@ BEGIN
         cost_per_unit = (
             SELECT CASE 
                 WHEN ri.unit = i.unit_of_measure THEN
-                    COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                    COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
                 ELSE
-                    COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                    COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
             END
             FROM items i 
             WHERE i.id = recipe_items.item_id
@@ -363,9 +363,9 @@ BEGIN
         total_cost = (
             SELECT CASE 
                 WHEN ri.unit = i.unit_of_measure THEN
-                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
                 ELSE
-                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.unit_quantity, 1)
+                    ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
             END
             FROM recipe_items ri
             JOIN items i ON ri.item_id = i.id

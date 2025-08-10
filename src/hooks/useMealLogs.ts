@@ -22,7 +22,7 @@ export function useMealLogs() {
       
       if (error) throw error;
       
-      const mappedMealLogs = data.map(dbMealLogToMealLog);
+      const mappedMealLogs = data.map(dbMealLogToMealLog).filter(Boolean) as MealLog[];
       setMealLogs(mappedMealLogs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load meal logs');

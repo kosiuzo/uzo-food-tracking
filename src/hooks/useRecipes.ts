@@ -87,13 +87,18 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
       // Calculate recipe cost after ingredients are inserted
       try {
         await supabase.rpc('calculate_recipe_cost', { p_recipe_id: recipeData.id });
+        // Refetch all recipes to get the updated cost values
+        await loadRecipes();
+        // Find and return the newly created recipe with correct costs
+        const updatedRecipe = recipes.find(r => r.id === recipeData.id.toString());
+        return updatedRecipe || dbRecipeToRecipe(recipeData, recipe.ingredients);
       } catch (costError) {
         console.warn('Failed to calculate recipe cost:', costError);
+        // Fall back to adding without cost calculation
+        const newRecipe = dbRecipeToRecipe(recipeData, recipe.ingredients);
+        setRecipes(prev => [...prev, newRecipe]);
+        return newRecipe;
       }
-      
-      const newRecipe = dbRecipeToRecipe(recipeData, recipe.ingredients);
-      setRecipes(prev => [...prev, newRecipe]);
-      return newRecipe;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add recipe');
       throw err;
@@ -101,8 +106,13 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
   };
 
 const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+    console.log('🎯 updateRecipe called for ID:', id, 'Updates:', updates);
+    console.log('📝 Updates includes ingredients?', !!updates.ingredients, 'Ingredient count:', updates.ingredients?.length);
     try {
       const numericId = parseInt(id);
+      
+      // Use the nutrition provided in updates (calculated by AddRecipeDialog)
+      let nutritionToSave = updates.nutrition;
       
       // Update recipe
       const { error: recipeError } = await supabase
@@ -112,7 +122,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           instructions: updates.instructions,
           servings: updates.servings,
           prep_time: updates.prep_time_minutes,
-          nutrition_per_serving: updates.nutrition,
+          nutrition_per_serving: nutritionToSave,
           rating: updates.is_favorite ? 5 : null,
         })
         .eq('id', numericId);
@@ -146,16 +156,46 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
       
       // Recalculate recipe cost if ingredients were updated
       if (updates.ingredients) {
+        console.log('🔄 Updating recipe with ingredients, triggering cost calculation for recipe ID:', numericId);
         try {
-          await supabase.rpc('calculate_recipe_cost', { p_recipe_id: numericId });
+          console.log('📞 Calling calculate_recipe_cost RPC function...');
+          const { data: rpcResult, error: rpcError } = await supabase.rpc('calculate_recipe_cost', { p_recipe_id: numericId });
+          console.log('📊 RPC Result:', rpcResult, 'RPC Error:', rpcError);
+          
+          // Fetch just the updated cost values instead of refetching everything
+          console.log('📖 Fetching updated cost values...');
+          const { data: updatedRecipe, error: fetchError } = await supabase
+            .from('recipes')
+            .select('cost_per_serving, total_cost, cost_last_calculated')
+            .eq('id', numericId)
+            .single();
+            
+          console.log('💰 Updated cost data:', updatedRecipe, 'Fetch Error:', fetchError);
+          if (fetchError) throw fetchError;
+          
+          // Update local state with the calculated nutrition and fetched costs
+          setRecipes(prev =>
+            prev.map(recipe => (recipe.id === id ? { 
+              ...recipe, 
+              ...updates,
+              cost_per_serving: updatedRecipe.cost_per_serving || 0,
+              total_cost: updatedRecipe.total_cost || 0,
+              cost_last_calculated: updatedRecipe.cost_last_calculated || undefined,
+            } : recipe))
+          );
         } catch (costError) {
           console.warn('Failed to calculate recipe cost:', costError);
+          // Still update local state even if cost calculation fails
+          setRecipes(prev =>
+            prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+          );
         }
+      } else {
+        // Update local state for non-ingredient changes
+        setRecipes(prev =>
+          prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+        );
       }
-      
-      setRecipes(prev =>
-        prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
-      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update recipe');
       throw err;

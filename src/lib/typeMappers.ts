@@ -93,12 +93,17 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
 }
 
 // Convert database meal log to MealLog format
-export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
+export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
+  // Skip meal logs without recipe_id as they are now mandatory
+  if (!dbMealLog.recipe_id) {
+    return null;
+  }
+  
   const macros = dbMealLog.macros || {};
   
   return {
     id: dbMealLog.id.toString(),
-    recipe_id: dbMealLog.recipe_id?.toString(),
+    recipe_id: dbMealLog.recipe_id.toString(),
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
     meal_name: 'Meal', // Default name since it's not in the database
     notes: dbMealLog.notes || undefined,
@@ -108,19 +113,19 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
       carbs: macros.carbs || 0,
       fat: macros.fat || 0,
     },
-    estimated_cost: dbMealLog.cost || undefined,
+    estimated_cost: dbMealLog.cost || 0,
   };
 }
 
 // Convert MealLog to database insert format
 export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog, 'id' | 'created_at'> {
   return {
-    recipe_id: mealLog.recipe_id ? parseInt(mealLog.recipe_id) : null,
+    recipe_id: parseInt(mealLog.recipe_id), // Now mandatory, no null check needed
     cooked_at: mealLog.date,
     notes: mealLog.notes || null,
     rating: null,
     macros: mealLog.nutrition,
-    cost: mealLog.estimated_cost || null,
+    cost: mealLog.estimated_cost,
   };
 }
 

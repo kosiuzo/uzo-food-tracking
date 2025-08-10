@@ -101,7 +101,7 @@ export interface RecipeIngredient {
 
 export interface MealLog {
   id: string;
-  recipe_id?: string;
+  recipe_id: string; // Now mandatory
   date: string;
   meal_name: string;
   notes?: string;
@@ -111,7 +111,7 @@ export interface MealLog {
     carbs: number;
     fat: number;
   };
-  estimated_cost?: number;
+  estimated_cost: number; // Now mandatory, derived from recipe
 }
 
 // Database row type for meal_logs table

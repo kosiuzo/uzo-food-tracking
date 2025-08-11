@@ -19,7 +19,6 @@ interface AddEditItemDialogProps {
 }
 
 const categories = ['Fruits', 'Vegetables', 'Meat', 'Dairy', 'Grains', 'Snacks', 'Beverages', 'Oils', 'Spices'];
-const units = ['pieces', 'lbs', 'kg', 'cups', 'bottles', 'cans', 'packages', 'oz', 'g'];
 
 export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditItemDialogProps) {
   const { toast } = useToast();
@@ -31,8 +30,6 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     brand: '',
     category: '',
     in_stock: true,
-    unit: '',
-    quantity: 0,
     price: 0,
     image_url: '',
     ingredients: '',
@@ -53,8 +50,6 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         brand: item.brand || '',
         category: item.category,
         in_stock: item.in_stock,
-        unit: item.unit,
-        quantity: item.quantity,
         price: item.price || 0,
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
@@ -67,8 +62,6 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         brand: '',
         category: '',
         in_stock: true,
-        unit: '',
-        quantity: 0,
         price: 0,
         image_url: '',
         ingredients: '',
@@ -221,12 +214,11 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // When editing, only name and category are required
-    // When adding new, name, category, and unit are required
-    if (!formData.name.trim() || !formData.category || (!item && !formData.unit)) {
+    // Name and category are required
+    if (!formData.name.trim() || !formData.category) {
       toast({
         title: "Missing required fields",
-        description: item ? "Please fill in name and category." : "Please fill in name, category, and unit.",
+        description: "Please fill in name and category.",
         variant: "destructive",
       });
       return;
@@ -326,36 +318,6 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
             </div>
           </div>
 
-          {/* Only show quantity and unit when adding new items */}
-          {!item && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit *</Label>
-                <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map(unit => (
-                      <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

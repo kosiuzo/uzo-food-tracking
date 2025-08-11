@@ -14,8 +14,6 @@ CREATE TABLE items (
     fat_per_serving NUMERIC(10,2),
     protein_per_serving NUMERIC(10,2),
     servings_per_container NUMERIC(10,2),
-    unit_of_measure TEXT,
-    unit_quantity NUMERIC(10,2),
     image_url TEXT,
     ingredients TEXT,
     nutrition_source TEXT,
@@ -162,8 +160,6 @@ BEGIN
             fat_per_serving,
             protein_per_serving,
             servings_per_container,
-            unit_of_measure,
-            unit_quantity,
             image_url,
             ingredients,
             nutrition_source,
@@ -181,8 +177,6 @@ BEGIN
             (item_data->>'fat_per_serving')::NUMERIC,
             (item_data->>'protein_per_serving')::NUMERIC,
             (item_data->>'servings_per_container')::NUMERIC,
-            item_data->>'unit_of_measure',
-            (item_data->>'unit_quantity')::NUMERIC,
             item_data->>'image_url',
             item_data->>'ingredients',
             item_data->>'nutrition_source',
@@ -200,8 +194,6 @@ BEGIN
             fat_per_serving = EXCLUDED.fat_per_serving,
             protein_per_serving = EXCLUDED.protein_per_serving,
             servings_per_container = EXCLUDED.servings_per_container,
-            unit_of_measure = EXCLUDED.unit_of_measure,
-            unit_quantity = EXCLUDED.unit_quantity,
             image_url = EXCLUDED.image_url,
             ingredients = EXCLUDED.ingredients,
             nutrition_source = EXCLUDED.nutrition_source,
@@ -323,14 +315,7 @@ DECLARE
 BEGIN
     -- Calculate total cost from recipe ingredients
     SELECT COALESCE(SUM(
-        CASE 
-            WHEN ri.unit = i.unit_of_measure THEN
-                -- Same unit, direct calculation
-                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1))
-            ELSE
-                -- Different units, assume 1:1 conversion for simplicity
-                (ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1))
-        END
+        ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
     ), 0) INTO v_total_cost
     FROM recipe_items ri
     JOIN items i ON ri.item_id = i.id
@@ -356,22 +341,12 @@ BEGIN
     UPDATE recipe_items 
     SET 
         cost_per_unit = (
-            SELECT CASE 
-                WHEN recipe_items.unit = i.unit_of_measure THEN
-                    COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-                ELSE
-                    COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-            END
+            SELECT COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
             FROM items i 
             WHERE i.id = recipe_items.item_id
         ),
         total_cost = (
-            SELECT CASE 
-                WHEN recipe_items.unit = i.unit_of_measure THEN
-                    recipe_items.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-                ELSE
-                    recipe_items.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-            END
+            SELECT recipe_items.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
             FROM items i 
             WHERE i.id = recipe_items.item_id
         ),

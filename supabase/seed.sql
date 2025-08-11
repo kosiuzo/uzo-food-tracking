@@ -1,22 +1,22 @@
 -- Seed data for the food tracking app
 
 -- Insert sample food items with high-quality images
-INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fat_per_serving, protein_per_serving, servings_per_container, unit_of_measure, unit_quantity, image_url, ingredients, rating, nutrition_source, last_edited) VALUES
-('Chicken Breast', 'Organic Valley', 'Protein', true, 12.99, 0, 3.5, 31, 4, 'piece', 1, 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=400&fit=crop&crop=center', 'Organic chicken breast', 5, 'manual', NOW()),
-('Brown Rice', 'Uncle Bens', 'Grains', true, 4.99, 45, 1, 5, 6, 'cup', 1, 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=400&fit=crop&crop=center', 'Whole grain brown rice', 4, 'manual', NOW()),
-('Broccoli', 'Fresh Market', 'Vegetables', true, 3.49, 6, 0.3, 2.5, 4, 'cup', 1, 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&h=400&fit=crop&crop=center', 'Fresh broccoli florets', 5, 'manual', NOW()),
-('Salmon', 'Wild Alaskan', 'Protein', false, 18.99, 0, 12, 22, 2, 'piece', 1, 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=400&fit=crop&crop=center', 'Wild-caught Alaskan salmon, naturally sourced', 5, 'manual', NOW()),
-('Sweet Potato', 'Organic', 'Vegetables', true, 2.99, 27, 0.1, 2, 4, 'piece', 1, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=400&fit=crop&crop=center', 'Organic sweet potato', 4, 'manual', NOW()),
-('Greek Yogurt', 'Chobani', 'Dairy', false, 5.99, 9, 0.5, 15, 6, 'cup', 1, 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop&crop=center', 'Cultured pasteurized nonfat milk, live and active cultures (S. thermophilus, L. bulgaricus, L. acidophilus, bifidus, L. casei)', 4, 'manual', NOW()),
-('Quinoa', 'Ancient Harvest', 'Grains', false, 6.99, 39, 4, 8, 4, 'cup', 1, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop&crop=center', 'Organic whole grain quinoa', 3, 'manual', NOW()),
-('Spinach', 'Fresh Market', 'Vegetables', true, 2.49, 1, 0.1, 0.9, 4, 'cup', 1, 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop&crop=center', 'Fresh baby spinach leaves', 5, 'manual', NOW()),
-('Eggs', 'Farm Fresh', 'Protein', true, 4.99, 0.6, 5, 6, 12, 'piece', 1, 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=400&h=400&fit=crop&crop=center', 'Grade A large eggs from cage-free hens', 4, 'manual', NOW()),
-('Avocado', 'Organic', 'Fruits', false, 1.99, 9, 15, 2, 1, 'piece', 1, 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=400&fit=crop&crop=center', 'Organic Hass avocado', 3, 'manual', NOW()),
-('Bananas', 'Dole', 'Fruits', true, 2.49, 27, 0.4, 1.3, 6, 'piece', 1, 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=400&h=400&fit=crop&crop=center', 'Fresh bananas', 4, 'manual', NOW()),
-('Olive Oil', 'Bertolli', 'Oils', true, 8.99, 0, 14, 0, 32, 'tbsp', 1, 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop&crop=center', '100% extra virgin olive oil, cold pressed', 5, 'manual', NOW()),
-('Almonds', 'Blue Diamond', 'Nuts', false, 6.99, 6, 14, 6, 8, 'cup', 1, 'https://images.unsplash.com/photo-1504672280212-9cc99ecb0d5a?w=400&h=400&fit=crop&crop=center', 'Roasted almonds, sea salt', 4, 'manual', NOW()),
-('Tomatoes', 'Garden Fresh', 'Vegetables', true, 3.99, 4, 0.2, 0.9, 4, 'piece', 1, 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400&h=400&fit=crop&crop=center', 'Fresh vine-ripened tomatoes', 5, 'manual', NOW()),
-('Oatmeal', 'Quaker', 'Grains', true, 4.49, 27, 3, 5, 8, 'cup', 1, 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=400&h=400&fit=crop&crop=center', '100% whole grain rolled oats', 4, 'manual', NOW());
+INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fat_per_serving, protein_per_serving, servings_per_container, image_url, ingredients, rating, nutrition_source, last_edited) VALUES
+('Chicken Breast', 'Organic Valley', 'Protein', true, 12.99, 0, 3.5, 31, 4, 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=400&fit=crop&crop=center', 'Organic chicken breast', 5, 'manual', NOW()),
+('Brown Rice', 'Uncle Bens', 'Grains', true, 4.99, 45, 1, 5, 6, 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=400&fit=crop&crop=center', 'Whole grain brown rice', 4, 'manual', NOW()),
+('Broccoli', 'Fresh Market', 'Vegetables', true, 3.49, 6, 0.3, 2.5, 4, 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&h=400&fit=crop&crop=center', 'Fresh broccoli florets', 5, 'manual', NOW()),
+('Salmon', 'Wild Alaskan', 'Protein', false, 18.99, 0, 12, 22, 2, 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=400&fit=crop&crop=center', 'Wild-caught Alaskan salmon, naturally sourced', 5, 'manual', NOW()),
+('Sweet Potato', 'Organic', 'Vegetables', true, 2.99, 27, 0.1, 2, 4, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=400&fit=crop&crop=center', 'Organic sweet potato', 4, 'manual', NOW()),
+('Greek Yogurt', 'Chobani', 'Dairy', false, 5.99, 9, 0.5, 15, 6, 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop&crop=center', 'Cultured pasteurized nonfat milk, live and active cultures (S. thermophilus, L. bulgaricus, L. acidophilus, bifidus, L. casei)', 4, 'manual', NOW()),
+('Quinoa', 'Ancient Harvest', 'Grains', false, 6.99, 39, 4, 8, 4, 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop&crop=center', 'Organic whole grain quinoa', 3, 'manual', NOW()),
+('Spinach', 'Fresh Market', 'Vegetables', true, 2.49, 1, 0.1, 0.9, 4, 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop&crop=center', 'Fresh baby spinach leaves', 5, 'manual', NOW()),
+('Eggs', 'Farm Fresh', 'Protein', true, 4.99, 0.6, 5, 6, 12, 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=400&h=400&fit=crop&crop=center', 'Grade A large eggs from cage-free hens', 4, 'manual', NOW()),
+('Avocado', 'Organic', 'Fruits', false, 1.99, 9, 15, 2, 1, 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=400&fit=crop&crop=center', 'Organic Hass avocado', 3, 'manual', NOW()),
+('Bananas', 'Dole', 'Fruits', true, 2.49, 27, 0.4, 1.3, 6, 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=400&h=400&fit=crop&crop=center', 'Fresh bananas', 4, 'manual', NOW()),
+('Olive Oil', 'Bertolli', 'Oils', true, 8.99, 0, 14, 0, 32, 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop&crop=center', '100% extra virgin olive oil, cold pressed', 5, 'manual', NOW()),
+('Almonds', 'Blue Diamond', 'Nuts', false, 6.99, 6, 14, 6, 8, 'https://images.unsplash.com/photo-1504672280212-9cc99ecb0d5a?w=400&h=400&fit=crop&crop=center', 'Roasted almonds, sea salt', 4, 'manual', NOW()),
+('Tomatoes', 'Garden Fresh', 'Vegetables', true, 3.99, 4, 0.2, 0.9, 4, 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400&h=400&fit=crop&crop=center', 'Fresh vine-ripened tomatoes', 5, 'manual', NOW()),
+('Oatmeal', 'Quaker', 'Grains', true, 4.49, 27, 3, 5, 8, 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=400&h=400&fit=crop&crop=center', '100% whole grain rolled oats', 4, 'manual', NOW());
 
 -- Insert sample recipes
 INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, nutrition_per_serving, tags, rating, cost_per_serving, total_cost, cost_last_calculated, notes, created_at, updated_at) VALUES

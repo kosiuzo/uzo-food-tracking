@@ -7,8 +7,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Whole Foods',
     category: 'Fruits',
     in_stock: true,
-    unit: 'pieces',
-    quantity: 6,
     price: 2.99,
     image_url: 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -27,8 +25,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Perdue',
     category: 'Meat',
     in_stock: false,
-    unit: 'lbs',
-    quantity: 0,
     price: 8.99,
     image_url: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -47,8 +43,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Uncle Ben\'s',
     category: 'Grains',
     in_stock: true,
-    unit: 'cups',
-    quantity: 4,
     price: 3.49,
     image_url: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -67,8 +61,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Fage',
     category: 'Dairy',
     in_stock: true,
-    unit: 'containers',
-    quantity: 2,
     price: 5.99,
     image_url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -87,8 +79,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Bertolli',
     category: 'Oils',
     in_stock: false,
-    unit: 'bottles',
-    quantity: 0,
     price: 7.99,
     image_url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -107,8 +97,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Fresh Market',
     category: 'Vegetables',
     in_stock: true,
-    unit: 'heads',
-    quantity: 2,
     price: 3.49,
     image_url: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -127,8 +115,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Wild Alaskan',
     category: 'Meat',
     in_stock: true,
-    unit: 'fillets',
-    quantity: 1,
     price: 18.99,
     image_url: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=400&fit=crop&crop=center',
     nutrition: {
@@ -147,8 +133,6 @@ export const mockFoodItems: FoodItem[] = [
     brand: 'Organic',
     category: 'Fruits',
     in_stock: false,
-    unit: 'pieces',
-    quantity: 0,
     price: 1.99,
     image_url: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=400&fit=crop&crop=center',
     nutrition: {

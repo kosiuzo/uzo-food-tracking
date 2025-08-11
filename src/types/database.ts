@@ -13,8 +13,6 @@ export interface Database {
           fat_per_serving: number | null
           protein_per_serving: number | null
           servings_per_container: number | null
-          unit_of_measure: string | null
-          unit_quantity: number | null
           image_url: string | null
           nutrition_source: string | null
           barcode: string | null
@@ -36,8 +34,6 @@ export interface Database {
           fat_per_serving?: number | null
           protein_per_serving?: number | null
           servings_per_container?: number | null
-          unit_of_measure?: string | null
-          unit_quantity?: number | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
@@ -59,8 +55,6 @@ export interface Database {
           fat_per_serving?: number | null
           protein_per_serving?: number | null
           servings_per_container?: number | null
-          unit_of_measure?: string | null
-          unit_quantity?: number | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null

@@ -115,8 +115,6 @@ export function useFoodInventory() {
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.in_stock !== undefined) updateData.in_stock = updates.in_stock;
       if (updates.price !== undefined) updateData.price = updates.price;
-      if (updates.unit !== undefined) updateData.unit_of_measure = updates.unit;
-      if (updates.quantity !== undefined) updateData.unit_quantity = updates.quantity;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
       if (updates.rating !== undefined) updateData.rating = updates.rating;
       if (updates.nutrition) {

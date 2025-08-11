@@ -21,8 +21,6 @@ describe('typeMappers', () => {
         fat_per_serving: 0.3,
         protein_per_serving: 0.5,
         servings_per_container: 1,
-        unit_of_measure: 'kg',
-        unit_quantity: 1,
         image_url: 'https://example.com/apple.jpg',
         nutrition_source: 'manual',
         barcode: null,
@@ -38,8 +36,6 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        unit: 'kg',
-        quantity: 1,
         price: 2.99,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
@@ -65,8 +61,6 @@ describe('typeMappers', () => {
         fat_per_serving: null,
         protein_per_serving: null,
         servings_per_container: null,
-        unit_of_measure: null,
-        unit_quantity: null,
         image_url: null,
         nutrition_source: null,
         barcode: null,
@@ -79,8 +73,6 @@ describe('typeMappers', () => {
       expect(result.brand).toBeUndefined();
       expect(result.category).toBe('Other');
       expect(result.in_stock).toBe(true);
-      expect(result.unit).toBe('unit');
-      expect(result.quantity).toBe(0);
       expect(result.price).toBeUndefined();
     });
   });
@@ -92,8 +84,6 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        unit: 'kg',
-        quantity: 1,
         price: 2.99,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
@@ -118,8 +108,6 @@ describe('typeMappers', () => {
         fat_per_serving: 0.002,
         protein_per_serving: 0.003,
         servings_per_container: 1,
-        unit_of_measure: 'kg',
-        unit_quantity: 1,
         image_url: 'https://example.com/apple.jpg',
         nutrition_source: 'manual',
         barcode: null,
@@ -133,8 +121,6 @@ describe('typeMappers', () => {
         name: 'Banana',
         category: 'Fruit',
         in_stock: true,
-        unit: 'kg',
-        quantity: 1,
         nutrition: {
           calories_per_100g: 89,
           protein_per_100g: 1.1,

@@ -23,6 +23,7 @@ export interface Database {
           rating: number | null
           last_edited: string | null
           normalized_name: string | null
+          ingredients: string | null
         }
         Insert: {
           id?: never
@@ -45,6 +46,7 @@ export interface Database {
           rating?: number | null
           last_edited?: string | null
           normalized_name?: never
+          ingredients?: string | null
         }
         Update: {
           id?: never
@@ -67,6 +69,7 @@ export interface Database {
           rating?: number | null
           last_edited?: string | null
           normalized_name?: never
+          ingredients?: string | null
         }
       }
       recipes: {

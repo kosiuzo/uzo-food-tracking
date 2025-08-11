@@ -8,6 +8,7 @@ export interface FoodItem {
   quantity: number;
   price?: number;
   image_url?: string;
+  ingredients?: string;
   nutrition: {
     calories_per_100g: number;
     protein_per_100g: number;
@@ -35,6 +36,7 @@ export interface DbItem {
   unit_of_measure?: string | null;
   unit_quantity?: number | null;
   image_url?: string | null;
+  ingredients?: string | null;
   nutrition_source?: string | null;
   barcode?: string | null;
   last_purchased?: string | null;

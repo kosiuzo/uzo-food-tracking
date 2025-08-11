@@ -130,6 +130,16 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
               </div>
             </div>
           )}
+
+          {/* Ingredients - Show if available */}
+          {item.ingredients && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="text-xs">
+                <span className="font-medium text-muted-foreground mb-1 block">Ingredients:</span>
+                <p className="text-muted-foreground leading-relaxed">{item.ingredients}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>

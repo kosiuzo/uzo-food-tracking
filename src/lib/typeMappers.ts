@@ -12,6 +12,7 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     quantity: dbItem.unit_quantity || 0,
     price: dbItem.price !== null ? Number(dbItem.price) : undefined,
     image_url: dbItem.image_url || undefined,
+    ingredients: dbItem.ingredients || undefined,
     nutrition: {
       calories_per_100g: calculateCaloriesPer100g(dbItem),
       protein_per_100g: (dbItem.protein_per_serving || 0) * 100 / (dbItem.servings_per_container || 1),
@@ -40,6 +41,7 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     unit_of_measure: item.unit,
     unit_quantity: item.quantity,
     image_url: item.image_url || null,
+    ingredients: item.ingredients || null,
     nutrition_source: 'manual',
     barcode: null,
     rating: item.rating || null,

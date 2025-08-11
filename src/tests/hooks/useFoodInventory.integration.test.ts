@@ -16,8 +16,6 @@ describe('Database Integration', () => {
         fat_per_serving: 0.2,
         protein_per_serving: 0.3,
         servings_per_container: 100, // 100g serving
-        unit_of_measure: 'kg',
-        unit_quantity: 1,
         image_url: null,
         nutrition_source: 'manual',
         barcode: null,
@@ -32,8 +30,6 @@ describe('Database Integration', () => {
       expect(foodItem.brand).toBe('Organic');
       expect(foodItem.category).toBe('Fruit');
       expect(foodItem.in_stock).toBe(true);
-      expect(foodItem.unit).toBe('kg');
-      expect(foodItem.quantity).toBe(1);
       expect(foodItem.price).toBe(2.99);
       
       // Nutrition should be calculated per 100g
@@ -58,8 +54,6 @@ describe('Database Integration', () => {
         fat_per_serving: null,
         protein_per_serving: null,
         servings_per_container: null,
-        unit_of_measure: null,
-        unit_quantity: null,
         image_url: null,
         nutrition_source: null,
         barcode: null,
@@ -74,8 +68,6 @@ describe('Database Integration', () => {
       expect(foodItem.brand).toBeUndefined();
       expect(foodItem.category).toBe('Other'); // Default value
       expect(foodItem.in_stock).toBe(true); // Default value
-      expect(foodItem.unit).toBe('unit'); // Default value
-      expect(foodItem.quantity).toBe(0); // Default value
       expect(foodItem.nutrition.calories_per_100g).toBe(0);
     });
   });
@@ -95,8 +87,6 @@ describe('Database Integration', () => {
           fat_per_serving: 0.2,
           protein_per_serving: 0.3,
           servings_per_container: 1,
-          unit_of_measure: 'piece',
-          unit_quantity: 1,
           image_url: 'test.jpg',
           nutrition_source: 'manual',
           barcode: '12345',

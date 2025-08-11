@@ -11,8 +11,6 @@ describe('Food Inventory Database Integration', () => {
       category: 'Fruit',
       in_stock: true,
       price: 2.99,
-      unit_of_measure: 'kg',
-      unit_quantity: 1,
       carbs_per_serving: 25,
       fat_per_serving: 0.3,
       protein_per_serving: 0.5,
@@ -42,8 +40,6 @@ describe('Food Inventory Database Integration', () => {
       category: 'Fruit',
       in_stock: false, // Out of stock - should appear in shopping list
       price: 1.99,
-      unit_of_measure: 'kg',
-      unit_quantity: 2, // Quantity needed
       carbs_per_serving: 27,
       fat_per_serving: 0.3,
       protein_per_serving: 1.1,
@@ -56,10 +52,10 @@ describe('Food Inventory Database Integration', () => {
     };
 
     const foodItem = dbItemToFoodItem(dbItem);
-    const expectedTotal = foodItem.price! * foodItem.quantity; // 1.99 * 2 = 3.98
+    // Since quantity field was removed, we'll use a default of 1 for calculations
+    const expectedTotal = foodItem.price! * 1; // 1.99 * 1 = 1.99
 
     expect(foodItem.price).toBe(1.99);
-    expect(foodItem.quantity).toBe(2);
-    expect(expectedTotal).toBe(3.98);
+    expect(expectedTotal).toBe(1.99);
   });
 });

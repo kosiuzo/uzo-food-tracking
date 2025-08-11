@@ -109,6 +109,7 @@ describe('typeMappers', () => {
         protein_per_serving: 0.003,
         servings_per_container: 1,
         image_url: 'https://example.com/apple.jpg',
+        ingredients: null,
         nutrition_source: 'manual',
         barcode: null,
         rating: null,

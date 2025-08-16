@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ChefHat, Clock, Users, Loader2 } from 'lucide-react';
+import { ChefHat, Clock, Users, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFoodInventory } from '@/hooks/useFoodInventory';
+import { FoodItem } from '@/types';
 
 const dietTypes = [
   { value: 'paleo', label: 'Paleo' },
@@ -62,15 +63,17 @@ const mockGeneratedRecipe = {
 };
 
 const RecipeGenerator = () => {
-  const [ingredients, setIngredients] = useState('');
+  const { allItems } = useFoodInventory();
+  const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
   const [dietType, setDietType] = useState('');
   const [inspiration, setInspiration] = useState('');
   const [generatedRecipe, setGeneratedRecipe] = useState<typeof mockGeneratedRecipe | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showIngredientDropdown, setShowIngredientDropdown] = useState(false);
 
   const handleGenerate = async () => {
-    if (!ingredients.trim()) {
-      toast.error('Please add some ingredients');
+    if (selectedIngredients.length === 0) {
+      toast.error('Please select some ingredients');
       return;
     }
     
@@ -87,7 +90,7 @@ const RecipeGenerator = () => {
       const customizedRecipe = {
         ...mockGeneratedRecipe,
         name: `${dietTypes.find(d => d.value === dietType)?.label} ${mockGeneratedRecipe.name}`,
-        description: `A delicious ${dietType} recipe using ${ingredients.split(',').slice(0, 3).join(', ')}`
+        description: `A delicious ${dietType} recipe using ${selectedIngredients.slice(0, 3).map(i => i.name).join(', ')}`
       };
       
       setGeneratedRecipe(customizedRecipe);
@@ -99,6 +102,21 @@ const RecipeGenerator = () => {
   const handleClearRecipe = () => {
     setGeneratedRecipe(null);
   };
+
+  const handleIngredientSelect = (item: FoodItem) => {
+    if (!selectedIngredients.find(ingredient => ingredient.id === item.id)) {
+      setSelectedIngredients(prev => [...prev, item]);
+    }
+    setShowIngredientDropdown(false);
+  };
+
+  const handleIngredientRemove = (itemId: string) => {
+    setSelectedIngredients(prev => prev.filter(ingredient => ingredient.id !== itemId));
+  };
+
+  const availableIngredients = allItems.filter(item => 
+    !selectedIngredients.find(selected => selected.id === item.id)
+  );
 
   return (
     <Layout>
@@ -125,14 +143,54 @@ const RecipeGenerator = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="ingredients">Ingredients*</Label>
-                <Input
-                  id="ingredients"
-                  placeholder="e.g., chicken, broccoli, rice, garlic..."
-                  value={ingredients}
-                  onChange={(e) => setIngredients(e.target.value)}
-                />
+                <div className="space-y-3">
+                  {/* Selected Ingredients */}
+                  {selectedIngredients.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIngredients.map((ingredient) => (
+                        <Badge 
+                          key={ingredient.id} 
+                          variant="secondary" 
+                          className="flex items-center gap-1 px-3 py-1"
+                        >
+                          {ingredient.name}
+                          <button
+                            onClick={() => handleIngredientRemove(ingredient.id)}
+                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Ingredient Selector */}
+                  <div className="relative">
+                    <Select onValueChange={(value) => {
+                      const item = allItems.find(item => item.id === value);
+                      if (item) handleIngredientSelect(item);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select ingredients from your inventory" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableIngredients.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            <div className="flex items-center justify-between w-full">
+                              <span>{item.name}</span>
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {item.category}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Separate ingredients with commas
+                  Select ingredients from your inventory to create a recipe
                 </p>
               </div>
 

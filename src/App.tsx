@@ -10,6 +10,7 @@ import Shopping from "./pages/Shopping";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import Planner from "./pages/Planner";
+import RecipeGenerator from "./pages/RecipeGenerator";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/shopping" element={<Shopping />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/planner" element={<Planner />} />
+          <Route path="/recipe-generator" element={<RecipeGenerator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

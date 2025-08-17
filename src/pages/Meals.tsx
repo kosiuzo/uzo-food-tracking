@@ -16,7 +16,7 @@ export default function Meals() {
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: any }>({ open: false, mealLog: null });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
 
   const recentLogs = mealLogs.slice(0, 20); // Show last 20 meals
 

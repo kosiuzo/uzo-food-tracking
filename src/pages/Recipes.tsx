@@ -22,7 +22,7 @@ export default function Recipes() {
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: any }>({ open: false, recipe: null });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
 
   const displayedRecipes = (favoritesOnly ? recipes.filter(r => r.is_favorite) : recipes);
   const toggleRecipeExpansion = (recipeId: string) => {
@@ -37,7 +37,7 @@ export default function Recipes() {
     });
   };
 
-  const handleEditRecipe = (recipe: any) => {
+  const handleEditRecipe = (recipe: Recipe) => {
     setEditingRecipe(recipe.id);
     setIsAddDialogOpen(true);
   };

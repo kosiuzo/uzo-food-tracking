@@ -1,4 +1,4 @@
-name: PR Checks
+name: Comprehensive PR Checks
 
 on:
   pull_request:

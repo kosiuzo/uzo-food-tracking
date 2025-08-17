@@ -236,10 +236,10 @@ describe('Cost Calculation Functions', () => {
 
   describe('Edge Cases and Error Handling', () => {
     it('should handle undefined and null values gracefully', () => {
-      const itemWithNullPrice = { ...mockChicken, price: null as any };
+      const itemWithNullPrice = { ...mockChicken, price: null as unknown };
       expect(calculateCostPerUnit(itemWithNullPrice)).toBe(0);
       
-      const itemWithUndefinedQuantity = { ...mockChicken, quantity: undefined as any };
+      const itemWithUndefinedQuantity = { ...mockChicken, quantity: undefined as unknown };
       expect(calculateCostPerUnit(itemWithUndefinedQuantity)).toBe(0);
     });
 

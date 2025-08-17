@@ -54,7 +54,7 @@ interface ProductInfo {
 export class OpenFoodFactsService {
   private readonly baseUrl: string;
   private readonly userAgent: string;
-  private readonly cache = new Map<string, { data: any; timestamp: number }>();
+  private readonly cache = new Map<string, { data: unknown; timestamp: number }>();
   private readonly cacheTimeout = 15 * 60 * 1000; // 15 minutes
 
   constructor() {
@@ -65,7 +65,7 @@ export class OpenFoodFactsService {
     this.userAgent = `${appName}/${appVersion} (${contactEmail})`;
   }
 
-  private async makeRequest(url: string): Promise<any> {
+  private async makeRequest(url: string): Promise<unknown> {
     const cacheKey = url;
     const cached = this.cache.get(cacheKey);
     
@@ -90,7 +90,7 @@ export class OpenFoodFactsService {
     return data;
   }
 
-  private mapNutrition(nutriments: any): NutritionData {
+  private mapNutrition(nutriments: OpenFoodFactsProduct['product']['nutriments']): NutritionData {
     return {
       calories: nutriments?.['energy-kcal_100g'] || 0,
       protein: nutriments?.['proteins_100g'] || 0,
@@ -185,7 +185,7 @@ export class OpenFoodFactsService {
     }
   }
 
-  private isProductRelevant(product: any, query: string): boolean {
+  private isProductRelevant(product: OpenFoodFactsProduct['product'], query: string): boolean {
     const searchTerm = query.toLowerCase().trim();
     const productName = (product.product_name || '').toLowerCase();
     const brandName = (product.brands || '').toLowerCase();
@@ -205,7 +205,7 @@ export class OpenFoodFactsService {
            );
   }
 
-  private calculateRelevanceScore(product: any, query: string): number {
+  private calculateRelevanceScore(product: OpenFoodFactsProduct['product'], query: string): number {
     const searchTerm = query.toLowerCase().trim();
     const productName = (product.product_name || '').toLowerCase();
     const brandName = (product.brands || '').toLowerCase();

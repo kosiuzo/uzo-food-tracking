@@ -138,7 +138,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
       const numericId = parseInt(id);
       
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
-      let nutritionToSave = updates.nutrition;
+      const nutritionToSave = updates.nutrition;
       
       // Update recipe
       const { error: recipeError } = await supabase

@@ -109,7 +109,7 @@ export function useFoodInventory() {
     try {
       const numericId = parseInt(id);
       // Build update object, only including fields that are actually being updated
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.brand !== undefined) updateData.brand = updates.brand || null;
       if (updates.category !== undefined) updateData.category = updates.category;

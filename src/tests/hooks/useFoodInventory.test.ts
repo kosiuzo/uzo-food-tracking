@@ -48,7 +48,7 @@ describe('useFoodInventory', () => {
           error: null,
         }),
       }),
-    } as any);
+    } as unknown);
 
     const { result } = renderHook(() => useFoodInventory());
 
@@ -73,7 +73,7 @@ describe('useFoodInventory', () => {
           error: mockError,
         })),
       })),
-    } as any);
+    } as unknown);
 
     const { result } = renderHook(() => useFoodInventory());
 
@@ -114,7 +114,7 @@ describe('useFoodInventory', () => {
           error: null,
         })),
       })),
-    } as any);
+    } as unknown);
 
     // Mock insert
     mockSupabase.from.mockReturnValueOnce({
@@ -123,10 +123,10 @@ describe('useFoodInventory', () => {
           single: vi.fn(() => Promise.resolve({
             data: mockInsertedItem,
             error: null,
-          })),
+        })),
         })),
       })),
-    } as any);
+    } as unknown);
 
     const { result } = renderHook(() => useFoodInventory());
 
@@ -205,7 +205,7 @@ describe('useFoodInventory', () => {
           error: null,
         })),
       })),
-    } as any);
+    } as unknown);
 
     const { result } = renderHook(() => useFoodInventory());
 

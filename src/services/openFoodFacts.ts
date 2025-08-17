@@ -132,26 +132,112 @@ export class OpenFoodFactsService {
   async searchProducts(query: string, limit: number = 10): Promise<ProductInfo[]> {
     try {
       const encodedQuery = encodeURIComponent(query);
-      const url = `${this.baseUrl}/search?search_terms=${encodedQuery}&fields=product_name,brands,ingredients_text,nutriments,categories_tags,image_url,serving_size&page_size=${limit}&sort_by=unique_scans_n`;
-      const data: OpenFoodFactsSearchResult = await this.makeRequest(url);
+      
+      // Try multiple search strategies to get better results
+      const searchStrategies = [
+        // Strategy 1: Search with product_name sorting for better relevance
+        `${this.baseUrl}/search?search_terms=${encodedQuery}&fields=product_name,brands,ingredients_text,nutriments,categories_tags,image_url,serving_size&page_size=${limit * 2}&sort_by=product_name`,
+        
+        // Strategy 2: Search without sorting (default relevance)
+        `${this.baseUrl}/search?search_terms=${encodedQuery}&fields=product_name,brands,ingredients_text,nutriments,categories_tags,image_url,serving_size&page_size=${limit * 2}`,
+        
+        // Strategy 3: Search with popularity sorting as fallback
+        `${this.baseUrl}/search?search_terms=${encodedQuery}&fields=product_name,brands,ingredients_text,nutriments,categories_tags,image_url,serving_size&page_size=${limit * 2}&sort_by=unique_scans_n`
+      ];
 
-      return data.products
-        .filter(product => product?.product_name)
-        .map(product => ({
-          name: product.product_name || 'Unknown Product',
-          brand: product.brands,
-          nutrition: this.mapNutrition(product.nutriments),
-          ingredients: product.ingredients_text,
-          categories: product.categories_tags?.map(tag => 
-            tag.replace('en:', '').replace(/-/g, ' ')
-          ),
-          imageUrl: product.image_url,
-          servingSize: product.serving_size,
-        }));
+      for (const url of searchStrategies) {
+        try {
+          const data: OpenFoodFactsSearchResult = await this.makeRequest(url);
+          
+          // Filter and rank results by relevance to the search query
+          const relevantProducts = data.products
+            .filter(product => product?.product_name)
+            .filter(product => this.isProductRelevant(product, query))
+            .sort((a, b) => this.calculateRelevanceScore(b, query) - this.calculateRelevanceScore(a, query))
+            .slice(0, limit)
+            .map(product => ({
+              name: product.product_name || 'Unknown Product',
+              brand: product.brands,
+              nutrition: this.mapNutrition(product.nutriments),
+              ingredients: product.ingredients_text,
+              categories: product.categories_tags?.map(tag => 
+                tag.replace('en:', '').replace(/-/g, ' ')
+              ),
+              imageUrl: product.image_url,
+              servingSize: product.serving_size,
+            }));
+
+          // If we found relevant results, return them
+          if (relevantProducts.length > 0) {
+            return relevantProducts;
+          }
+        } catch (error) {
+          console.warn(`Search strategy failed for ${url}:`, error);
+          continue;
+        }
+      }
+
+      // If no relevant results found with any strategy, return empty array
+      return [];
     } catch (error) {
       console.error('Error searching products:', error);
       throw new Error('Failed to search products');
     }
+  }
+
+  private isProductRelevant(product: any, query: string): boolean {
+    const searchTerm = query.toLowerCase().trim();
+    const productName = (product.product_name || '').toLowerCase();
+    const brandName = (product.brands || '').toLowerCase();
+    const ingredients = (product.ingredients_text || '').toLowerCase();
+    
+    // Check if the search term appears in product name, brand, or ingredients
+    return productName.includes(searchTerm) || 
+           brandName.includes(searchTerm) || 
+           ingredients.includes(searchTerm) ||
+           // Also check individual words in case of compound search terms
+           searchTerm.split(' ').some(word => 
+             word.length > 2 && (
+               productName.includes(word) || 
+               brandName.includes(word) || 
+               ingredients.includes(word)
+             )
+           );
+  }
+
+  private calculateRelevanceScore(product: any, query: string): number {
+    const searchTerm = query.toLowerCase().trim();
+    const productName = (product.product_name || '').toLowerCase();
+    const brandName = (product.brands || '').toLowerCase();
+    
+    let score = 0;
+    
+    // Exact match in product name gets highest score
+    if (productName === searchTerm) {
+      score += 100;
+    }
+    // Product name starts with search term
+    else if (productName.startsWith(searchTerm)) {
+      score += 50;
+    }
+    // Product name contains search term
+    else if (productName.includes(searchTerm)) {
+      score += 25;
+    }
+    
+    // Brand name matches
+    if (brandName.includes(searchTerm)) {
+      score += 10;
+    }
+    
+    // Prefer products with more complete nutrition data
+    if (product.nutriments) {
+      const nutritionFields = ['energy-kcal_100g', 'proteins_100g', 'carbohydrates_100g', 'fat_100g'];
+      const filledFields = nutritionFields.filter(field => product.nutriments[field] != null).length;
+      score += filledFields * 2;
+    }
+    
+    return score;
   }
 
   async getProductWithRetry(barcode: string, maxRetries: number = 3): Promise<ProductInfo | null> {
@@ -174,7 +260,16 @@ export class OpenFoodFactsService {
   async searchProductsWithRetry(query: string, limit: number = 10, maxRetries: number = 3): Promise<ProductInfo[]> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.searchProducts(query, limit);
+        const results = await this.searchProducts(query, limit);
+        // Only retry if we got no results and haven't exhausted attempts
+        if (results.length > 0 || attempt === maxRetries) {
+          return results;
+        }
+        
+        // If no results, wait before retrying with a different approach
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
       } catch (error) {
         if (attempt === maxRetries) {
           console.error(`Failed to search products after ${maxRetries} attempts:`, error);

@@ -32,13 +32,13 @@ describe('Food Inventory Database Integration', () => {
     expect(foodItem.price).toBe(2.99);
   });
 
-  it('should handle price calculations for shopping', () => {
+  it('should handle price calculations for out-of-stock items', () => {
     const dbItem: DbItem = {
       id: 1,
       name: 'Banana',
       brand: null,
       category: 'Fruit',
-      in_stock: false, // Out of stock - should appear in shopping list
+      in_stock: false, // Out of stock item
       price: 1.99,
       carbs_per_serving: 27,
       fat_per_serving: 0.3,

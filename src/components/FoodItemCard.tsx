@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { format, parseISO } from 'date-fns';
+import { getFoodItemImage } from '@/lib/utils';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -22,17 +23,16 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
       <div className="flex items-center gap-3">
         {/* Image */}
         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-          {item.image_url ? (
-            <img
-              src={item.image_url}
-              alt={item.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              <span className="text-xs">No image</span>
-            </div>
-          )}
+          <img
+            src={getFoodItemImage(item.image_url, item.category)}
+            alt={item.name}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              // Fallback to category default if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.src = getFoodItemImage('', item.category);
+            }}
+          />
         </div>
 
         {/* Content */}

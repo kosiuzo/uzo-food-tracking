@@ -18,7 +18,7 @@ interface AddEditItemDialogProps {
   onSave: (item: Omit<FoodItem, 'id' | 'last_edited'>) => void;
 }
 
-const categories = ['Fruits', 'Vegetables', 'Meat', 'Dairy', 'Grains', 'Snacks', 'Beverages', 'Oils', 'Spices'];
+const categories = ['Fruits', 'Vegetables', 'Proteins', 'Dairy & Eggs', 'Grains & Starches', 'Snacks', 'Beverages', 'Oils & Fats', 'Seasonings & Spices', 'Condiments & Sauces', 'Baking Supplies'];
 
 export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditItemDialogProps) {
   const { toast } = useToast();
@@ -349,6 +349,29 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
               checked={formData.in_stock}
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked }))}
             />
+          </div>
+
+          {/* Image URL */}
+          <div className="space-y-2">
+            <Label htmlFor="image_url">Image URL</Label>
+            <Input
+              id="image_url"
+              value={formData.image_url}
+              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+              placeholder="e.g., https://example.com/product-image.jpg"
+            />
+            {formData.image_url && (
+              <div className="mt-2">
+                <img 
+                  src={formData.image_url} 
+                  alt="Product preview" 
+                  className="w-20 h-20 object-cover rounded-md border"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Ingredients */}

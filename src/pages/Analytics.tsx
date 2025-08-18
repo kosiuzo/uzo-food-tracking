@@ -1,15 +1,19 @@
 import { TrendingUp, DollarSign, Target, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Layout } from '../components/Layout';
 import { useMealLogs } from '../hooks/useMealLogs';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 
 export default function Analytics() {
-  const { mealLogs, getRecentMealLogs } = useMealLogs();
-  const { allItems } = useFoodInventory();
+  const { mealLogs, getRecentMealLogs, usingMockData: mealLogsUsingMock, loading: mealLogsLoading, error: mealLogsError } = useMealLogs();
+  const { allItems, usingMockData: inventoryUsingMock, loading: inventoryLoading, error: inventoryError } = useFoodInventory();
 
   const recentLogs = getRecentMealLogs(7);
+  const loading = mealLogsLoading || inventoryLoading;
+  const error = mealLogsError || inventoryError;
+  const usingMockData = mealLogsUsingMock || inventoryUsingMock;
   
   // Calculate averages
   const totalMeals = recentLogs.length;
@@ -47,8 +51,48 @@ export default function Analytics() {
           <p className="text-muted-foreground">Your food tracking insights</p>
         </div>
 
-        {/* Weekly Overview */}
-        <div className="space-y-4">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-muted-foreground">Loading analytics data...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !usingMockData && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-800">Error loading analytics data: {error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-2"
+              variant="outline"
+            >
+              Reload Page
+            </Button>
+          </div>
+        )}
+
+        {/* Mock Data Indicator */}
+        {usingMockData && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+              <p className="text-sm text-amber-800">
+                <strong>Demo Mode:</strong> Showing sample analytics with realistic data. 
+                Connect to Supabase to see your real food tracking insights and history.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Content when not loading */}
+        {!loading && (
+          <>
+            {/* Weekly Overview */}
+            <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             This Week (Last 7 Days)
@@ -151,6 +195,8 @@ export default function Analytics() {
             <div className="text-sm text-muted-foreground">In Stock</div>
           </Card>
         </div>
+          </>
+        )}
       </div>
     </Layout>
   );

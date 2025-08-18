@@ -3,22 +3,47 @@ import { Plus, Calendar, Utensils, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Layout } from '../components/Layout';
 import { LogMealDialog } from '../components/LogMealDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useMealLogs } from '../hooks/useMealLogs';
 import { useRecipes } from '../hooks/useRecipes';
 import { useToast } from '@/hooks/use-toast';
+import { MealLog } from '../types';
 
 export default function Meals() {
-  const { mealLogs, addMealLog, updateMealLog, deleteMealLog } = useMealLogs();
+  const { mealLogs, addMealLog, updateMealLog, deleteMealLog, usingMockData, error, loading } = useMealLogs();
   const { getRecipeById } = useRecipes();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
-  const [editingMealLog, setEditingMealLog] = useState(null);
+  const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
-  const recentLogs = mealLogs.slice(0, 20); // Show last 20 meals
+  // Debug logging
+  console.log('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
+
+  // Ensure mealLogs is always an array
+  const safeMealLogs = Array.isArray(mealLogs) ? mealLogs : [];
+
+  // Filter meals by selected date or show all if no date selected
+  const filteredMeals = selectedDate 
+    ? safeMealLogs.filter(log => log.date === selectedDate)
+    : safeMealLogs;
+
+  const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
+
+  // Safety check for recipes
+  const safeGetRecipeById = (id: string) => {
+    try {
+      return getRecipeById(id);
+    } catch (err) {
+      console.warn('Error getting recipe by ID:', err);
+      return null;
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -62,101 +87,252 @@ export default function Meals() {
           <p className="text-muted-foreground">Track your daily meals and nutrition</p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{mealLogs.length}</div>
-            <div className="text-sm text-muted-foreground">Total Meals</div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {mealLogs.reduce((sum, log) => sum + log.nutrition.calories, 0).toFixed(1)}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-sm text-muted-foreground">Loading meal logs...</p>
             </div>
-            <div className="text-sm text-muted-foreground">Total Calories</div>
-          </Card>
-        </div>
+          </div>
+        )}
 
-        {/* Recent Meals */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Recent Meals</h2>
-          
-          {recentLogs.length === 0 ? (
-            <div className="text-center py-8">
-              <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">No meals logged yet</p>
-            </div>
-          ) : (
-            recentLogs.map(log => {
-              const recipe = log.recipe_id ? getRecipeById(log.recipe_id) : null;
+        {/* Error State */}
+        {error && !usingMockData && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-800">Error loading meal logs: {error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-2"
+              variant="outline"
+            >
+              Reload Page
+            </Button>
+          </div>
+        )}
+
+        {/* Content when not loading */}
+        {!loading && (
+          <>
+            {/* Mock Data Indicator */}
+            {usingMockData && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+                  <p className="text-sm text-amber-800">
+                    <strong>Demo Mode:</strong> Showing sample meal logs with realistic data. 
+                    Connect to Supabase to see your real meal history.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Date Filter */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="date-filter" className="text-sm font-medium">Filter by Date:</Label>
+                </div>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-40"
+                />
+                {selectedDate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDate('')}
+                    className="h-8 px-2"
+                  >
+                    Clear Filter
+                  </Button>
+                )}
+              </div>
               
-              return (
-                <Card key={log.id} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-medium">{log.meal_name}</h3>
-                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(log.date)}
+              {/* Quick Date Navigation */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Quick select:</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  className="h-7 px-2 text-xs"
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    setSelectedDate(yesterday.toISOString().split('T')[0]);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Yesterday
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const thisWeek = new Date();
+                    thisWeek.setDate(thisWeek.getDate() - 7);
+                    setSelectedDate(thisWeek.toISOString().split('T')[0]);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  This Week
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const lastWeek = new Date();
+                    lastWeek.setDate(lastWeek.getDate() - 14);
+                    setSelectedDate(lastWeek.toISOString().split('T')[0]);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Last Week
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedDate ? 'Meals on ' + new Date(selectedDate).toLocaleDateString() : 'Total Meals'}
+                </div>
+              </Card>
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.calories, 0).toFixed(1)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedDate ? 'Calories on ' + new Date(selectedDate).toLocaleDateString() : 'Total Calories'}
+                </div>
+              </Card>
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  ${filteredMeals.reduce((sum, log) => sum + log.estimated_cost, 0).toFixed(2)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedDate ? 'Cost on ' + new Date(selectedDate).toLocaleDateString() : 'Total Cost'}
+                </div>
+              </Card>
+            </div>
+
+            {/* Recent Meals */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  {selectedDate ? `Meals on ${new Date(selectedDate).toLocaleDateString()}` : 'Recent Meals'}
+                </h2>
+                {selectedDate && (
+                  <Badge variant="outline" className="text-xs">
+                    {filteredMeals.length} meal{filteredMeals.length !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
+              
+              {recentLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    {selectedDate 
+                      ? `No meals logged on ${new Date(selectedDate).toLocaleDateString()}`
+                      : 'No meals logged yet'
+                    }
+                  </p>
+                </div>
+              ) : (
+                recentLogs.map(log => {
+                  const recipes = log.recipe_ids.map(id => safeGetRecipeById(id)).filter(Boolean);
+                  
+                  return (
+                    <Card key={log.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium">{log.meal_name}</h3>
+                            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              {formatDate(log.date)}
+                            </div>
+                            {recipes.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                <div className="text-xs text-muted-foreground">
+                                  Recipes ({recipes.length}):
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {recipes.map((recipe, index) => (
+                                    <Badge key={recipe.id} variant="outline" className="text-xs">
+                                      {recipe.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingMealLog(log);
+                                setIsLogDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setDeleteConfirm({ open: true, mealLog: log })}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <Badge variant="secondary" className="text-green-600">
+                              ${log.estimated_cost.toFixed(2)}
+                            </Badge>
+                          </div>
                         </div>
-                        {recipe && (
-                          <Badge variant="outline" className="mt-2">
-                            Recipe: {recipe.name}
-                          </Badge>
+
+                        {/* Nutrition */}
+                        <div className="flex gap-4 text-xs">
+                          <span className="font-medium">
+                            {log.nutrition.calories.toFixed(1)} cal
+                          </span>
+                          <span className="text-muted-foreground">
+                            P: {log.nutrition.protein.toFixed(1)}g
+                          </span>
+                          <span className="text-muted-foreground">
+                            C: {log.nutrition.carbs.toFixed(1)}g
+                          </span>
+                          <span className="text-muted-foreground">
+                            F: {log.nutrition.fat.toFixed(1)}g
+                          </span>
+                        </div>
+
+                        {log.notes && (
+                          <p className="text-sm text-muted-foreground">{log.notes}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingMealLog(log);
-                            setIsLogDialogOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setDeleteConfirm({ open: true, mealLog: log })}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                        {recipe && recipe.total_cost && (
-                          <Badge variant="secondary">
-                            ${recipe.total_cost.toFixed(2)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Nutrition */}
-                    <div className="flex gap-4 text-xs">
-                      <span className="font-medium">
-                        {log.nutrition.calories.toFixed(1)} cal
-                      </span>
-                      <span className="text-muted-foreground">
-                        P: {log.nutrition.protein.toFixed(1)}g
-                      </span>
-                      <span className="text-muted-foreground">
-                        C: {log.nutrition.carbs.toFixed(1)}g
-                      </span>
-                      <span className="text-muted-foreground">
-                        F: {log.nutrition.fat.toFixed(1)}g
-                      </span>
-                    </div>
-
-                    {log.notes && (
-                      <p className="text-sm text-muted-foreground">{log.notes}</p>
-                    )}
-                  </div>
-                </Card>
-              );
-            })
-          )}
-        </div>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
 
         {/* Floating Add Button */}
         <Button

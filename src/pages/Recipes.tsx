@@ -215,35 +215,48 @@ export default function Recipes() {
                     )}
                   </div>
 
-                  {/* Ingredients list */}
-<div className="space-y-1">
-                    <p className="text-sm font-medium">Ingredients ({recipe.ingredients.length}):</p>
-                    <div className="text-sm text-muted-foreground space-y-1" aria-live="polite">
+                                    {/* Ingredients list */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <p className="text-sm font-semibold text-gray-800">Ingredients ({recipe.ingredients.length})</p>
+                    </div>
+                    <div className="space-y-2.5" aria-live="polite">
                       {(expandedRecipes.has(recipe.id) ? recipe.ingredients : recipe.ingredients.slice(0, 3)).map((ingredient, idx) => {
                         const item = allItems.find(item => item.id === ingredient.item_id);
                         return (
-                          <div key={idx}>
-                            {ingredient.quantity} {ingredient.unit} {item?.name || 'Unknown item'}
+                          <div key={idx} className="flex items-center gap-3 text-sm bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-gray-900">{ingredient.quantity}</span>
+                              <span className="text-sm text-gray-500 ml-1">{ingredient.unit}</span>
+                              <span className="text-gray-700 ml-2 font-medium">{item?.name || 'Unknown item'}</span>
+                            </div>
                           </div>
                         );
                       })}
                       {!expandedRecipes.has(recipe.id) && recipe.ingredients.length > 3 && (
-                        <div className="text-xs">+ {recipe.ingredients.length - 3} more ingredients</div>
+                        <div className="text-xs text-gray-500 ml-9 bg-gray-50 rounded-lg p-2 border border-gray-100">+ {recipe.ingredients.length - 3} more ingredients</div>
                       )}
                     </div>
                   </div>
 
                   {/* Instructions - only show when expanded */}
                   {expandedRecipes.has(recipe.id) && (
-                    <div className="space-y-2 border-t pt-3">
-                      <p className="text-sm font-medium">Instructions:</p>
-                      <div className="space-y-2">
+                    <div className="space-y-3 border-t pt-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <p className="text-sm font-semibold text-gray-800">Instructions</p>
+                      </div>
+                      <div className="space-y-3">
                         {recipe.instructions.split('\n').filter(step => step.trim()).map((step, idx) => (
-                          <div key={idx} className="flex gap-3 text-sm">
-                            <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
+                          <div key={idx} className="flex gap-3 text-sm bg-green-50 rounded-lg p-3 border border-green-100">
+                            <div className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
                               {idx + 1}
                             </div>
-                            <div className="text-muted-foreground">{step.trim()}</div>
+                            <div className="text-gray-700 leading-relaxed">{step.trim().replace(/^\d+\.\s*/, '')}</div>
                           </div>
                         ))}
                       </div>

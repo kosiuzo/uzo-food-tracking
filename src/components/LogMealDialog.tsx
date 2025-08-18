@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { X, Plus, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '../hooks/useRecipes';
-import { MealLog } from '../types';
+import { MealLog, Recipe } from '../types';
 
 interface LogMealDialogProps {
   open: boolean;
@@ -21,7 +23,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   const { allRecipes } = useRecipes();
   
   const [formData, setFormData] = useState({
-    recipe_id: '',
+    recipe_ids: [] as string[],
     date: new Date().toISOString().split('T')[0],
     meal_name: '',
     notes: '',
@@ -38,7 +40,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   useEffect(() => {
     if (editingMealLog) {
       setFormData({
-        recipe_id: editingMealLog.recipe_id || '',
+        recipe_ids: editingMealLog.recipe_ids || [],
         date: editingMealLog.date,
         meal_name: editingMealLog.meal_name,
         notes: editingMealLog.notes || '',
@@ -48,7 +50,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     } else if (open) {
       // Reset form when opening for new meal log
       setFormData({
-        recipe_id: '',
+        recipe_ids: [],
         date: new Date().toISOString().split('T')[0],
         meal_name: '',
         notes: '',
@@ -63,33 +65,61 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     }
   }, [editingMealLog, open]);
 
-  const selectedRecipe = formData.recipe_id ? allRecipes.find(r => r.id === formData.recipe_id) : null;
+  const selectedRecipes = formData.recipe_ids.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
 
-  const handleRecipeSelect = (recipeId: string) => {
+  const calculateCombinedNutrition = (recipes: Recipe[]) => {
+    if (recipes.length === 0) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    
+    return recipes.reduce((total, recipe) => ({
+      calories: total.calories + recipe.nutrition.calories_per_serving,
+      protein: total.protein + recipe.nutrition.protein_per_serving,
+      carbs: total.carbs + recipe.nutrition.carbs_per_serving,
+      fat: total.fat + recipe.nutrition.fat_per_serving,
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  };
+
+  const calculateCombinedCost = (recipes: Recipe[]) => {
+    return recipes.reduce((total, recipe) => total + (recipe.cost_per_serving || 0), 0);
+  };
+
+  const handleAddRecipe = (recipeId: string) => {
+    if (formData.recipe_ids.includes(recipeId)) return;
+    
     const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
+      const newRecipeIds = [...formData.recipe_ids, recipeId];
+      const newRecipes = newRecipeIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
+      
       setFormData(prev => ({
         ...prev,
-        recipe_id: recipeId,
-        meal_name: recipe.name,
-        nutrition: {
-          calories: recipe.nutrition.calories_per_serving,
-          protein: recipe.nutrition.protein_per_serving,
-          carbs: recipe.nutrition.carbs_per_serving,
-          fat: recipe.nutrition.fat_per_serving,
-        },
-        estimated_cost: recipe.cost_per_serving || 0,
+        recipe_ids: newRecipeIds,
+        meal_name: newRecipes.length === 1 ? newRecipes[0].name : `${newRecipes.length} Recipe Combo`,
+        nutrition: calculateCombinedNutrition(newRecipes),
+        estimated_cost: calculateCombinedCost(newRecipes),
       }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleRemoveRecipe = (recipeId: string) => {
+    const newRecipeIds = formData.recipe_ids.filter(id => id !== recipeId);
+    const newRecipes = newRecipeIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
+    
+    setFormData(prev => ({
+      ...prev,
+      recipe_ids: newRecipeIds,
+      meal_name: newRecipes.length === 1 ? newRecipes[0].name : newRecipes.length > 0 ? `${newRecipes.length} Recipe Combo` : '',
+      nutrition: calculateCombinedNutrition(newRecipes),
+      estimated_cost: calculateCombinedCost(newRecipes),
+    }));
+  };
+
+    const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.recipe_id) {
+    if (formData.recipe_ids.length === 0) {
       toast({
         title: "Missing recipe",
-        description: "Please select a recipe.",
+        description: "Please select at least one recipe.",
         variant: "destructive",
       });
       return;
@@ -103,12 +133,12 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       });
       return;
     }
-
+    
     onSave(formData);
     
     // Reset form
     setFormData({
-      recipe_id: '',
+      recipe_ids: [],
       date: new Date().toISOString().split('T')[0],
       meal_name: '',
       notes: '',
@@ -129,7 +159,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingMealLog ? 'Edit Meal' : 'Log a Meal'}</DialogTitle>
           <DialogDescription>
@@ -148,18 +178,72 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="recipe">Recipe *</Label>
-            <Select value={formData.recipe_id} onValueChange={handleRecipeSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a recipe" />
-              </SelectTrigger>
-              <SelectContent>
-                {allRecipes.map(recipe => (
-                  <SelectItem key={recipe.id} value={recipe.id}>{recipe.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Recipe Selection */}
+          <div className="space-y-3">
+            <Label>Recipes *</Label>
+            
+            {/* Selected Recipes Display */}
+            {selectedRecipes.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Selected Recipes:</Label>
+                <div className="space-y-2">
+                  {selectedRecipes.map((recipe, index) => (
+                    <Card key={recipe.id} className="p-3 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Utensils className="h-4 w-4 text-primary" />
+                          <div>
+                            <div className="font-medium text-sm">{recipe.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {recipe.nutrition.calories_per_serving.toFixed(0)} cal • 
+                              P: {recipe.nutrition.protein_per_serving.toFixed(1)}g • 
+                              C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g • 
+                              F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveRecipe(recipe.id)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recipe Picker */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Add Recipe:</Label>
+              <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                {allRecipes
+                  .filter(recipe => !formData.recipe_ids.includes(recipe.id))
+                  .map(recipe => (
+                    <Button
+                      key={recipe.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddRecipe(recipe.id)}
+                      className="justify-start h-auto p-2"
+                    >
+                      <Plus className="h-3 w-3 mr-2" />
+                      <div className="text-left">
+                        <div className="font-medium text-xs">{recipe.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {recipe.nutrition.calories_per_serving.toFixed(0)} cal
+                        </div>
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -172,30 +256,35 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
             />
           </div>
 
-          {/* Nutrition & Cost (Read-only from Recipe) */}
-          {selectedRecipe && (
+          {/* Nutrition & Cost (Combined from Recipes) */}
+          {selectedRecipes.length > 0 && (
             <div className="space-y-3 bg-muted/50 p-3 rounded-md">
-              <Label>Nutrition & Cost (from recipe)</Label>
+              <Label>Combined Nutrition & Cost</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm">
-                    <span className="font-medium">Calories:</span> {selectedRecipe.nutrition.calories_per_serving.toFixed(1)}
+                    <span className="font-medium">Calories:</span> {formData.nutrition.calories.toFixed(1)}
                   </div>
                   <div className="text-sm">
-                    <span className="font-medium">Protein:</span> {selectedRecipe.nutrition.protein_per_serving.toFixed(1)}g
+                    <span className="font-medium">Protein:</span> {formData.nutrition.protein.toFixed(1)}g
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm">
-                    <span className="font-medium">Carbs:</span> {selectedRecipe.nutrition.carbs_per_serving.toFixed(1)}g
+                    <span className="font-medium">Carbs:</span> {formData.nutrition.carbs.toFixed(1)}g
                   </div>
                   <div className="text-sm">
-                    <span className="font-medium">Fat:</span> {selectedRecipe.nutrition.fat_per_serving.toFixed(1)}g
+                    <span className="font-medium">Fat:</span> {formData.nutrition.fat.toFixed(1)}g
                   </div>
                 </div>
               </div>
               <div className="text-sm border-t pt-2">
-                <span className="font-medium">Cost per serving:</span> ${(selectedRecipe.cost_per_serving || 0).toFixed(2)}
+                <span className="font-medium">Total cost:</span> ${formData.estimated_cost.toFixed(2)}
+                {selectedRecipes.length > 1 && (
+                  <span className="text-muted-foreground ml-2">
+                    ({selectedRecipes.length} recipes)
+                  </span>
+                )}
               </div>
             </div>
           )}

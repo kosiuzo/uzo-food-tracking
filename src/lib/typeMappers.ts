@@ -101,7 +101,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
   
   return {
     id: dbMealLog.id.toString(),
-    recipe_id: dbMealLog.recipe_id.toString(),
+    recipe_ids: [dbMealLog.recipe_id.toString()], // Convert single recipe_id to array
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
     meal_name: 'Meal', // Default name since it's not in the database
     notes: dbMealLog.notes || undefined,
@@ -117,8 +117,12 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
 
 // Convert MealLog to database insert format
 export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog, 'id' | 'created_at'> {
+  // For now, we'll use the first recipe_id for database compatibility
+  // In the future, we might want to create a separate table for multiple recipes per meal
+  const firstRecipeId = mealLog.recipe_ids.length > 0 ? parseInt(mealLog.recipe_ids[0]) : null;
+  
   return {
-    recipe_id: parseInt(mealLog.recipe_id), // Now mandatory, no null check needed
+    recipe_id: firstRecipeId,
     cooked_at: mealLog.date,
     notes: mealLog.notes || null,
     rating: null,

@@ -268,10 +268,9 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="g">grams (g)</SelectItem>
-                        <SelectItem value="cup">cup</SelectItem>
-                        <SelectItem value="tbsp">tablespoon</SelectItem>
-                        <SelectItem value="tsp">teaspoon</SelectItem>
-                        <SelectItem value="piece">piece</SelectItem>
+                        <SelectItem value="kg">kilograms (kg)</SelectItem>
+                        <SelectItem value="oz">ounces (oz)</SelectItem>
+                        <SelectItem value="lb">pounds (lb)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

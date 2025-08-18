@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { mockMealPlan } from '../data/mockData';
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
 
@@ -14,6 +15,7 @@ export function useMealPlan() {
   const [plan, setPlan] = useState<MealPlanEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     loadMealPlan();
@@ -37,14 +39,39 @@ export function useMealPlan() {
       }));
       
       setPlan(mappedPlan);
+      setUsingMockData(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load meal plan');
+      console.warn('Failed to load meal plan from Supabase, using mock data:', err);
+      setPlan(mockMealPlan);
+      setUsingMockData(true);
+      setError(null); // Clear error since we're using fallback data
     } finally {
       setLoading(false);
     }
   };
 
   const setMeal = async (date: string, mealType: MealType, recipeId: string) => {
+    if (usingMockData) {
+      // In demo mode, just update local state
+      const newEntry: MealPlanEntry = {
+        id: Math.random().toString(),
+        date,
+        mealType,
+        recipeId,
+      };
+      
+      setPlan((prev) => {
+        const idx = prev.findIndex((p) => p.date === date && p.mealType === mealType);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = newEntry;
+          return updated;
+        }
+        return [...prev, newEntry];
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('meal_plans')
@@ -81,6 +108,12 @@ export function useMealPlan() {
   };
 
   const clearMeal = async (date: string, mealType: MealType) => {
+    if (usingMockData) {
+      // In demo mode, just update local state
+      setPlan((prev) => prev.filter((p) => !(p.date === date && p.mealType === mealType)));
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('meal_plans')
@@ -116,6 +149,7 @@ export function useMealPlan() {
     plan, 
     loading,
     error,
+    usingMockData,
     setMeal, 
     clearMeal, 
     getPlanForDate, 

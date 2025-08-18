@@ -70,19 +70,8 @@ jobs:
     - name: Check for known vulnerabilities
       run: npx audit-ci --moderate
 
-  dependency-review:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Dependency Review
-      uses: actions/dependency-review-action@v4
-      with:
-        fail-on-severity: moderate
-        allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, Unlicense
+  # dependency-review job removed - requires GitHub Advanced Security features
+  # that are not available on this repository
 
   code-quality:
     runs-on: ubuntu-latest
@@ -156,7 +145,7 @@ jobs:
 
   summary:
     runs-on: ubuntu-latest
-    needs: [test, security, dependency-review, code-quality, build-verification]
+    needs: [test, security, code-quality, build-verification]
     if: always()
     
     steps:
@@ -182,11 +171,7 @@ jobs:
           echo "| ❌ Security | Failed |" >> $GITHUB_STEP_SUMMARY
         fi
         
-        if [ "${{ needs.dependency-review.result }}" == "success" ]; then
-          echo "| ✅ Dependencies | Passed |" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "| ❌ Dependencies | Failed |" >> $GITHUB_STEP_SUMMARY
-        fi
+        # Dependency review removed - requires GitHub Advanced Security features
         
         if [ "${{ needs.code-quality.result }}" == "success" ]; then
           echo "| ✅ Code Quality | Passed |" >> $GITHUB_STEP_SUMMARY

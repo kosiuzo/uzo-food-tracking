@@ -37,9 +37,12 @@ test.describe('Meals Page', () => {
     // Wait for the page to load
     await page.waitForSelector('h1:has-text("Meal Log")', { timeout: 10000 });
     
+    // Wait for mock data to load (hook has 5 second timeout)
+    await page.waitForTimeout(6000);
+    
     // Check for demo banner (should appear when using mock data)
     const demoBanner = page.locator('text=Demo Mode:');
-    await expect(demoBanner).toBeVisible({ timeout: 5000 });
+    await expect(demoBanner).toBeVisible({ timeout: 10000 });
   });
 
   test('should filter meals by date', async ({ page }) => {
@@ -70,6 +73,9 @@ test.describe('Meals Page', () => {
   test('should display meal logs', async ({ page }) => {
     // Wait for the page to load
     await page.waitForSelector('h1:has-text("Meal Log")', { timeout: 10000 });
+    
+    // Wait for mock data to load (hook has 5 second timeout)
+    await page.waitForTimeout(6000);
     
     // Wait for meal logs to appear (mock data should load)
     await page.waitForSelector('[class*="card"]', { timeout: 10000 });

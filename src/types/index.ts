@@ -5,6 +5,7 @@ export interface FoodItem {
   category: string;
   in_stock: boolean;
   price?: number;
+  serving_size?: number;
   image_url?: string;
   ingredients?: string;
   nutrition: {
@@ -31,6 +32,7 @@ export interface DbItem {
   fat_per_serving?: number | null;
   protein_per_serving?: number | null;
   servings_per_container?: number | null;
+  serving_size_grams?: number | null;
   image_url?: string | null;
   ingredients?: string | null;
   nutrition_source?: string | null;

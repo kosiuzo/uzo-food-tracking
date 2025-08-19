@@ -21,6 +21,7 @@ describe('typeMappers', () => {
         fat_per_serving: 0.3,
         protein_per_serving: 0.5,
         servings_per_container: 1,
+        serving_size_grams: 100,
         image_url: 'https://example.com/apple.jpg',
         nutrition_source: 'manual',
         barcode: null,
@@ -37,12 +38,16 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
+        serving_size: 100,
         image_url: 'https://example.com/apple.jpg',
+        ingredients: undefined,
+        last_purchased: undefined,
+        rating: undefined,
         nutrition: {
-          calories_per_100g: 10470, // Calculated: (0.5*4 + 25*4 + 0.3*9) * 100 / 1
-          protein_per_100g: 50, // 0.5 * 100 / 1
-          carbs_per_100g: 2500, // 25 * 100 / 1
-          fat_per_100g: 30, // 0.3 * 100 / 1
+          calories_per_100g: 104.7, // Calculated: (0.5*4 + 25*4 + 0.3*9) * 100 / 100
+          protein_per_100g: 0.5, // 0.5 * 100 / 100
+          carbs_per_100g: 25, // 25 * 100 / 100
+          fat_per_100g: 0.3, // 0.3 * 100 / 100
           fiber_per_100g: 0,
         },
         last_edited: '2025-01-01T00:00:00Z',
@@ -61,6 +66,7 @@ describe('typeMappers', () => {
         fat_per_serving: null,
         protein_per_serving: null,
         servings_per_container: null,
+        serving_size_grams: null,
         image_url: null,
         nutrition_source: null,
         barcode: null,
@@ -85,6 +91,7 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
+        serving_size: 100,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
           calories_per_100g: 52,
@@ -104,10 +111,11 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
-        carbs_per_serving: 0.14,
-        fat_per_serving: 0.002,
-        protein_per_serving: 0.003,
+        carbs_per_serving: 14, // Store the per 100g value directly
+        fat_per_serving: 0.2, // Store the per 100g value directly  
+        protein_per_serving: 0.3, // Store the per 100g value directly
         servings_per_container: 1,
+        serving_size_grams: 100,
         image_url: 'https://example.com/apple.jpg',
         ingredients: null,
         nutrition_source: 'manual',

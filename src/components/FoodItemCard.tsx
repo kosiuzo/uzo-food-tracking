@@ -116,7 +116,7 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
             <div className="mt-3 pt-3 border-t border-border">
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {item.nutrition.calories_per_100g > 0 && (
-                  <span className="font-medium">{item.nutrition.calories_per_100g.toFixed(0)} cal</span>
+                  <span className="font-medium">{item.nutrition.calories_per_100g.toFixed(1)} cal</span>
                 )}
                 {item.nutrition.protein_per_100g > 0 && (
                   <span>Protein: {item.nutrition.protein_per_100g.toFixed(1)}g</span>

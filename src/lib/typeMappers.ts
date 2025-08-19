@@ -9,13 +9,19 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     category: dbItem.category || 'Other',
     in_stock: dbItem.in_stock ?? true,
     price: dbItem.price !== null ? Number(dbItem.price) : undefined,
+    serving_size: dbItem.serving_size_grams || 100,
     image_url: dbItem.image_url || undefined,
     ingredients: dbItem.ingredients || undefined,
     nutrition: {
-      calories_per_100g: calculateCaloriesPer100g(dbItem),
-      protein_per_100g: (dbItem.protein_per_serving || 0) * 100 / (dbItem.servings_per_container || 1),
-      carbs_per_100g: (dbItem.carbs_per_serving || 0) * 100 / (dbItem.servings_per_container || 1),
-      fat_per_100g: (dbItem.fat_per_serving || 0) * 100 / (dbItem.servings_per_container || 1),
+      calories_per_100g: convertToPer100g(
+        (dbItem.protein_per_serving || 0) * 4 + 
+        (dbItem.carbs_per_serving || 0) * 4 + 
+        (dbItem.fat_per_serving || 0) * 9,
+        dbItem.serving_size_grams || 100
+      ),
+      protein_per_100g: convertToPer100g(dbItem.protein_per_serving || 0, dbItem.serving_size_grams || 100),
+      carbs_per_100g: convertToPer100g(dbItem.carbs_per_serving || 0, dbItem.serving_size_grams || 100),
+      fat_per_100g: convertToPer100g(dbItem.fat_per_serving || 0, dbItem.serving_size_grams || 100),
       fiber_per_100g: 0, // Not in database schema
     },
     last_purchased: dbItem.last_purchased || undefined,
@@ -26,16 +32,18 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
 
 // Convert FoodItem to database insert format
 export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id' | 'normalized_name'> {
+  const servingSizeGrams = item.serving_size || 100;
   return {
     name: item.name,
     brand: item.brand || null,
     category: item.category,
     in_stock: item.in_stock,
     price: item.price || null,
-    carbs_per_serving: item.nutrition.carbs_per_100g / 100,
-    fat_per_serving: item.nutrition.fat_per_100g / 100,
-    protein_per_serving: item.nutrition.protein_per_100g / 100,
+    carbs_per_serving: item.nutrition.carbs_per_100g,
+    fat_per_serving: item.nutrition.fat_per_100g,
+    protein_per_serving: item.nutrition.protein_per_100g,
     servings_per_container: 1,
+    serving_size_grams: servingSizeGrams,
     image_url: item.image_url || null,
     ingredients: item.ingredients || null,
     nutrition_source: 'manual',
@@ -131,10 +139,7 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
   };
 }
 
-// Helper function to calculate calories per 100g
-function calculateCaloriesPer100g(dbItem: DbItem): number {
-  const caloriesPerServing = (dbItem.protein_per_serving || 0) * 4 + 
-                            (dbItem.carbs_per_serving || 0) * 4 + 
-                            (dbItem.fat_per_serving || 0) * 9;
-  return caloriesPerServing * 100 / (dbItem.servings_per_container || 1);
+// Helper function to convert any nutritional value to per 100g using the formula: input * (100/servings_per_gram)
+function convertToPer100g(valuePerServing: number, servingSizeGrams: number): number {
+  return valuePerServing * (100 / servingSizeGrams);
 }

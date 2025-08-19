@@ -31,6 +31,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     category: '',
     in_stock: true,
     price: 0,
+    serving_size: 100,
     image_url: '',
     ingredients: '',
     rating: 0,
@@ -51,6 +52,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         category: item.category,
         in_stock: item.in_stock,
         price: item.price || 0,
+        serving_size: item.serving_size || 100,
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
         rating: item.rating || 0,
@@ -63,6 +65,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         category: '',
         in_stock: true,
         price: 0,
+        serving_size: 100,
         image_url: '',
         ingredients: '',
         rating: 0,
@@ -342,6 +345,23 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
             </div>
           </div>
 
+          {/* Serving Size */}
+          <div className="space-y-2">
+            <Label htmlFor="serving_size">Serving Size (grams)</Label>
+            <Input
+              id="serving_size"
+              type="number"
+              value={formData.serving_size || 100}
+              onChange={(e) => setFormData(prev => ({ ...prev, serving_size: parseFloat(e.target.value) || 100 }))}
+              min="1"
+              step="1"
+              placeholder="100"
+            />
+            <p className="text-xs text-muted-foreground">
+              The weight of one serving in grams. Used for accurate macro calculations.
+            </p>
+          </div>
+
           <div className="flex items-center justify-between">
             <Label htmlFor="in_stock">Currently in stock</Label>
             <Switch
@@ -396,12 +416,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="calories"
                   type="number"
-                  value={formData.nutrition.calories_per_100g || ''}
+                  value={formData.nutrition.calories_per_100g ?? ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     nutrition: { ...prev.nutrition, calories_per_100g: parseFloat(e.target.value) || 0 }
                   }))}
                   min="0"
+                  step="0.1"
                 />
               </div>
               <div>
@@ -409,7 +430,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="protein"
                   type="number"
-                  value={formData.nutrition.protein_per_100g || ''}
+                  value={formData.nutrition.protein_per_100g ?? ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     nutrition: { ...prev.nutrition, protein_per_100g: parseFloat(e.target.value) || 0 }
@@ -423,7 +444,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="carbs"
                   type="number"
-                  value={formData.nutrition.carbs_per_100g || ''}
+                  value={formData.nutrition.carbs_per_100g ?? ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     nutrition: { ...prev.nutrition, carbs_per_100g: parseFloat(e.target.value) || 0 }
@@ -437,7 +458,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="fat"
                   type="number"
-                  value={formData.nutrition.fat_per_100g || ''}
+                  value={formData.nutrition.fat_per_100g ?? ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     nutrition: { ...prev.nutrition, fat_per_100g: parseFloat(e.target.value) || 0 }

@@ -16,16 +16,13 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     image_url: dbItem.image_url || undefined,
     ingredients: dbItem.ingredients || undefined,
     nutrition: {
-      calories_per_100g: convertToPer100g(
-        (dbItem.protein_per_serving || 0) * 4 + 
-        (dbItem.carbs_per_serving || 0) * 4 + 
-        (dbItem.fat_per_serving || 0) * 9,
-        dbItem.serving_size_grams || 100
-      ),
-      protein_per_100g: convertToPer100g(dbItem.protein_per_serving || 0, dbItem.serving_size_grams || 100),
-      carbs_per_100g: convertToPer100g(dbItem.carbs_per_serving || 0, dbItem.serving_size_grams || 100),
-      fat_per_100g: convertToPer100g(dbItem.fat_per_serving || 0, dbItem.serving_size_grams || 100),
-      fiber_per_100g: 0, // Not in database schema
+      calories_per_serving: (dbItem.protein_per_serving || 0) * 4 + 
+                           (dbItem.carbs_per_serving || 0) * 4 + 
+                           (dbItem.fat_per_serving || 0) * 9,
+      protein_per_serving: dbItem.protein_per_serving || 0,
+      carbs_per_serving: dbItem.carbs_per_serving || 0,
+      fat_per_serving: dbItem.fat_per_serving || 0,
+      fiber_per_serving: 0, // Not in database schema
     },
     last_purchased: dbItem.last_purchased || undefined,
     rating: dbItem.rating || undefined,
@@ -42,9 +39,9 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     category: item.category,
     in_stock: item.in_stock,
     price: item.price || null,
-    carbs_per_serving: item.nutrition.carbs_per_100g,
-    fat_per_serving: item.nutrition.fat_per_100g,
-    protein_per_serving: item.nutrition.protein_per_100g,
+    carbs_per_serving: item.nutrition.carbs_per_serving,
+    fat_per_serving: item.nutrition.fat_per_serving,
+    protein_per_serving: item.nutrition.protein_per_serving,
     servings_per_container: 1,
     serving_size_grams: servingSizeGrams,
     serving_quantity: item.serving_quantity || null,
@@ -145,10 +142,3 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
   };
 }
 
-// Helper function to convert any nutritional value to per 100g using the formula: input * (100/servingSizeGrams)
-function convertToPer100g(valuePerServing: number, servingSizeGrams: number): number {
-  if (servingSizeGrams <= 0) {
-    throw new Error("Serving size must be greater than 0 grams");
-  }
-  return valuePerServing * (100 / servingSizeGrams);
-}

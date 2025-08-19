@@ -12,11 +12,11 @@ export interface FoodItem {
   image_url?: string;
   ingredients?: string;
   nutrition: {
-    calories_per_100g: number;
-    protein_per_100g: number;
-    carbs_per_100g: number;
-    fat_per_100g: number;
-    fiber_per_100g: number;
+    calories_per_serving: number;
+    protein_per_serving: number;
+    carbs_per_serving: number;
+    fat_per_serving: number;
+    fiber_per_serving: number;
   };
   last_purchased?: string;
   rating?: number;

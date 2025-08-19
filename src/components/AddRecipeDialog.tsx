@@ -102,16 +102,16 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
             quantityInGrams = ingredient.quantity;
           }
           
-          // Scale nutrition based on actual grams
+          // Scale nutrition based on actual grams vs item's serving size
           const scaled = scaleNutrition(
             {
-              calories: item.nutrition.calories_per_100g,
-              protein: item.nutrition.protein_per_100g,
-              carbs: item.nutrition.carbs_per_100g,
-              fat: item.nutrition.fat_per_100g,
+              calories: item.nutrition.calories_per_serving,
+              protein: item.nutrition.protein_per_serving,
+              carbs: item.nutrition.carbs_per_serving,
+              fat: item.nutrition.fat_per_serving,
             },
             quantityInGrams,
-            100 // base serving size is 100g
+            item.serving_size || 100 // item's actual serving size
           );
           
           totalCalories += scaled.calories;
@@ -122,11 +122,11 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         } catch (error) {
           console.warn(`Error calculating nutrition for ${item.name}:`, error);
           // Fallback to simple gram calculation
-          const factor = quantityInGrams / 100;
-          totalCalories += item.nutrition.calories_per_100g * factor;
-          totalProtein += item.nutrition.protein_per_100g * factor;
-          totalCarbs += item.nutrition.carbs_per_100g * factor;
-          totalFat += item.nutrition.fat_per_100g * factor;
+          const factor = quantityInGrams / (item.serving_size || 100);
+          totalCalories += item.nutrition.calories_per_serving * factor;
+          totalProtein += item.nutrition.protein_per_serving * factor;
+          totalCarbs += item.nutrition.carbs_per_serving * factor;
+          totalFat += item.nutrition.fat_per_serving * factor;
         }
       }
     });
@@ -321,26 +321,25 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <optgroup label="Volume">
-                          <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
-                          <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
-                          <SelectItem value="cup">cups</SelectItem>
-                          <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
-                          <SelectItem value="ml">milliliters (ml)</SelectItem>
-                          <SelectItem value="l">liters (l)</SelectItem>
-                        </optgroup>
-                        <optgroup label="Weight">
-                          <SelectItem value="g">grams (g)</SelectItem>
-                          <SelectItem value="kg">kilograms (kg)</SelectItem>
-                          <SelectItem value="oz">ounces (oz)</SelectItem>
-                          <SelectItem value="lb">pounds (lb)</SelectItem>
-                        </optgroup>
-                        <optgroup label="Count">
-                          <SelectItem value="piece">pieces</SelectItem>
-                          <SelectItem value="slice">slices</SelectItem>
-                          <SelectItem value="can">cans</SelectItem>
-                          <SelectItem value="bottle">bottles</SelectItem>
-                        </optgroup>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Volume</div>
+                        <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
+                        <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
+                        <SelectItem value="cup">cups</SelectItem>
+                        <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
+                        <SelectItem value="ml">milliliters (ml)</SelectItem>
+                        <SelectItem value="l">liters (l)</SelectItem>
+                        
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Weight</div>
+                        <SelectItem value="g">grams (g)</SelectItem>
+                        <SelectItem value="kg">kilograms (kg)</SelectItem>
+                        <SelectItem value="oz">ounces (oz)</SelectItem>
+                        <SelectItem value="lb">pounds (lb)</SelectItem>
+                        
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Count</div>
+                        <SelectItem value="piece">pieces</SelectItem>
+                        <SelectItem value="slice">slices</SelectItem>
+                        <SelectItem value="can">cans</SelectItem>
+                        <SelectItem value="bottle">bottles</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

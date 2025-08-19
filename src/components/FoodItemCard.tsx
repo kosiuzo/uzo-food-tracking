@@ -112,21 +112,46 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
           </div>
 
           {/* Nutrition Info - Only show if significant data exists */}
-          {(item.nutrition.calories_per_100g || item.nutrition.protein_per_100g) && (
+          {(item.nutrition.calories_per_serving || item.nutrition.protein_per_serving) && (
             <div className="mt-3 pt-3 border-t border-border">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {item.nutrition.calories_per_100g > 0 && (
-                  <span className="font-medium">{item.nutrition.calories_per_100g.toFixed(1)} cal</span>
-                )}
-                {item.nutrition.protein_per_100g > 0 && (
-                  <span>Protein: {item.nutrition.protein_per_100g.toFixed(1)}g</span>
-                )}
-                {item.nutrition.carbs_per_100g > 0 && (
-                  <span>Carbs: {item.nutrition.carbs_per_100g.toFixed(1)}g</span>
-                )}
-                {item.nutrition.fat_per_100g > 0 && (
-                  <span>Fat: {item.nutrition.fat_per_100g.toFixed(1)}g</span>
-                )}
+              <div className="text-xs">
+                <span className="font-medium text-muted-foreground mb-1 block">Nutrition (per serving):</span>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                  {item.nutrition.calories_per_serving > 0 && (
+                    <span className="font-medium">{item.nutrition.calories_per_serving.toFixed(1)} cal</span>
+                  )}
+                  {item.nutrition.protein_per_serving > 0 && (
+                    <span>Protein: {item.nutrition.protein_per_serving.toFixed(1)}g</span>
+                  )}
+                  {item.nutrition.carbs_per_serving > 0 && (
+                    <span>Carbs: {item.nutrition.carbs_per_serving.toFixed(1)}g</span>
+                  )}
+                  {item.nutrition.fat_per_serving > 0 && (
+                    <span>Fat: {item.nutrition.fat_per_serving.toFixed(1)}g</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Serving Information */}
+          {(item.serving_size || item.serving_quantity) && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="text-xs">
+                <span className="font-medium text-muted-foreground mb-1 block">Serving Information:</span>
+                <div className="space-y-1 text-muted-foreground">
+                  {item.serving_size && (
+                    <div>Serving size: {item.serving_size}g</div>
+                  )}
+                  {item.serving_quantity && item.serving_unit && (
+                    <div>
+                      Unit: {item.serving_quantity} {item.serving_unit} = {item.serving_size || 100}g
+                      {item.serving_unit_type && (
+                        <span className="ml-1 text-xs opacity-75">({item.serving_unit_type})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

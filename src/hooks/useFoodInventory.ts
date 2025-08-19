@@ -148,10 +148,16 @@ export function useFoodInventory() {
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
       if (updates.rating !== undefined) updateData.rating = updates.rating;
+      if (updates.serving_size !== undefined) updateData.serving_size_grams = updates.serving_size;
+      if (updates.serving_quantity !== undefined) updateData.serving_quantity = updates.serving_quantity;
+      if (updates.serving_unit !== undefined) updateData.serving_unit = updates.serving_unit || null;
+      if (updates.serving_unit_type !== undefined) updateData.serving_unit_type = updates.serving_unit_type || null;
+      if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
       if (updates.nutrition) {
-        updateData.carbs_per_serving = updates.nutrition.carbs_per_100g / 100;
-        updateData.fat_per_serving = updates.nutrition.fat_per_100g / 100;
-        updateData.protein_per_serving = updates.nutrition.protein_per_100g / 100;
+        // Store nutrition values directly as per-serving
+        updateData.carbs_per_serving = updates.nutrition.carbs_per_serving;
+        updateData.fat_per_serving = updates.nutrition.fat_per_serving;
+        updateData.protein_per_serving = updates.nutrition.protein_per_serving;
       }
       updateData.last_edited = new Date().toISOString();
       

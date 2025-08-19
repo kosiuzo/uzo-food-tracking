@@ -139,7 +139,10 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
   };
 }
 
-// Helper function to convert any nutritional value to per 100g using the formula: input * (100/servings_per_gram)
+// Helper function to convert any nutritional value to per 100g using the formula: input * (100/servingSizeGrams)
 function convertToPer100g(valuePerServing: number, servingSizeGrams: number): number {
+  if (servingSizeGrams <= 0) {
+    throw new Error("Serving size must be greater than 0 grams");
+  }
   return valuePerServing * (100 / servingSizeGrams);
 }

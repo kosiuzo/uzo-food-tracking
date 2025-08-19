@@ -2,6 +2,14 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
+-- Create serving unit type enum
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'serving_unit_type') THEN
+    CREATE TYPE serving_unit_type AS ENUM ('volume', 'weight', 'package');
+  END IF;
+END$$;
+
 -- Create items table
 CREATE TABLE items (
     id BIGSERIAL PRIMARY KEY,
@@ -15,6 +23,9 @@ CREATE TABLE items (
     protein_per_serving NUMERIC(10,2),
     servings_per_container NUMERIC(10,2),
     serving_size_grams NUMERIC(10,2) DEFAULT 100,
+    serving_quantity NUMERIC(10,2),
+    serving_unit TEXT,
+    serving_unit_type serving_unit_type,
     image_url TEXT,
     ingredients TEXT,
     nutrition_source TEXT,
@@ -162,6 +173,9 @@ BEGIN
             protein_per_serving,
             servings_per_container,
             serving_size_grams,
+            serving_quantity,
+            serving_unit,
+            serving_unit_type,
             image_url,
             ingredients,
             nutrition_source,
@@ -180,6 +194,9 @@ BEGIN
             (item_data->>'protein_per_serving')::NUMERIC,
             (item_data->>'servings_per_container')::NUMERIC,
             COALESCE((item_data->>'serving_size_grams')::NUMERIC, 100),
+            (item_data->>'serving_quantity')::NUMERIC,
+            item_data->>'serving_unit',
+            (item_data->>'serving_unit_type')::serving_unit_type,
             item_data->>'image_url',
             item_data->>'ingredients',
             item_data->>'nutrition_source',
@@ -198,6 +215,9 @@ BEGIN
             protein_per_serving = EXCLUDED.protein_per_serving,
             servings_per_container = EXCLUDED.servings_per_container,
             serving_size_grams = EXCLUDED.serving_size_grams,
+            serving_quantity = EXCLUDED.serving_quantity,
+            serving_unit = EXCLUDED.serving_unit,
+            serving_unit_type = EXCLUDED.serving_unit_type,
             image_url = EXCLUDED.image_url,
             ingredients = EXCLUDED.ingredients,
             nutrition_source = EXCLUDED.nutrition_source,

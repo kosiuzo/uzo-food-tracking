@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { openFoodFactsService } from '../services/openFoodFacts';
+import { getServingUnitType, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 interface AddEditItemDialogProps {
   open: boolean;
@@ -32,6 +33,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     in_stock: true,
     price: 0,
     serving_size: 100,
+    serving_quantity: 0,
+    serving_unit: '',
+    serving_unit_type: '' as 'volume' | 'weight' | 'package' | '',
     image_url: '',
     ingredients: '',
     rating: 0,
@@ -53,6 +57,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         in_stock: item.in_stock,
         price: item.price || 0,
         serving_size: item.serving_size || 100,
+        serving_quantity: item.serving_quantity || 0,
+        serving_unit: item.serving_unit || '',
+        serving_unit_type: item.serving_unit_type || '',
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
         rating: item.rating || 0,
@@ -66,6 +73,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         in_stock: true,
         price: 0,
         serving_size: 100,
+        serving_quantity: 0,
+        serving_unit: '',
+        serving_unit_type: '',
         image_url: '',
         ingredients: '',
         rating: 0,
@@ -79,6 +89,16 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
       });
     }
   }, [item, open]);
+
+  // Auto-set serving unit type when serving unit changes
+  const handleServingUnitChange = (unit: string) => {
+    const unitType = getServingUnitType(unit);
+    setFormData(prev => ({
+      ...prev,
+      serving_unit: unit,
+      serving_unit_type: unitType || '',
+    }));
+  };
 
   const fetchNutritionData = async () => {
     if (!formData.name.trim()) {
@@ -360,6 +380,71 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
             <p className="text-xs text-muted-foreground">
               The weight of one serving in grams. Used for accurate macro calculations.
             </p>
+          </div>
+
+          {/* Serving Unit Information */}
+          <div className="space-y-3">
+            <Label>Serving Unit Information (Optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              For volume-based measurements in recipes (e.g., 1 cup of rice = 45g)
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="serving_quantity">Serving Quantity</Label>
+                <Input
+                  id="serving_quantity"
+                  type="number"
+                  value={formData.serving_quantity || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serving_quantity: parseFloat(e.target.value) || 0 }))}
+                  min="0"
+                  step="0.25"
+                  placeholder="e.g., 0.25"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="serving_unit">Serving Unit</Label>
+                <Select 
+                  value={formData.serving_unit} 
+                  onValueChange={handleServingUnitChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
+                    <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
+                    <SelectItem value="cup">cups</SelectItem>
+                    <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
+                    <SelectItem value="ml">milliliters (ml)</SelectItem>
+                    <SelectItem value="l">liters (l)</SelectItem>
+                    <SelectItem value="g">grams (g)</SelectItem>
+                    <SelectItem value="kg">kilograms (kg)</SelectItem>
+                    <SelectItem value="oz">ounces (oz)</SelectItem>
+                    <SelectItem value="lb">pounds (lb)</SelectItem>
+                    <SelectItem value="piece">pieces</SelectItem>
+                    <SelectItem value="slice">slices</SelectItem>
+                    <SelectItem value="can">cans</SelectItem>
+                    <SelectItem value="bottle">bottles</SelectItem>
+                    <SelectItem value="pouch">pouches</SelectItem>
+                    <SelectItem value="scoop">scoops</SelectItem>
+                    <SelectItem value="serving">servings</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {formData.serving_unit_type && (
+              <div className="text-xs text-muted-foreground">
+                Unit type: <span className="font-medium">{formData.serving_unit_type}</span>
+                {formData.serving_quantity && formData.serving_unit && formData.serving_size && (
+                  <span className="ml-2">
+                    • {formData.serving_quantity} {formData.serving_unit} = {formData.serving_size}g
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between">

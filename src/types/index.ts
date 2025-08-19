@@ -6,6 +6,9 @@ export interface FoodItem {
   in_stock: boolean;
   price?: number;
   serving_size?: number;
+  serving_quantity?: number;
+  serving_unit?: string;
+  serving_unit_type?: 'volume' | 'weight' | 'package';
   image_url?: string;
   ingredients?: string;
   nutrition: {
@@ -33,6 +36,9 @@ export interface DbItem {
   protein_per_serving?: number | null;
   servings_per_container?: number | null;
   serving_size_grams?: number | null;
+  serving_quantity?: number | null;
+  serving_unit?: string | null;
+  serving_unit_type?: 'volume' | 'weight' | 'package' | null;
   image_url?: string | null;
   ingredients?: string | null;
   nutrition_source?: string | null;

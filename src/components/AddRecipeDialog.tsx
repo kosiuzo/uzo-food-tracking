@@ -10,6 +10,7 @@ import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 import { Recipe, RecipeIngredient } from '../types';
+import { getServingUnitType, convertVolumeToGrams, scaleNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 interface AddRecipeDialogProps {
   open: boolean;
@@ -62,35 +63,76 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     formData.ingredients.forEach(ingredient => {
       const item = allItems.find(item => item.id === ingredient.item_id);
       if (item) {
-        // Convert quantity to grams based on unit
         let quantityInGrams = ingredient.quantity;
-        switch (ingredient.unit) {
-          case 'kg':
-            quantityInGrams *= 1000;
-            break;
-          case 'oz':
-            quantityInGrams *= 28.35; // 1 oz = 28.35g
-            break;
-          case 'lb':
-            quantityInGrams *= 453.592; // 1 lb = 453.592g
-            break;
-          case 'g':
-          default:
-            // already in grams
-            break;
-        }
+        const unitType = getServingUnitType(ingredient.unit);
         
-        // Calculate nutrition per 100g, then scale to actual quantity
-        const factor = quantityInGrams / 100;
-        totalCalories += item.nutrition.calories_per_100g * factor;
-        totalProtein += item.nutrition.protein_per_100g * factor;
-        totalCarbs += item.nutrition.carbs_per_100g * factor;
-        totalFat += item.nutrition.fat_per_100g * factor;
+        try {
+          // Handle different unit types
+          if (unitType === 'volume' && item.serving_unit_type === 'volume' && item.serving_quantity && item.serving_unit) {
+            // Use volume conversion for volume-based ingredients
+            quantityInGrams = convertVolumeToGrams(
+              ingredient.quantity,
+              ingredient.unit,
+              item.serving_quantity,
+              item.serving_unit,
+              item.serving_size || 100
+            );
+          } else if (unitType === 'weight') {
+            // Convert weight units to grams
+            switch (ingredient.unit) {
+              case 'kg':
+                quantityInGrams *= 1000;
+                break;
+              case 'oz':
+                quantityInGrams *= 28.35; // 1 oz = 28.35g
+                break;
+              case 'lb':
+                quantityInGrams *= 453.592; // 1 lb = 453.592g
+                break;
+              case 'g':
+              default:
+                // already in grams
+                break;
+            }
+          } else if (unitType === 'package') {
+            // For package units, multiply by serving size
+            quantityInGrams = ingredient.quantity * (item.serving_size || 100);
+          } else {
+            // Fallback: assume grams
+            quantityInGrams = ingredient.quantity;
+          }
+          
+          // Scale nutrition based on actual grams
+          const scaled = scaleNutrition(
+            {
+              calories: item.nutrition.calories_per_100g,
+              protein: item.nutrition.protein_per_100g,
+              carbs: item.nutrition.carbs_per_100g,
+              fat: item.nutrition.fat_per_100g,
+            },
+            quantityInGrams,
+            100 // base serving size is 100g
+          );
+          
+          totalCalories += scaled.calories;
+          totalProtein += scaled.protein;
+          totalCarbs += scaled.carbs;
+          totalFat += scaled.fat;
+          
+        } catch (error) {
+          console.warn(`Error calculating nutrition for ${item.name}:`, error);
+          // Fallback to simple gram calculation
+          const factor = quantityInGrams / 100;
+          totalCalories += item.nutrition.calories_per_100g * factor;
+          totalProtein += item.nutrition.protein_per_100g * factor;
+          totalCarbs += item.nutrition.carbs_per_100g * factor;
+          totalFat += item.nutrition.fat_per_100g * factor;
+        }
       }
     });
 
     return {
-      calories_per_serving: Math.round((totalCalories / formData.servings) * 10) / 10, // Round to 1 decimal place
+      calories_per_serving: Math.round((totalCalories / formData.servings) * 10) / 10,
       protein_per_serving: Math.round((totalProtein / formData.servings) * 10) / 10,
       carbs_per_serving: Math.round((totalCarbs / formData.servings) * 10) / 10,
       fat_per_serving: Math.round((totalFat / formData.servings) * 10) / 10,
@@ -100,7 +142,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   const addIngredient = () => {
     setFormData(prev => ({
       ...prev,
-      ingredients: [...prev.ingredients, { item_id: '', quantity: 100, unit: 'g' }]
+      ingredients: [...prev.ingredients, { item_id: '', quantity: 1, unit: 'cup' }]
     }));
   };
 
@@ -279,10 +321,26 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="g">grams (g)</SelectItem>
-                        <SelectItem value="kg">kilograms (kg)</SelectItem>
-                        <SelectItem value="oz">ounces (oz)</SelectItem>
-                        <SelectItem value="lb">pounds (lb)</SelectItem>
+                        <optgroup label="Volume">
+                          <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
+                          <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
+                          <SelectItem value="cup">cups</SelectItem>
+                          <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
+                          <SelectItem value="ml">milliliters (ml)</SelectItem>
+                          <SelectItem value="l">liters (l)</SelectItem>
+                        </optgroup>
+                        <optgroup label="Weight">
+                          <SelectItem value="g">grams (g)</SelectItem>
+                          <SelectItem value="kg">kilograms (kg)</SelectItem>
+                          <SelectItem value="oz">ounces (oz)</SelectItem>
+                          <SelectItem value="lb">pounds (lb)</SelectItem>
+                        </optgroup>
+                        <optgroup label="Count">
+                          <SelectItem value="piece">pieces</SelectItem>
+                          <SelectItem value="slice">slices</SelectItem>
+                          <SelectItem value="can">cans</SelectItem>
+                          <SelectItem value="bottle">bottles</SelectItem>
+                        </optgroup>
                       </SelectContent>
                     </Select>
                   </div>

@@ -76,12 +76,13 @@ grams_per_unit = serving_size_grams / serving_quantity
 Volume conversion factors (normalize to cups)
 
 const toCup = (qty: number, unit: string): number => {
-  const u = unit.toLowerCase();
+  const u = unit.toLowerCase().replace(/\s+/g, '_');
   if (u === 'cup')   return qty;
   if (u === 'tbsp')  return qty / 16;
   if (u === 'tsp')   return qty / 48;
   if (u === 'ml')    return qty / 240;
   if (u === 'fl_oz') return qty / 8;   // US
+  if (u === 'l' || u === 'liter') return qty * 4.227; // 1 liter = 4.227 US cups
   throw new Error(`Unsupported volume unit: ${unit}`);
 };
 

@@ -16,9 +16,10 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     image_url: dbItem.image_url || undefined,
     ingredients: dbItem.ingredients || undefined,
     nutrition: {
-      calories_per_serving: (dbItem.protein_per_serving || 0) * 4 + 
-                           (dbItem.carbs_per_serving || 0) * 4 + 
-                           (dbItem.fat_per_serving || 0) * 9,
+      calories_per_serving: dbItem.calories_per_serving || 
+        Math.round(((dbItem.protein_per_serving || 0) * 4 + 
+                   (dbItem.carbs_per_serving || 0) * 4 + 
+                   (dbItem.fat_per_serving || 0) * 9) * 10) / 10,
       protein_per_serving: dbItem.protein_per_serving || 0,
       carbs_per_serving: dbItem.carbs_per_serving || 0,
       fat_per_serving: dbItem.fat_per_serving || 0,
@@ -39,6 +40,7 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     category: item.category,
     in_stock: item.in_stock,
     price: item.price || null,
+    calories_per_serving: item.nutrition.calories_per_serving,
     carbs_per_serving: item.nutrition.carbs_per_serving,
     fat_per_serving: item.nutrition.fat_per_serving,
     protein_per_serving: item.nutrition.protein_per_serving,
@@ -68,10 +70,10 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     prep_time_minutes: dbRecipe.prep_time || undefined,
     ingredients,
     nutrition: {
-      calories_per_serving: nutrition.calories || 0,
-      protein_per_serving: nutrition.protein || 0,
-      carbs_per_serving: nutrition.carbs || 0,
-      fat_per_serving: nutrition.fat || 0,
+      calories_per_serving: (nutrition.calories as number) || 0,
+      protein_per_serving: (nutrition.protein as number) || 0,
+      carbs_per_serving: (nutrition.carbs as number) || 0,
+      fat_per_serving: (nutrition.fat as number) || 0,
     },
     cost_per_serving: dbRecipe.cost_per_serving || undefined,
     total_cost: dbRecipe.total_cost || undefined,
@@ -92,7 +94,12 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
     total_time: recipe.prep_time_minutes || null,
     servings: recipe.servings,
     instructions: recipe.instructions,
-    nutrition_per_serving: recipe.nutrition,
+    nutrition_per_serving: {
+      calories: recipe.nutrition.calories_per_serving,
+      protein: recipe.nutrition.protein_per_serving,
+      carbs: recipe.nutrition.carbs_per_serving,
+      fat: recipe.nutrition.fat_per_serving,
+    },
     tags: null,
     rating: recipe.is_favorite ? 5 : null,
     source_link: null,
@@ -117,10 +124,10 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
     meal_name: 'Meal', // Default name since it's not in the database
     notes: dbMealLog.notes || undefined,
     nutrition: {
-      calories: macros.calories || 0,
-      protein: macros.protein || 0,
-      carbs: macros.carbs || 0,
-      fat: macros.fat || 0,
+      calories: (macros.calories as number) || 0,
+      protein: (macros.protein as number) || 0,
+      carbs: (macros.carbs as number) || 0,
+      fat: (macros.fat as number) || 0,
     },
     estimated_cost: dbMealLog.cost || 0,
   };

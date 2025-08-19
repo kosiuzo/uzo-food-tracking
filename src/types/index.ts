@@ -31,6 +31,7 @@ export interface DbItem {
   category?: string | null;
   in_stock?: boolean | null;
   price?: number | null;
+  calories_per_serving?: number | null;
   carbs_per_serving?: number | null;
   fat_per_serving?: number | null;
   protein_per_serving?: number | null;

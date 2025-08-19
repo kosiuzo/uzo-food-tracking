@@ -155,6 +155,7 @@ export function useFoodInventory() {
       if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
       if (updates.nutrition) {
         // Store nutrition values directly as per-serving
+        updateData.calories_per_serving = updates.nutrition.calories_per_serving;
         updateData.carbs_per_serving = updates.nutrition.carbs_per_serving;
         updateData.fat_per_serving = updates.nutrition.fat_per_serving;
         updateData.protein_per_serving = updates.nutrition.protein_per_serving;

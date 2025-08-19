@@ -64,6 +64,11 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
             <Badge variant="secondary" className="text-xs px-2 py-1">
               {item.category}
             </Badge>
+            {item.price && (
+              <span className="text-sm font-semibold text-green-600">
+                ${item.price.toFixed(2)}
+              </span>
+            )}
           </div>
 
           {/* Purchase Date - Separate from other info */}

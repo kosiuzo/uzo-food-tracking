@@ -12,7 +12,12 @@ export interface Database {
           carbs_per_serving: number | null
           fat_per_serving: number | null
           protein_per_serving: number | null
+          calories_per_serving: number | null
           servings_per_container: number | null
+          serving_size_grams: number | null
+          serving_quantity: number | null
+          serving_unit: string | null
+          serving_unit_type: 'volume' | 'weight' | 'package' | null
           image_url: string | null
           nutrition_source: string | null
           barcode: string | null
@@ -33,7 +38,12 @@ export interface Database {
           carbs_per_serving?: number | null
           fat_per_serving?: number | null
           protein_per_serving?: number | null
+          calories_per_serving?: number | null
           servings_per_container?: number | null
+          serving_size_grams?: number | null
+          serving_quantity?: number | null
+          serving_unit?: string | null
+          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
@@ -54,7 +64,12 @@ export interface Database {
           carbs_per_serving?: number | null
           fat_per_serving?: number | null
           protein_per_serving?: number | null
+          calories_per_serving?: number | null
           servings_per_container?: number | null
+          serving_size_grams?: number | null
+          serving_quantity?: number | null
+          serving_unit?: string | null
+          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null

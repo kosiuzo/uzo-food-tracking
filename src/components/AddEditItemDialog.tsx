@@ -249,7 +249,15 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
       return;
     }
 
-    onSave(formData);
+    // Prepare the data to save, converting empty strings to null for optional fields
+    const dataToSave = {
+      ...formData,
+      image_url: formData.image_url.trim() || null,
+      brand: formData.brand.trim() || null,
+      ingredients: formData.ingredients.trim() || null,
+    };
+
+    onSave(dataToSave);
     toast({
       title: item ? "Item updated" : "Item added",
       description: `${formData.name} has been ${item ? 'updated' : 'added to your inventory'}.`,
@@ -461,12 +469,26 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
           {/* Image URL */}
           <div className="space-y-2">
             <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-              placeholder="e.g., https://example.com/product-image.jpg"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="image_url"
+                value={formData.image_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                placeholder="e.g., https://example.com/product-image.jpg"
+                className="flex-1"
+              />
+              {formData.image_url && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                  title="Clear image URL"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
             {formData.image_url && (
               <div className="mt-2">
                 <img 
@@ -477,6 +499,11 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                     e.currentTarget.style.display = 'none';
                   }}
                 />
+              </div>
+            )}
+            {!formData.image_url && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                No image URL set. Will use default category image.
               </div>
             )}
           </div>

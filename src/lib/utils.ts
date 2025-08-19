@@ -6,21 +6,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Food category to default image mapping using reliable Pexels images
+ * Food category to default image mapping using local default images
  * These images are categorized by food type and provide fallbacks for items without images
  */
 export const FOOD_CATEGORY_IMAGES = {
-  'Fruits': 'https://images.pexels.com/photos/61127/pexels-photo-61127.jpeg?w=400',
-  'Vegetables': 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?w=400',
-  'Proteins': 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?w=400',
-  'Dairy & Eggs': 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?w=400',
-  'Grains & Starches': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400',
-  'Beverages': 'https://images.pexels.com/photos/1546173/pexels-photo-1546173.jpeg?w=400',
-  'Condiments & Sauces': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400',
-  'Oils & Fats': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400',
-  'Seasonings & Spices': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400',
-  'Baking Supplies': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400',
-  'Snacks & Packaged Foods': 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400'
+  'Fruits': '/images/defaults/fruits.jpeg',
+  'Vegetables': '/images/defaults/vegetables.jpeg',
+  'Proteins': '/images/defaults/proteins.jpeg',
+  'Dairy & Eggs': '/images/defaults/dairy_eggs.jpeg',
+  'Grains & Starches': '/images/defaults/grains_starches.jpeg',
+  'Snacks': '/images/defaults/snacks.jpeg',
+  'Snacks & Packaged Foods': '/images/defaults/snacks.jpeg',
+  'Beverages': '/images/defaults/beverages.jpeg',
+  'Oils & Fats': '/images/defaults/oils_fats.jpeg',
+  'Seasonings & Spices': '/images/defaults/seasonings_spices.jpeg',
+  'Condiments & Sauces': '/images/defaults/condiments_sauces.jpeg',
+  'Baking Supplies': '/images/defaults/baking_supplies.jpeg'
 } as const;
 
 /**

@@ -7,7 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { format, parseISO } from 'date-fns';
-import { getFoodItemImage } from '@/lib/utils';
+import { getFoodItemImage, getDefaultImageByCategory } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -18,20 +19,41 @@ interface FoodItemCardProps {
 }
 
 export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingChange }: FoodItemCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
+
+  // Reset error state when item.image_url changes
+  useEffect(() => {
+    setImageError(false);
+    setHasTriedFallback(false);
+  }, [item.image_url, item.id]);
+
+  const currentImageUrl = getFoodItemImage(item.image_url, item.category);
+
   return (
     <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center gap-3">
         {/* Image */}
         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
           <img
-            src={getFoodItemImage(item.image_url, item.category)}
+            src={currentImageUrl}
             alt={item.name}
             className="h-full w-full object-cover"
             onError={(e) => {
-              // Fallback to category default if image fails to load
+              // Only fallback if we haven't tried yet and it's not already the default
               const target = e.target as HTMLImageElement;
-              target.src = getFoodItemImage('', item.category);
+              if (!hasTriedFallback && item.image_url && item.image_url.trim() !== '') {
+                setHasTriedFallback(true);
+                setImageError(true);
+                target.src = getDefaultImageByCategory(item.category);
+              }
             }}
+            onLoad={() => {
+              // Reset error states when image loads successfully
+              setImageError(false);
+              setHasTriedFallback(false);
+            }}
+            key={item.image_url || 'default'} // Force re-render when image URL changes
           />
         </div>
 

@@ -3,27 +3,27 @@
 -- Insert food items (simplified for initial setup)
 INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fat_per_serving, protein_per_serving, servings_per_container, serving_size_grams, serving_quantity, serving_unit, serving_unit_type, image_url, ingredients, rating, nutrition_source, last_edited) VALUES
 -- Key volume-based items for testing conversions
-('Thai Jasmine Rice', 'Member''s Mark', 'Grains & Starches', true, 18.98, 34.9, 0.4, 3.2, 200, 45, 0.25, 'cup', 'volume', 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Jasmine rice', 4, 'manual', NOW()),
-('Olive Oil', 'Member''s Mark', 'Oils & Fats', true, 18.98, 0, 14, 0, 101, 14, 1, 'tbsp', 'volume', 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Olive oil', 4, 'manual', NOW()),
-('Coconut Oil', 'Member''s Mark Organic', 'Oils & Fats', true, 10.98, 0, 14, 0, 112, 14, 1, 'tbsp', 'volume', 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Organic pure virgin unrefined coconut oil', 5, 'manual', NOW()),
-('Honey', 'Nature''s Nate', 'Condiments & Sauces', true, 13.98, 17, 0, 0, 50, 21, 1, 'tbsp', 'volume', 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Raw unfiltered honey', 5, 'manual', NOW()),
-('Maple Syrup', 'Member''s Mark Organic', 'Condiments & Sauces', true, 11.98, 13, 0, 0, 64, 20, 1, 'tbsp', 'volume', 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Organic maple syrup', 4, 'manual', NOW()),
+('Thai Jasmine Rice', 'Member''s Mark', 'Grains & Starches', true, 18.98, 34.9, 0.4, 3.2, 200, 45, 0.25, 'cup', 'volume', NULL, 'Jasmine rice', 4, 'manual', NOW()),
+('Olive Oil', 'Member''s Mark', 'Oils & Fats', true, 18.98, 0, 14, 0, 101, 14, 1, 'tbsp', 'volume', NULL, 'Olive oil', 4, 'manual', NOW()),
+('Coconut Oil', 'Member''s Mark Organic', 'Oils & Fats', true, 10.98, 0, 14, 0, 112, 14, 1, 'tbsp', 'volume', NULL, 'Organic pure virgin unrefined coconut oil', 5, 'manual', NOW()),
+('Honey', 'Nature''s Nate', 'Condiments & Sauces', true, 13.98, 17, 0, 0, 50, 21, 1, 'tbsp', 'volume', NULL, 'Raw unfiltered honey', 5, 'manual', NOW()),
+('Maple Syrup', 'Member''s Mark Organic', 'Condiments & Sauces', true, 11.98, 13, 0, 0, 64, 20, 1, 'tbsp', 'volume', NULL, 'Organic maple syrup', 4, 'manual', NOW()),
 -- Package-based items
-('Chicken Breast', 'Member''s Mark', 'Proteins', true, 21.11, 0, 3.6, 31, 8, 113, 1, 'piece', 'package', 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?w=400', 'Boneless skinless chicken breasts', 5, 'manual', NOW()),
-('Eggs', 'Member''s Mark Organic', 'Dairy & Eggs', true, 7.00, 0.4, 5, 6, 12, 50, 1, 'piece', 'package', 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?w=400', 'Pasture-raised eggs', 5, 'manual', NOW()),
-('Salmon Fillet', 'Member''s Mark', 'Proteins', true, 23.94, 0, 6.4, 20, 8, 113, 1, 'piece', 'package', 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?w=400', 'Atlantic salmon fillet', 5, 'manual', NOW()),
+('Chicken Breast', 'Member''s Mark', 'Proteins', true, 21.11, 0, 3.6, 31, 8, 113, 1, 'piece', 'package', NULL, 'Boneless skinless chicken breasts', 5, 'manual', NOW()),
+('Eggs', 'Member''s Mark Organic', 'Dairy & Eggs', true, 7.00, 0.4, 5, 6, 12, 50, 1, 'piece', 'package', NULL, 'Pasture-raised eggs', 5, 'manual', NOW()),
+('Salmon Fillet', 'Member''s Mark', 'Proteins', true, 23.94, 0, 6.4, 20, 8, 113, 1, 'piece', 'package', NULL, 'Atlantic salmon fillet', 5, 'manual', NOW()),
 -- Weight-based items
-('Ground Beef', 'Member''s Mark', 'Proteins', true, 17.94, 0, 15.0, 18.6, 8, 100, 100, 'g', 'weight', 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?w=400', 'Ground beef (85% lean, 15% fat)', 5, 'manual', NOW()),
-('Parmesan Cheese', 'Kroger', 'Dairy & Eggs', true, 4.99, 4, 28.6, 38.4, 50, 100, 28, 'g', 'weight', 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?w=400', 'Parmigiano Reggiano cheese', 5, 'manual', NOW()),
+('Ground Beef', 'Member''s Mark', 'Proteins', true, 17.94, 0, 15.0, 18.6, 8, 100, 100, 'g', 'weight', NULL, 'Ground beef (85% lean, 15% fat)', 5, 'manual', NOW()),
+('Parmesan Cheese', 'Kroger', 'Dairy & Eggs', true, 4.99, 4, 28.6, 38.4, 50, 100, 28, 'g', 'weight', NULL, 'Parmigiano Reggiano cheese', 5, 'manual', NOW()),
 -- Items without serving unit data (legacy)
-('Avocados', 'Member''s Mark', 'Fruits', true, 4.48, 8.5, 14.7, 2, 5, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/61127/pexels-photo-61127.jpeg?w=400', 'Avocados', 5, 'manual', NOW()),
-('Bananas', 'Chiquita', 'Fruits', true, 1.97, 22.8, 0.3, 1.1, 12, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/61127/pexels-photo-61127.jpeg?w=400', 'Bananas', 4, 'manual', NOW()),
-('Spinach', 'Kroger', 'Vegetables', true, 2.49, 2.08, 0.14, 0.69, 4, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?w=400', 'Fresh spinach', 4, 'manual', NOW()),
-('Broccoli', 'Kroger', 'Vegetables', true, 3.99, 6.04, 0.34, 1.01, 1, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg?w=400', 'Fresh broccoli', 4, 'manual', NOW()),
-('Greek Yogurt', 'Member''s Mark', 'Dairy & Eggs', true, 4.28, 3.59, 0.39, 10.18, 1, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?w=400', 'Nonfat Greek yogurt', 4, 'manual', NOW()),
-('Salt', 'Member''s Mark', 'Seasonings & Spices', true, 7.00, 0, 0, 0, 200, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Pink Himalayan salt', 5, 'manual', NOW()),
-('Black Pepper', 'Member''s Mark', 'Seasonings & Spices', true, 8.50, 64.0, 3.3, 10.4, 200, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Ground black pepper', 4, 'manual', NOW()),
-('Garlic Powder', 'Member''s Mark', 'Seasonings & Spices', true, 8.00, 73.0, 0.7, 16.0, 200, 100, NULL, NULL, NULL, 'https://images.pexels.com/photos/1556909/pexels-photo-1556909.jpeg?w=400', 'Ground garlic', 4, 'manual', NOW());
+('Avocados', 'Member''s Mark', 'Fruits', true, 4.48, 8.5, 14.7, 2, 5, 100, NULL, NULL, NULL, NULL, 'Avocados', 5, 'manual', NOW()),
+('Bananas', 'Chiquita', 'Fruits', true, 1.97, 22.8, 0.3, 1.1, 12, 100, NULL, NULL, NULL, NULL, 'Bananas', 4, 'manual', NOW()),
+('Spinach', 'Kroger', 'Vegetables', true, 2.49, 2.08, 0.14, 0.69, 4, 100, NULL, NULL, NULL, NULL, 'Fresh spinach', 4, 'manual', NOW()),
+('Broccoli', 'Kroger', 'Vegetables', true, 3.99, 6.04, 0.34, 1.01, 1, 100, NULL, NULL, NULL, NULL, 'Fresh broccoli', 4, 'manual', NOW()),
+('Greek Yogurt', 'Member''s Mark', 'Dairy & Eggs', true, 4.28, 3.59, 0.39, 10.18, 1, 100, NULL, NULL, NULL, NULL, 'Nonfat Greek yogurt', 4, 'manual', NOW()),
+('Salt', 'Member''s Mark', 'Seasonings & Spices', true, 7.00, 0, 0, 0, 200, 100, NULL, NULL, NULL, NULL, 'Pink Himalayan salt', 5, 'manual', NOW()),
+('Black Pepper', 'Member''s Mark', 'Seasonings & Spices', true, 8.50, 64.0, 3.3, 10.4, 200, 100, NULL, NULL, NULL, NULL, 'Ground black pepper', 4, 'manual', NOW()),
+('Garlic Powder', 'Member''s Mark', 'Seasonings & Spices', true, 8.00, 73.0, 0.7, 16.0, 200, 100, NULL, NULL, NULL, NULL, 'Ground garlic', 4, 'manual', NOW());
 
 -- Insert sample recipes with volume-based measurements
 INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, nutrition_per_serving, tags, rating, cost_per_serving, total_cost, cost_last_calculated, notes, created_at, updated_at) VALUES

@@ -64,9 +64,21 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       if (item) {
         // Convert quantity to grams based on unit
         let quantityInGrams = ingredient.quantity;
-        if (ingredient.unit === 'cup') quantityInGrams *= 240; // approximate
-        if (ingredient.unit === 'tbsp') quantityInGrams *= 15;
-        if (ingredient.unit === 'tsp') quantityInGrams *= 5;
+        switch (ingredient.unit) {
+          case 'kg':
+            quantityInGrams *= 1000;
+            break;
+          case 'oz':
+            quantityInGrams *= 28.35; // 1 oz = 28.35g
+            break;
+          case 'lb':
+            quantityInGrams *= 453.592; // 1 lb = 453.592g
+            break;
+          case 'g':
+          default:
+            // already in grams
+            break;
+        }
         
         // Calculate nutrition per 100g, then scale to actual quantity
         const factor = quantityInGrams / 100;
@@ -78,10 +90,10 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     });
 
     return {
-      calories_per_serving: Math.round(totalCalories / formData.servings),
-      protein_per_serving: Math.round(totalProtein / formData.servings),
-      carbs_per_serving: Math.round(totalCarbs / formData.servings),
-      fat_per_serving: Math.round(totalFat / formData.servings),
+      calories_per_serving: Math.round((totalCalories / formData.servings) * 10) / 10, // Round to 1 decimal place
+      protein_per_serving: Math.round((totalProtein / formData.servings) * 10) / 10,
+      carbs_per_serving: Math.round((totalCarbs / formData.servings) * 10) / 10,
+      fat_per_serving: Math.round((totalFat / formData.servings) * 10) / 10,
     };
   };
 

@@ -32,14 +32,14 @@ describe('Database Integration', () => {
       expect(foodItem.in_stock).toBe(true);
       expect(foodItem.price).toBe(2.99);
       
-      // Nutrition should be calculated per 100g
-      expect(foodItem.nutrition.carbs_per_100g).toBe(14); // 14 * 100 / 100
-      expect(foodItem.nutrition.fat_per_100g).toBe(0.2); // 0.2 * 100 / 100
-      expect(foodItem.nutrition.protein_per_100g).toBe(0.3); // 0.3 * 100 / 100
+      // Nutrition should be per serving
+      expect(foodItem.nutrition.carbs_per_serving).toBe(14);
+      expect(foodItem.nutrition.fat_per_serving).toBe(0.2);
+      expect(foodItem.nutrition.protein_per_serving).toBe(0.3);
       
       // Calories should be calculated from macros: (protein*4 + carbs*4 + fat*9)
       const expectedCalories = (0.3 * 4 + 14 * 4 + 0.2 * 9);
-      expect(foodItem.nutrition.calories_per_100g).toBe(expectedCalories);
+      expect(foodItem.nutrition.calories_per_serving).toBe(expectedCalories);
     });
 
     it('should handle null database values gracefully', () => {
@@ -68,7 +68,7 @@ describe('Database Integration', () => {
       expect(foodItem.brand).toBeUndefined();
       expect(foodItem.category).toBe('Other'); // Default value
       expect(foodItem.in_stock).toBe(true); // Default value
-      expect(foodItem.nutrition.calories_per_100g).toBe(0);
+      expect(foodItem.nutrition.calories_per_serving).toBe(0);
     });
   });
 

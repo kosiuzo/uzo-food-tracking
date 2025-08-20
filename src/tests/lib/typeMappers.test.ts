@@ -135,11 +135,11 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         nutrition: {
-          calories_per_100g: 89,
-          protein_per_100g: 1.1,
-          carbs_per_100g: 23,
-          fat_per_100g: 0.3,
-          fiber_per_100g: 2.6,
+          calories_per_serving: 89,
+          protein_per_serving: 1.1,
+          carbs_per_serving: 23,
+          fat_per_serving: 0.3,
+          fiber_per_serving: 2.6,
         },
         last_edited: '2025-01-01T00:00:00Z',
       };

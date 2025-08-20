@@ -104,11 +104,11 @@ describe('useFoodInventory', () => {
       quantity: 1,
       price: 1.99,
       nutrition: {
-        calories_per_100g: 89,
-        protein_per_100g: 1.1,
-        carbs_per_100g: 27,
-        fat_per_100g: 0.3,
-        fiber_per_100g: 2.6,
+        calories_per_serving: 89,
+        protein_per_serving: 1.1,
+        carbs_per_serving: 27,
+        fat_per_serving: 0.3,
+        fiber_per_serving: 2.6,
       },
     };
 

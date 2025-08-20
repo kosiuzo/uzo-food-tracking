@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { Recipe, FoodItem } from '../types';
+import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
+import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
 
 interface RecipeGeneratorDialogProps {
   open: boolean;
@@ -93,7 +94,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     try {
       const ingredientNames = selectedIngredients.map(item => item.name);
       
-      // Create system prompt for the LLM
+      // Create system prompt for the LLM (nutrition will be calculated by the app)
       const systemPrompt = `You are a professional chef and recipe developer. Create a detailed recipe using the provided ingredients as the main components. 
 
 Requirements:
@@ -101,9 +102,8 @@ Requirements:
 - Serve ${servings} people
 ${cuisineStyle && cuisineStyle !== 'none' ? `- Cuisine style: ${cuisineStyle}` : ''}
 ${dietaryRestrictions && dietaryRestrictions !== 'none' ? `- Dietary restrictions: ${dietaryRestrictions}` : ''}
-- Provide accurate nutritional information per serving
 - Include clear, step-by-step cooking instructions
-- Suggest reasonable prep time
+- Suggest reasonable prep time and cooking time
 - Return response in valid JSON format only
 
 Return the recipe in this exact JSON format:
@@ -111,20 +111,14 @@ Return the recipe in this exact JSON format:
   "name": "Recipe Name",
   "instructions": "Step 1: ... Step 2: ... Step 3: ...",
   "servings": ${servings},
-          "total_time_minutes": 30,
+  "total_time_minutes": 30,
   "ingredients": [
     {
       "ingredient_name": "chicken breast",
       "quantity": 2,
       "unit": "pieces"
     }
-  ],
-  "nutrition": {
-    "calories_per_serving": 350,
-    "protein_per_serving": 25,
-    "carbs_per_serving": 30,
-    "fat_per_serving": 15
-  }
+  ]
 }
 
 Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')}`;
@@ -142,22 +136,19 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
       
       // Mock generated recipe response with realistic data
       const recipeName = `${ingredientNames.slice(0, 2).join(' & ')} ${cuisineStyle || 'Fusion'} Delight`;
+      const recipeIngredients = selectedIngredients.map((ingredient) => ({
+        item_id: ingredient.id,
+        quantity: Math.floor(Math.random() * 3) + 1,
+        unit: ['cups', 'tbsp', 'tsp', 'pieces', 'cloves'][Math.floor(Math.random() * 5)]
+      }));
+
       const mockGeneratedRecipe = {
         name: recipeName,
         instructions: `1. Prep all ingredients by washing and chopping as needed.\n2. Heat oil in a large pan over medium heat.\n3. Add ${ingredientNames[0]} and cook for 3-4 minutes until tender.\n4. Add ${ingredientNames.slice(1).join(', ')} and season with salt and pepper.\n5. Cook for 8-10 minutes, stirring occasionally.\n6. Taste and adjust seasoning as needed.\n7. Serve hot and enjoy!`,
         servings: servings,
         total_time_minutes: Math.floor(Math.random() * 30) + 20,
-        ingredients: selectedIngredients.map((ingredient) => ({
-          item_id: ingredient.id,
-          quantity: Math.floor(Math.random() * 3) + 1,
-          unit: ['cups', 'tbsp', 'tsp', 'pieces', 'cloves'][Math.floor(Math.random() * 5)]
-        })),
-        nutrition: {
-          calories_per_serving: Math.floor(Math.random() * 200) + 250,
-          protein_per_serving: Math.floor(Math.random() * 20) + 15,
-          carbs_per_serving: Math.floor(Math.random() * 25) + 20,
-          fat_per_serving: Math.floor(Math.random() * 15) + 8
-        }
+        ingredients: recipeIngredients,
+        nutrition: calculateRecipeNutrition(recipeIngredients, servings, allItems)
       };
 
       setGeneratedRecipe(mockGeneratedRecipe);

@@ -185,3 +185,114 @@ export function scaleNutrition(
     fat: Math.round((baseNutrition.fat || 0) * ratio * 100) / 100,
   };
 }
+
+/**
+ * Calculate total recipe nutrition based on ingredients
+ * This is a reusable function used by both AddRecipeDialog and RecipeGeneratorDialog
+ */
+export function calculateRecipeNutrition(
+  ingredients: Array<{ item_id: string; quantity: number; unit: string }>,
+  servings: number,
+  allItems: Array<{
+    id: string;
+    nutrition: {
+      calories_per_serving: number;
+      protein_per_serving: number;
+      carbs_per_serving: number;
+      fat_per_serving: number;
+    };
+    serving_size?: number;
+    serving_quantity?: number;
+    serving_unit?: string;
+    serving_unit_type?: 'volume' | 'weight' | 'package';
+    name: string;
+  }>
+): {
+  calories_per_serving: number;
+  protein_per_serving: number;
+  carbs_per_serving: number;
+  fat_per_serving: number;
+} {
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  ingredients.forEach(ingredient => {
+    const item = allItems.find(item => item.id === ingredient.item_id);
+    if (item) {
+      let quantityInGrams = ingredient.quantity;
+      const unitType = getServingUnitType(ingredient.unit);
+      
+      try {
+        // Handle different unit types
+        if (unitType === 'volume' && item.serving_unit_type === 'volume' && item.serving_quantity && item.serving_unit) {
+          // Use volume conversion for volume-based ingredients
+          quantityInGrams = convertVolumeToGrams(
+            ingredient.quantity,
+            ingredient.unit,
+            item.serving_quantity,
+            item.serving_unit,
+            item.serving_size || 100
+          );
+        } else if (unitType === 'weight') {
+          // Convert weight units to grams
+          switch (ingredient.unit) {
+            case 'kg':
+              quantityInGrams *= 1000;
+              break;
+            case 'oz':
+              quantityInGrams *= 28.35; // 1 oz = 28.35g
+              break;
+            case 'lb':
+              quantityInGrams *= 453.592; // 1 lb = 453.592g
+              break;
+            case 'g':
+            default:
+              // already in grams
+              break;
+          }
+        } else if (unitType === 'package') {
+          // For package units, multiply by serving size
+          quantityInGrams = ingredient.quantity * (item.serving_size || 100);
+        } else {
+          // Fallback: assume grams
+          quantityInGrams = ingredient.quantity;
+        }
+        
+        // Scale nutrition based on actual grams vs item's serving size
+        const scaled = scaleNutrition(
+          {
+            calories: item.nutrition.calories_per_serving,
+            protein: item.nutrition.protein_per_serving,
+            carbs: item.nutrition.carbs_per_serving,
+            fat: item.nutrition.fat_per_serving,
+          },
+          quantityInGrams,
+          item.serving_size || 100 // item's actual serving size
+        );
+        
+        totalCalories += scaled.calories;
+        totalProtein += scaled.protein;
+        totalCarbs += scaled.carbs;
+        totalFat += scaled.fat;
+        
+      } catch (error) {
+        console.warn(`Error calculating nutrition for ${item.name}:`, error);
+        // Fallback to simple gram calculation
+        const factor = quantityInGrams / (item.serving_size || 100);
+        totalCalories += item.nutrition.calories_per_serving * factor;
+        totalProtein += item.nutrition.protein_per_serving * factor;
+        totalCarbs += item.nutrition.carbs_per_serving * factor;
+        totalFat += item.nutrition.fat_per_serving * factor;
+      }
+    }
+  });
+
+  return {
+    calories_per_serving: Math.round((totalCalories / servings) * 10) / 10,
+    protein_per_serving: Math.round((totalProtein / servings) * 10) / 10,
+    carbs_per_serving: Math.round((totalCarbs / servings) * 10) / 10,
+    fat_per_serving: Math.round((totalFat / servings) * 10) / 10,
+  };
+}

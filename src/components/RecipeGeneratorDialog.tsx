@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Bot, Plus, X, Loader2, Search } from 'lucide-react';
+import { HfInference } from '@huggingface/inference';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,6 +95,9 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     try {
       const ingredientNames = selectedIngredients.map(item => item.name);
       
+      // Initialize Hugging Face client
+      const hf = new HfInference(import.meta.env.VITE_HUGGING_FACE_ACCESS_TOKEN);
+      
       // Create system prompt for the LLM (nutrition will be calculated by the app)
       const systemPrompt = `You are a professional chef and recipe developer. Create a detailed recipe using the provided ingredients as the main components. 
 
@@ -123,35 +127,72 @@ Return the recipe in this exact JSON format:
 
 Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')}`;
 
-      // For prototype, simulate API call with mock response
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // TODO: Replace this with actual LLM API call
-      // const response = await fetch('/api/generate-recipe', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ prompt: systemPrompt })
-      // });
-      // const result = await response.json();
-      
-      // Mock generated recipe response with realistic data
-      const recipeName = `${ingredientNames.slice(0, 2).join(' & ')} ${cuisineStyle || 'Fusion'} Delight`;
-      const recipeIngredients = selectedIngredients.map((ingredient) => ({
-        item_id: ingredient.id,
-        quantity: Math.floor(Math.random() * 3) + 1,
-        unit: ['cups', 'tbsp', 'tsp', 'pieces', 'cloves'][Math.floor(Math.random() * 5)]
-      }));
+      // Call Hugging Face GPT-OSS-20B model
+      const response = await hf.textGeneration({
+        model: 'openai/gpt-oss-20b',
+        inputs: systemPrompt,
+        parameters: {
+          max_new_tokens: 1000,
+          temperature: 0.7,
+          do_sample: true,
+          return_full_text: false
+        }
+      });
 
-      const mockGeneratedRecipe = {
-        name: recipeName,
-        instructions: `1. Prep all ingredients by washing and chopping as needed.\n2. Heat oil in a large pan over medium heat.\n3. Add ${ingredientNames[0]} and cook for 3-4 minutes until tender.\n4. Add ${ingredientNames.slice(1).join(', ')} and season with salt and pepper.\n5. Cook for 8-10 minutes, stirring occasionally.\n6. Taste and adjust seasoning as needed.\n7. Serve hot and enjoy!`,
-        servings: servings,
-        total_time_minutes: Math.floor(Math.random() * 30) + 20,
+      let generatedText = response.generated_text;
+      
+      // Try to extract JSON from the response
+      let parsedRecipe;
+      try {
+        // Look for JSON in the response
+        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedRecipe = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found in response');
+        }
+      } catch (parseError) {
+        console.warn('Failed to parse AI response as JSON, using fallback');
+        // Fallback to mock response if parsing fails
+        const recipeName = `${ingredientNames.slice(0, 2).join(' & ')} ${cuisineStyle || 'Fusion'} Delight`;
+        parsedRecipe = {
+          name: recipeName,
+          instructions: `1. Prep all ingredients by washing and chopping as needed.\n2. Heat oil in a large pan over medium heat.\n3. Add ${ingredientNames[0]} and cook for 3-4 minutes until tender.\n4. Add ${ingredientNames.slice(1).join(', ')} and season with salt and pepper.\n5. Cook for 8-10 minutes, stirring occasionally.\n6. Taste and adjust seasoning as needed.\n7. Serve hot and enjoy!`,
+          servings: servings,
+          total_time_minutes: Math.floor(Math.random() * 30) + 20,
+          ingredients: selectedIngredients.map((ingredient) => ({
+            ingredient_name: ingredient.name,
+            quantity: Math.floor(Math.random() * 3) + 1,
+            unit: ['cups', 'tbsp', 'tsp', 'pieces', 'cloves'][Math.floor(Math.random() * 5)]
+          }))
+        };
+      }
+
+      // Map the AI response ingredients to our expected format
+      const recipeIngredients = parsedRecipe.ingredients.map((aiIngredient: any) => {
+        // Find matching ingredient from selected ingredients
+        const matchingIngredient = selectedIngredients.find(
+          item => item.name.toLowerCase().includes(aiIngredient.ingredient_name.toLowerCase()) ||
+                 aiIngredient.ingredient_name.toLowerCase().includes(item.name.toLowerCase())
+        );
+        
+        return {
+          item_id: matchingIngredient?.id || selectedIngredients[0]?.id,
+          quantity: aiIngredient.quantity || 1,
+          unit: aiIngredient.unit || 'pieces'
+        };
+      });
+
+      const finalRecipe = {
+        name: parsedRecipe.name,
+        instructions: parsedRecipe.instructions,
+        servings: parsedRecipe.servings || servings,
+        total_time_minutes: parsedRecipe.total_time_minutes || 30,
         ingredients: recipeIngredients,
         nutrition: calculateRecipeNutrition(recipeIngredients, servings, allItems)
       };
 
-      setGeneratedRecipe(mockGeneratedRecipe);
+      setGeneratedRecipe(finalRecipe);
       setShowPreview(true);
       
     } catch (error) {

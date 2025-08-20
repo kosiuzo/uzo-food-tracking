@@ -199,11 +199,6 @@ export default function Recipes() {
                     <span className="text-muted-foreground">
                       F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
                     </span>
-                    {recipe.cost_per_serving && (
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        ${recipe.cost_per_serving.toFixed(2)}/serving
-                      </Badge>
-                    )}
                   </div>
 
                                     {/* Ingredients list */}

@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { Recipe, FoodItem } from '../types';
 import { useFoodInventory } from '../hooks/useFoodInventory';
+import { RecipePreviewDialog } from './RecipePreviewDialog';
 
 interface RecipeGeneratorDialogProps {
   open: boolean;
@@ -56,6 +57,8 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const [dietaryRestrictions, setDietaryRestrictions] = useState('none');
   const [isGenerating, setIsGenerating] = useState(false);
   const [ingredientSelectorOpen, setIngredientSelectorOpen] = useState(false);
+  const [generatedRecipe, setGeneratedRecipe] = useState<Omit<Recipe, 'id' | 'is_favorite'> | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
 
@@ -157,14 +160,8 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
         }
       };
 
-      onRecipeGenerated(mockGeneratedRecipe);
-      resetForm();
-      onOpenChange(false);
-      
-      toast({
-        title: 'Recipe generated!',
-        description: 'Your AI-generated recipe has been created successfully.',
-      });
+      setGeneratedRecipe(mockGeneratedRecipe);
+      setShowPreview(true);
       
     } catch (error) {
       console.error('Recipe generation failed:', error);
@@ -184,6 +181,31 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
     setCuisineStyle('none');
     setDietaryRestrictions('none');
     setIngredientSelectorOpen(false);
+    setGeneratedRecipe(null);
+    setShowPreview(false);
+  };
+
+  const handleAcceptRecipe = () => {
+    if (generatedRecipe) {
+      onRecipeGenerated(generatedRecipe);
+      resetForm();
+      onOpenChange(false);
+      
+      toast({
+        title: 'Recipe saved!',
+        description: 'Your AI-generated recipe has been saved successfully.',
+      });
+    }
+  };
+
+  const handleDeclineRecipe = () => {
+    setShowPreview(false);
+    setGeneratedRecipe(null);
+    
+    toast({
+      title: 'Recipe declined',
+      description: 'You can generate a new recipe with different parameters.',
+    });
   };
 
   const handleClose = () => {
@@ -194,8 +216,9 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+    <>
+      <Dialog open={open && !showPreview} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />
@@ -356,7 +379,17 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <RecipePreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        recipe={generatedRecipe}
+        onAccept={handleAcceptRecipe}
+        onDecline={handleDeclineRecipe}
+        ingredients={selectedIngredients}
+      />
+    </>
   );
 }

@@ -219,26 +219,112 @@ export interface Database {
           created_at?: string | null
         }
       }
-      meal_plans: {
+      weekly_meal_plans: {
         Row: {
           id: number
-          date: string
-          meal_type: string
-          recipe_id: number | null
+          week_start: string
           created_at: string | null
+          updated_at: string | null
         }
         Insert: {
           id?: never
-          date: string
-          meal_type: string
-          recipe_id?: number | null
+          week_start: string
           created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: never
-          date?: string
-          meal_type?: string
-          recipe_id?: number | null
+          week_start?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      meal_plan_blocks: {
+        Row: {
+          id: number
+          weekly_plan_id: number
+          name: string
+          start_day: number
+          end_day: number
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          weekly_plan_id: number
+          name: string
+          start_day: number
+          end_day: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          weekly_plan_id?: number
+          name?: string
+          start_day?: number
+          end_day?: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      recipe_rotations: {
+        Row: {
+          id: number
+          block_id: number
+          name: string
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          block_id: number
+          name: string
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          block_id?: number
+          name?: string
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      rotation_recipes: {
+        Row: {
+          rotation_id: number
+          recipe_id: number
+          created_at: string | null
+        }
+        Insert: {
+          rotation_id: number
+          recipe_id: number
+          created_at?: string | null
+        }
+        Update: {
+          rotation_id?: number
+          recipe_id?: number
+          created_at?: string | null
+        }
+      }
+      block_snacks: {
+        Row: {
+          block_id: number
+          recipe_id: number
+          created_at: string | null
+        }
+        Insert: {
+          block_id: number
+          recipe_id: number
+          created_at?: string | null
+        }
+        Update: {
+          block_id?: number
+          recipe_id?: number
           created_at?: string | null
         }
       }

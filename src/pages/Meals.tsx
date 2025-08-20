@@ -204,7 +204,7 @@ export default function Meals() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
                 <div className="text-sm text-muted-foreground">
@@ -217,14 +217,6 @@ export default function Meals() {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {selectedDate ? 'Calories on ' + new Date(selectedDate).toLocaleDateString() : 'Total Calories'}
-                </div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  ${filteredMeals.reduce((sum, log) => sum + log.estimated_cost, 0).toFixed(2)}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedDate ? 'Cost on ' + new Date(selectedDate).toLocaleDateString() : 'Total Cost'}
                 </div>
               </Card>
             </div>
@@ -300,9 +292,6 @@ export default function Meals() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                            <Badge variant="secondary" className="text-green-600">
-                              ${log.estimated_cost.toFixed(2)}
-                            </Badge>
                           </div>
                         </div>
 

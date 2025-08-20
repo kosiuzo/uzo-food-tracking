@@ -112,12 +112,13 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
 export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
   // Skip meal logs without recipe_id as they are now mandatory
   if (!dbMealLog.recipe_id) {
+    console.warn('Skipping meal log without recipe_id:', dbMealLog);
     return null;
   }
   
   const macros = dbMealLog.macros || {};
   
-  return {
+  const mealLog = {
     id: dbMealLog.id.toString(),
     recipe_ids: [dbMealLog.recipe_id.toString()], // Convert single recipe_id to array
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
@@ -131,6 +132,9 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
     },
     estimated_cost: dbMealLog.cost || 0,
   };
+  
+  console.log('Mapped meal log:', mealLog);
+  return mealLog;
 }
 
 // Convert MealLog to database insert format

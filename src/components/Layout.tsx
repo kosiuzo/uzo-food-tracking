@@ -10,7 +10,7 @@ interface LayoutProps {
 const navItems = [
   { path: '/', label: 'Inventory', icon: Package },
   { path: '/recipes', label: 'Recipes', icon: ChefHat },
-  { path: '/meals', label: 'Meals', icon: BookOpen },
+  { path: '/meals', label: 'Log', icon: BookOpen },
   { path: '/planner', label: 'Planner', icon: CalendarDays },
 ];
 

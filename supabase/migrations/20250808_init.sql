@@ -2,6 +2,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
+-- Drop the old meal_plans table and related indexes if they exist
+DROP INDEX IF EXISTS idx_meal_plans_date;
+DROP INDEX IF EXISTS idx_meal_plans_recipe_id;
+DROP TABLE IF EXISTS meal_plans;
+
 -- Create serving unit type enum
 DO $$
 BEGIN
@@ -107,20 +112,51 @@ CREATE TABLE meal_logs (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Remove shopping_list table since we're using in_stock toggle
--- CREATE TABLE shopping_list (
---     item_id BIGINT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE,
---     added_at TIMESTAMP DEFAULT NOW()
--- );
-
--- Create meal_plans table
-CREATE TABLE meal_plans (
+-- Create new meal planning tables
+-- Weekly meal plans
+CREATE TABLE weekly_meal_plans (
     id BIGSERIAL PRIMARY KEY,
-    date DATE NOT NULL,
-    meal_type TEXT NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'dinner')),
+    week_start DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Meal plan blocks (day ranges)
+CREATE TABLE meal_plan_blocks (
+    id BIGSERIAL PRIMARY KEY,
+    weekly_plan_id BIGINT REFERENCES weekly_meal_plans(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    start_day INTEGER NOT NULL CHECK (start_day >= 0 AND start_day <= 6), -- 0 = Monday, 6 = Sunday
+    end_day INTEGER NOT NULL CHECK (end_day >= 0 AND end_day <= 6),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT valid_day_range CHECK (end_day >= start_day)
+);
+
+-- Recipe rotations within blocks
+CREATE TABLE recipe_rotations (
+    id BIGSERIAL PRIMARY KEY,
+    block_id BIGINT REFERENCES meal_plan_blocks(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Recipes assigned to rotations
+CREATE TABLE rotation_recipes (
+    rotation_id BIGINT REFERENCES recipe_rotations(id) ON DELETE CASCADE,
     recipe_id BIGINT REFERENCES recipes(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT NOW(),
-    UNIQUE(date, meal_type)
+    PRIMARY KEY (rotation_id, recipe_id)
+);
+
+-- Snacks for meal plan blocks
+CREATE TABLE block_snacks (
+    block_id BIGINT REFERENCES meal_plan_blocks(id) ON DELETE CASCADE,
+    recipe_id BIGINT REFERENCES recipes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (block_id, recipe_id)
 );
 
 -- Create indexes for performance
@@ -133,8 +169,11 @@ CREATE INDEX IF NOT EXISTS idx_recipes_meal_type ON recipes USING GIN(meal_type)
 CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_cooked_at ON meal_logs(cooked_at);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_recipe_id ON meal_logs(recipe_id);
-CREATE INDEX IF NOT EXISTS idx_meal_plans_date ON meal_plans(date);
-CREATE INDEX IF NOT EXISTS idx_meal_plans_recipe_id ON meal_plans(recipe_id);
+CREATE INDEX IF NOT EXISTS idx_weekly_meal_plans_week_start ON weekly_meal_plans(week_start);
+CREATE INDEX IF NOT EXISTS idx_meal_plan_blocks_weekly_plan_id ON meal_plan_blocks(weekly_plan_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_rotations_block_id ON recipe_rotations(block_id);
+CREATE INDEX IF NOT EXISTS idx_rotation_recipes_rotation_id ON rotation_recipes(rotation_id);
+CREATE INDEX IF NOT EXISTS idx_block_snacks_block_id ON block_snacks(block_id);
 
 -- Create RPC function for upserting items by name
 CREATE OR REPLACE FUNCTION upsert_item_by_name(
@@ -332,7 +371,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create RPC function for calculating recipe costs
--- Create RPC function for calculating recipe costs
 CREATE OR REPLACE FUNCTION calculate_recipe_cost(
     p_recipe_id BIGINT
 ) RETURNS NUMERIC AS $$
@@ -451,16 +489,66 @@ CREATE TRIGGER trigger_recipes_update_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_recipes_updated_at();
 
+-- Create trigger to update updated_at timestamp on meal plan blocks
+CREATE OR REPLACE FUNCTION trigger_update_meal_plan_blocks_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_meal_plan_blocks_update_updated_at
+    BEFORE UPDATE ON meal_plan_blocks
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_meal_plan_blocks_updated_at();
+
+-- Create trigger to update updated_at timestamp on recipe rotations
+CREATE OR REPLACE FUNCTION trigger_update_recipe_rotations_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_recipe_rotations_update_updated_at
+    BEFORE UPDATE ON recipe_rotations
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_recipe_rotations_updated_at();
+
+-- Create trigger to update updated_at timestamp on weekly meal plans
+CREATE OR REPLACE FUNCTION trigger_update_weekly_meal_plans_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_weekly_meal_plans_update_updated_at
+    BEFORE UPDATE ON weekly_meal_plans
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_weekly_meal_plans_updated_at();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipe_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE meal_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_meal_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_plan_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recipe_rotations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rotation_recipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE block_snacks ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (since this is a single-user app)
 CREATE POLICY "Allow public access to items" ON items FOR ALL USING (true);
 CREATE POLICY "Allow public access to recipes" ON recipes FOR ALL USING (true);
 CREATE POLICY "Allow public access to recipe_items" ON recipe_items FOR ALL USING (true);
 CREATE POLICY "Allow public access to meal_logs" ON meal_logs FOR ALL USING (true);
-CREATE POLICY "Allow public access to meal_plans" ON meal_plans FOR ALL USING (true);
+CREATE POLICY "Allow public access to weekly_meal_plans" ON weekly_meal_plans FOR ALL USING (true);
+CREATE POLICY "Allow public access to meal_plan_blocks" ON meal_plan_blocks FOR ALL USING (true);
+CREATE POLICY "Allow public access to recipe_rotations" ON recipe_rotations FOR ALL USING (true);
+CREATE POLICY "Allow public access to rotation_recipes" ON rotation_recipes FOR ALL USING (true);
+CREATE POLICY "Allow public access to block_snacks" ON block_snacks FOR ALL USING (true);

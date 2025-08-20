@@ -44,11 +44,11 @@ describe('typeMappers', () => {
         last_purchased: undefined,
         rating: undefined,
         nutrition: {
-          calories_per_100g: 104.7, // Calculated: (0.5*4 + 25*4 + 0.3*9) * 100 / 100
-          protein_per_100g: 0.5, // 0.5 * 100 / 100
-          carbs_per_100g: 25, // 25 * 100 / 100
-          fat_per_100g: 0.3, // 0.3 * 100 / 100
-          fiber_per_100g: 0,
+          calories_per_serving: 104.7, // Calculated: (0.5*4 + 25*4 + 0.3*9) * 100 / 100
+          protein_per_serving: 0.5, // 0.5 * 100 / 100
+          carbs_per_serving: 25, // 25 * 100 / 100
+          fat_per_serving: 0.3, // 0.3 * 100 / 100
+          fiber_per_serving: 0,
         },
         last_edited: '2025-01-01T00:00:00Z',
       });
@@ -94,11 +94,11 @@ describe('typeMappers', () => {
         serving_size: 100,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
-          calories_per_100g: 52,
-          protein_per_100g: 0.3,
-          carbs_per_100g: 14,
-          fat_per_100g: 0.2,
-          fiber_per_100g: 2.4,
+          calories_per_serving: 52,
+          protein_per_serving: 0.3,
+          carbs_per_serving: 14,
+          fat_per_serving: 0.2,
+          fiber_per_serving: 2.4,
         },
         last_edited: '2025-01-01T00:00:00Z',
       };
@@ -111,11 +111,15 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
-        carbs_per_serving: 14, // Store the per 100g value directly
-        fat_per_serving: 0.2, // Store the per 100g value directly  
-        protein_per_serving: 0.3, // Store the per 100g value directly
+        calories_per_serving: 52,
+        carbs_per_serving: 14,
+        fat_per_serving: 0.2,
+        protein_per_serving: 0.3,
         servings_per_container: 1,
         serving_size_grams: 100,
+        serving_quantity: null,
+        serving_unit: null,
+        serving_unit_type: null,
         image_url: 'https://example.com/apple.jpg',
         ingredients: null,
         nutrition_source: 'manual',
@@ -191,7 +195,7 @@ describe('typeMappers', () => {
         name: 'Apple Pie',
         instructions: 'Mix ingredients and bake',
         servings: 8,
-        prep_time_minutes: 30,
+        total_time_minutes: 75,
         ingredients,
         nutrition: {
           calories_per_serving: 250,
@@ -235,7 +239,7 @@ describe('typeMappers', () => {
 
       expect(result.instructions).toBe('');
       expect(result.servings).toBe(1);
-      expect(result.prep_time_minutes).toBeUndefined();
+      expect(result.total_time_minutes).toBeUndefined();
       expect(result.is_favorite).toBe(false);
       expect(result.nutrition).toEqual({
         calories_per_serving: 0,
@@ -252,7 +256,7 @@ describe('typeMappers', () => {
         name: 'Apple Pie',
         instructions: 'Mix ingredients and bake',
         servings: 8,
-        prep_time_minutes: 30,
+        total_time_minutes: 30,
         ingredients: [
           { item_id: '1', quantity: 6, unit: 'pieces' },
         ],
@@ -272,16 +276,16 @@ describe('typeMappers', () => {
         cuisine_type: null,
         meal_type: null,
         difficulty: null,
-        prep_time: 30,
+        prep_time: null,
         cook_time: null,
         total_time: 30,
         servings: 8,
         instructions: 'Mix ingredients and bake',
         nutrition_per_serving: {
-          calories_per_serving: 250,
-          protein_per_serving: 3,
-          carbs_per_serving: 35,
-          fat_per_serving: 12,
+          calories: 250,
+          protein: 3,
+          carbs: 35,
+          fat: 12,
         },
         tags: null,
         rating: 5, // is_favorite = true

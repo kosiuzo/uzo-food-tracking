@@ -27,7 +27,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     name: '',
     instructions: '',
     servings: 1,
-    prep_time_minutes: 0,
+    total_time_minutes: 0,
     ingredients: [] as RecipeIngredient[],
   });
 
@@ -38,7 +38,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         name: editingRecipe.name,
         instructions: editingRecipe.instructions,
         servings: editingRecipe.servings,
-        prep_time_minutes: editingRecipe.prep_time_minutes,
+        total_time_minutes: editingRecipe.total_time_minutes,
         ingredients: editingRecipe.ingredients,
       });
     } else if (open) {
@@ -47,7 +47,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         name: '',
         instructions: '',
         servings: 1,
-        prep_time_minutes: 0,
+        total_time_minutes: 0,
         ingredients: [],
       });
     }
@@ -195,7 +195,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       name: '',
       instructions: '',
       servings: 1,
-      prep_time_minutes: 0,
+      total_time_minutes: 0,
       ingredients: [],
     });
 
@@ -238,12 +238,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prep-time">Prep Time (min)</Label>
+              <Label htmlFor="prep-time">Total Time (min)</Label>
               <Input
                 id="prep-time"
                 type="number"
-                value={formData.prep_time_minutes}
-                onChange={(e) => setFormData(prev => ({ ...prev, prep_time_minutes: parseInt(e.target.value) || 0 }))}
+                value={formData.total_time_minutes}
+                onChange={(e) => setFormData(prev => ({ ...prev, total_time_minutes: parseInt(e.target.value) || 0 }))}
                 min="0"
               />
             </div>

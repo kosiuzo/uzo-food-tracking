@@ -67,7 +67,7 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     name: dbRecipe.name,
     instructions: dbRecipe.instructions || '',
     servings: dbRecipe.servings || 1,
-    prep_time_minutes: dbRecipe.prep_time || undefined,
+    total_time_minutes: dbRecipe.total_time || undefined,
     ingredients,
     nutrition: {
       calories_per_serving: (nutrition.calories as number) || 0,
@@ -89,9 +89,9 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
     cuisine_type: null,
     meal_type: null,
     difficulty: null,
-    prep_time: recipe.prep_time_minutes || null,
+    prep_time: null,
     cook_time: null,
-    total_time: recipe.prep_time_minutes || null,
+    total_time: recipe.total_time_minutes || null,
     servings: recipe.servings,
     instructions: recipe.instructions,
     nutrition_per_serving: {

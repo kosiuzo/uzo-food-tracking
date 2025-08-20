@@ -154,7 +154,7 @@ export const mockRecipes: Recipe[] = [
     name: 'Banana Protein Smoothie',
     instructions: '1. Add 1 banana, 1 cup yogurt, and 1 cup water to blender\n2. Blend until smooth\n3. Serve immediately',
     servings: 1,
-    prep_time_minutes: 5,
+    total_time_minutes: 5,
     is_favorite: true,
     ingredients: [
       { item_id: '1', quantity: 120, unit: 'g' },
@@ -173,7 +173,7 @@ export const mockRecipes: Recipe[] = [
     name: 'Grilled Salmon with Broccoli',
     instructions: '1. Season salmon with salt and pepper\n2. Grill salmon for 4-5 minutes per side\n3. Steam broccoli until tender\n4. Serve together with lemon wedges',
     servings: 2,
-    prep_time_minutes: 25,
+    total_time_minutes: 25,
     is_favorite: false,
     ingredients: [
       { item_id: '7', quantity: 300, unit: 'g' },
@@ -192,7 +192,7 @@ export const mockRecipes: Recipe[] = [
     name: 'Avocado Toast with Eggs',
     instructions: '1. Toast bread until golden\n2. Mash avocado and spread on toast\n3. Fry eggs to desired doneness\n4. Top with salt, pepper, and red pepper flakes',
     servings: 2,
-    prep_time_minutes: 15,
+    total_time_minutes: 15,
     is_favorite: true,
     ingredients: [
       { item_id: '8', quantity: 150, unit: 'g' },
@@ -211,7 +211,7 @@ export const mockRecipes: Recipe[] = [
     name: 'Greek Yogurt Parfait',
     instructions: '1. Layer yogurt in a glass\n2. Add granola and honey\n3. Top with fresh berries\n4. Repeat layers and serve',
     servings: 1,
-    prep_time_minutes: 8,
+    total_time_minutes: 8,
     is_favorite: false,
     ingredients: [
       { item_id: '4', quantity: 200, unit: 'g' },
@@ -230,7 +230,7 @@ export const mockRecipes: Recipe[] = [
     name: 'Chicken and Rice Bowl',
     instructions: '1. Cook rice according to package directions\n2. Season and grill chicken breast\n3. Steam vegetables\n4. Assemble bowl with rice, chicken, and vegetables',
     servings: 4,
-    prep_time_minutes: 35,
+    total_time_minutes: 35,
     is_favorite: true,
     ingredients: [
       { item_id: '5', quantity: 400, unit: 'g' },

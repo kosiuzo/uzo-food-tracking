@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2 } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
+import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
@@ -19,6 +20,7 @@ export default function Recipes() {
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isGeneratorDialogOpen, setIsGeneratorDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -55,6 +57,22 @@ export default function Recipes() {
       toast({
         title: 'Error',
         description: 'Failed to delete recipe. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRecipeGenerated = async (generatedRecipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
+    try {
+      await addRecipe(generatedRecipe);
+      toast({
+        title: 'AI Recipe Added!',
+        description: `"${generatedRecipe.name}" has been generated and saved successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save the generated recipe. Please try again.',
         variant: 'destructive',
       });
     }
@@ -116,6 +134,16 @@ export default function Recipes() {
             <Switch id="favorites-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
             <Label htmlFor="favorites-only" className="text-sm">Favorites only</Label>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsGeneratorDialogOpen(true)}
+            className="flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">Generate with AI</span>
+            <span className="sm:hidden">AI Generate</span>
+          </Button>
         </div>
 
         {/* Recipes List */}
@@ -136,10 +164,10 @@ export default function Recipes() {
                           <Users className="h-4 w-4" />
                           {recipe.servings} servings
                         </div>
-                        {recipe.prep_time_minutes && (
+                        {recipe.total_time_minutes && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {recipe.prep_time_minutes} min
+                            {recipe.total_time_minutes} min
                           </div>
                         )}
                       </div>
@@ -290,6 +318,13 @@ export default function Recipes() {
           onConfirm={handleDeleteRecipe}
           confirmText="Delete"
           variant="destructive"
+        />
+
+        {/* Recipe Generator Dialog */}
+        <RecipeGeneratorDialog
+          open={isGeneratorDialogOpen}
+          onOpenChange={setIsGeneratorDialogOpen}
+          onRecipeGenerated={handleRecipeGenerated}
         />
       </div>
     </Layout>

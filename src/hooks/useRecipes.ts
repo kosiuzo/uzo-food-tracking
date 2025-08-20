@@ -147,7 +147,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           name: updates.name,
           instructions: updates.instructions,
           servings: updates.servings,
-          prep_time: updates.prep_time_minutes,
+          total_time: updates.total_time_minutes,
           nutrition_per_serving: nutritionToSave,
           rating: updates.is_favorite ? 5 : null,
         })

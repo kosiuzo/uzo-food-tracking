@@ -56,7 +56,7 @@ export interface Recipe {
   name: string;
   instructions: string;
   servings: number;
-  prep_time_minutes?: number;
+  total_time_minutes?: number;
   ingredients: RecipeIngredient[];
   nutrition: {
     calories_per_serving: number;

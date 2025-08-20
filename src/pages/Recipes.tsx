@@ -90,7 +90,7 @@ export default function Recipes() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg border bg-card p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">{recipes.length}</div>
             <div className="text-sm text-muted-foreground">Total Recipes</div>
@@ -98,15 +98,6 @@ export default function Recipes() {
           <div className="rounded-lg border bg-card p-4 text-center">
             <div className="text-2xl font-bold text-pink-600">{recipes.filter(r => r.is_favorite).length}</div>
             <div className="text-sm text-muted-foreground">Favorites</div>
-          </div>
-          <div className="rounded-lg border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {recipes.length > 0 
-                ? Math.round(recipes.reduce((sum, r) => sum + (r.prep_time_minutes || 0), 0) / recipes.length)
-                : 0
-              }
-            </div>
-            <div className="text-sm text-muted-foreground">Avg Prep Time (min)</div>
           </div>
         </div>
 

@@ -87,7 +87,7 @@ describe('Planner Page', () => {
     render(<Planner />);
     
     expect(screen.getByText('Meal Planner')).toBeInTheDocument();
-    expect(screen.getByText('Weekly Overview')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Meal Plan Overview')).toBeInTheDocument();
     expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
   });
 
@@ -97,7 +97,7 @@ describe('Planner Page', () => {
     render(<Planner />);
     
     expect(screen.getByText('Meal Planner')).toBeInTheDocument();
-    expect(screen.getByText('Weekly Overview')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Meal Plan Overview')).toBeInTheDocument();
     expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
   });
 
@@ -115,7 +115,7 @@ describe('Planner Page', () => {
     
     render(<Planner />);
     
-    expect(screen.getByText('Weekly Overview')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Meal Plan Overview')).toBeInTheDocument();
   });
 
   it('handles loading state', () => {

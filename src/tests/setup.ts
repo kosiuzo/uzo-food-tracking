@@ -10,10 +10,9 @@ vi.mock('../lib/supabase', () => ({
         return {
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: null, // No existing plan
-                error: { code: 'PGRST116' } // No rows returned
-              }))
+              single: vi.fn(() => {
+                throw new Error('Mocked database error'); // Force fallback to mock data
+              })
             }))
           })),
           insert: vi.fn(() => ({

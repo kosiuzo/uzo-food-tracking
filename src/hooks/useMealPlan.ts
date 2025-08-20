@@ -1,18 +1,59 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { mockMealPlan } from '../data/mockData';
+import { WeeklyMealPlan, MealPlanBlock, RecipeRotation } from '../types';
 
-export type MealType = 'breakfast' | 'lunch' | 'dinner';
-
-export interface MealPlanEntry {
-  id: string;
-  date: string; // YYYY-MM-DD
-  mealType: MealType;
-  recipeId: string;
-}
+// Mock data for the new meal planner
+const mockWeeklyMealPlan: WeeklyMealPlan = {
+  id: '1',
+  weekStart: '2024-01-01',
+  blocks: [
+    {
+      id: '1',
+      name: 'Mon-Wed Block',
+      startDay: 0, // Monday
+      endDay: 2,   // Wednesday
+      rotations: [
+        {
+          id: '1',
+          name: 'Rotation 1',
+          recipes: ['salmon-eggs-salsa'],
+          notes: 'Salmon & eggs with salsa'
+        },
+        {
+          id: '2',
+          name: 'Rotation 2',
+          recipes: ['chicken-orange-broccoli'],
+          notes: 'Chicken breast with orange chicken sauce, and broccoli'
+        }
+      ],
+      snacks: ['protein-bar', 'nuts']
+    },
+    {
+      id: '2',
+      name: 'Thu-Sat Block',
+      startDay: 3, // Thursday
+      endDay: 5,   // Saturday
+      rotations: [
+        {
+          id: '3',
+          name: 'Rotation 1',
+          recipes: ['steak-honey-garlic', 'cabbage'],
+          notes: 'Steak with honey and garlic sauce, cabbage'
+        },
+        {
+          id: '4',
+          name: 'Rotation 2',
+          recipes: ['ground-beef-bacon', 'lettuce-guacamole'],
+          notes: 'Ground beef, bacon, lettuce, and guacamole'
+        }
+      ],
+      snacks: ['yogurt', 'berries']
+    }
+  ]
+};
 
 export function useMealPlan() {
-  const [plan, setPlan] = useState<MealPlanEntry[]>([]);
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyMealPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
@@ -24,136 +65,137 @@ export function useMealPlan() {
   const loadMealPlan = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('meal_plans')
-        .select('*')
-        .order('date', { ascending: false });
-      
-      if (error) throw error;
-      
-      const mappedPlan: MealPlanEntry[] = data.map((dbEntry: Record<string, unknown>) => ({
-        id: dbEntry.id.toString(),
-        date: dbEntry.date,
-        mealType: dbEntry.meal_type as MealType,
-        recipeId: dbEntry.recipe_id.toString(),
-      }));
-      
-      setPlan(mappedPlan);
-      setUsingMockData(false);
-    } catch (err) {
-      console.warn('Failed to load meal plan from Supabase, using mock data:', err);
-      setPlan(mockMealPlan);
+      // For now, we'll use mock data since the new structure isn't in the database yet
+      // TODO: Implement database loading when schema is updated
+      setWeeklyPlan(mockWeeklyMealPlan);
       setUsingMockData(true);
-      setError(null); // Clear error since we're using fallback data
+      setError(null);
+    } catch (err) {
+      console.warn('Failed to load meal plan, using mock data:', err);
+      setWeeklyPlan(mockWeeklyMealPlan);
+      setUsingMockData(true);
+      setError(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const setMeal = async (date: string, mealType: MealType, recipeId: string) => {
-    if (usingMockData) {
-      // In demo mode, just update local state
-      const newEntry: MealPlanEntry = {
-        id: Math.random().toString(),
-        date,
-        mealType,
-        recipeId,
-      };
-      
-      setPlan((prev) => {
-        const idx = prev.findIndex((p) => p.date === date && p.mealType === mealType);
-        if (idx >= 0) {
-          const updated = [...prev];
-          updated[idx] = newEntry;
-          return updated;
-        }
-        return [...prev, newEntry];
-      });
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('meal_plans')
-        .upsert([{
-          date,
-          meal_type: mealType,
-          recipe_id: parseInt(recipeId),
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      const newEntry: MealPlanEntry = {
-        id: data.id.toString(),
-        date,
-        mealType,
-        recipeId,
-      };
-      
-      setPlan((prev) => {
-        const idx = prev.findIndex((p) => p.date === date && p.mealType === mealType);
-        if (idx >= 0) {
-          const updated = [...prev];
-          updated[idx] = newEntry;
-          return updated;
-        }
-        return [...prev, newEntry];
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set meal');
-      throw err;
-    }
-  };
-
-  const clearMeal = async (date: string, mealType: MealType) => {
-    if (usingMockData) {
-      // In demo mode, just update local state
-      setPlan((prev) => prev.filter((p) => !(p.date === date && p.mealType === mealType)));
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('meal_plans')
-        .delete()
-        .eq('date', date)
-        .eq('meal_type', mealType);
-      
-      if (error) throw error;
-      
-      setPlan((prev) => prev.filter((p) => !(p.date === date && p.mealType === mealType)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear meal');
-      throw err;
-    }
-  };
-
-  const getPlanForDate = (date: string) => {
-    const byMeal: Record<MealType, string | undefined> = {
-      breakfast: undefined,
-      lunch: undefined,
-      dinner: undefined,
+  const createMealPlanBlock = (block: Omit<MealPlanBlock, 'id'>) => {
+    const newBlock: MealPlanBlock = {
+      ...block,
+      id: Math.random().toString(),
     };
-    for (const p of plan) {
-      if (p.date === date) byMeal[p.mealType] = p.recipeId;
-    }
-    return byMeal;
+
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: [...prev.blocks, newBlock],
+      };
+    });
   };
 
-  const getPlansInRange = (startDate: string, endDate: string) =>
-    plan.filter((p) => p.date >= startDate && p.date <= endDate);
+  const updateMealPlanBlock = (blockId: string, updates: Partial<MealPlanBlock>) => {
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((block) =>
+          block.id === blockId ? { ...block, ...updates } : block
+        ),
+      };
+    });
+  };
 
-  return { 
-    plan, 
+  const deleteMealPlanBlock = (blockId: string) => {
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: prev.blocks.filter((block) => block.id !== blockId),
+      };
+    });
+  };
+
+  const addRotationToBlock = (blockId: string, rotation: Omit<RecipeRotation, 'id'>) => {
+    const newRotation: RecipeRotation = {
+      ...rotation,
+      id: Math.random().toString(),
+    };
+
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((block) =>
+          block.id === blockId
+            ? { ...block, rotations: [...block.rotations, newRotation] }
+            : block
+        ),
+      };
+    });
+  };
+
+  const updateRotation = (blockId: string, rotationId: string, updates: Partial<RecipeRotation>) => {
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((block) =>
+          block.id === blockId
+            ? {
+                ...block,
+                rotations: block.rotations.map((rotation) =>
+                  rotation.id === rotationId ? { ...rotation, ...updates } : rotation
+                ),
+              }
+            : block
+        ),
+      };
+    });
+  };
+
+  const deleteRotation = (blockId: string, rotationId: string) => {
+    setWeeklyPlan((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((block) =>
+          block.id === blockId
+            ? {
+                ...block,
+                rotations: block.rotations.filter((rotation) => rotation.id !== rotationId),
+              }
+            : block
+        ),
+      };
+    });
+  };
+
+  const getDayName = (dayIndex: number): string => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[dayIndex] || 'Unknown';
+  };
+
+  const getDayRange = (startDay: number, endDay: number): string => {
+    const start = getDayName(startDay);
+    const end = getDayName(endDay);
+    return start === end ? start : `${start} - ${end}`;
+  };
+
+  return {
+    weeklyPlan,
     loading,
     error,
     usingMockData,
-    setMeal, 
-    clearMeal, 
-    getPlanForDate, 
-    getPlansInRange,
+    createMealPlanBlock,
+    updateMealPlanBlock,
+    deleteMealPlanBlock,
+    addRotationToBlock,
+    updateRotation,
+    deleteRotation,
+    getDayName,
+    getDayRange,
     refetch: loadMealPlan,
   };
 }

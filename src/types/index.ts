@@ -121,6 +121,29 @@ export interface MealLog {
   estimated_cost: number; // Now mandatory, derived from recipes
 }
 
+// New types for the reimagined meal planner
+export interface RecipeRotation {
+  id: string;
+  name: string;
+  recipes: string[]; // Array of recipe IDs
+  notes?: string;
+}
+
+export interface MealPlanBlock {
+  id: string;
+  name: string;
+  startDay: number; // 0 = Monday, 1 = Tuesday, etc.
+  endDay: number;
+  rotations: RecipeRotation[];
+  snacks?: string[]; // Array of snack recipe IDs
+}
+
+export interface WeeklyMealPlan {
+  id: string;
+  weekStart: string; // YYYY-MM-DD
+  blocks: MealPlanBlock[];
+}
+
 // Database row type for meal_logs table
 export interface DbMealLog {
   id: number;

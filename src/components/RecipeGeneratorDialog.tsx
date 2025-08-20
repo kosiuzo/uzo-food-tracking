@@ -95,10 +95,13 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
       const ingredientNames = selectedIngredients.map(item => item.name);
       
       // Create system prompt for the LLM (nutrition will be calculated by the app)
-      const systemPrompt = `You are a professional chef and recipe developer. Create a detailed recipe using the provided ingredients as the main components. 
+      const systemPrompt = `You are a professional chef and recipe developer. Create a delicious and cohesive recipe using some or all of the available ingredients. Choose ingredients that work well together to create a balanced dish.
+
+Available ingredients: ${ingredientNames.join(', ')}
 
 Requirements:
-- Use the ingredients: ${ingredientNames.join(', ')}
+- Select ingredients from the list that complement each other well
+- You don't have to use every ingredient - choose what makes sense for a good recipe
 - Serve ${servings} people
 ${cuisineStyle && cuisineStyle !== 'none' ? `- Cuisine style: ${cuisineStyle}` : ''}
 ${dietaryRestrictions && dietaryRestrictions !== 'none' ? `- Dietary restrictions: ${dietaryRestrictions}` : ''}
@@ -121,7 +124,7 @@ Return the recipe in this exact JSON format:
   ]
 }
 
-Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')}`;
+Important: Only use ingredient names from this list: ${ingredientNames.join(', ')}`;
 
       // Call OpenRouter API
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

@@ -12,18 +12,6 @@ export function useMealLogs() {
 
   useEffect(() => {
     loadMealLogs();
-    
-    // Fallback timeout to ensure we don't get stuck loading
-    const timeoutId = setTimeout(() => {
-      if (loading && mealLogs.length === 0) {
-        console.log('⏰ Timeout fallback: Using mock data after 5 seconds');
-        setMealLogs(mockMealLogs);
-        setUsingMockData(true);
-        setLoading(false);
-      }
-    }, 5000);
-    
-    return () => clearTimeout(timeoutId);
   }, []);
 
   const loadMealLogs = async () => {
@@ -70,14 +58,14 @@ export function useMealLogs() {
     }
   };
 
-  // Ensure we always have valid data, even if something goes wrong
+  // Only fall back to mock data if there's an actual error AND no data
   useEffect(() => {
-    if (!loading && mealLogs.length === 0 && !usingMockData) {
-      console.log('🔄 Fallback: No data loaded, using mock data');
+    if (!loading && mealLogs.length === 0 && !usingMockData && error) {
+      console.log('🔄 Fallback: Error occurred and no data loaded, using mock data');
       setMealLogs(mockMealLogs);
       setUsingMockData(true);
     }
-  }, [loading, mealLogs.length, usingMockData]);
+  }, [loading, mealLogs.length, usingMockData, error]);
 
   const addMealLog = async (mealLog: Omit<MealLog, 'id'>) => {
     try {

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Bot, Plus, X, Loader2, Search } from 'lucide-react';
-import { HfInference } from '@huggingface/inference';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,9 +94,6 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     try {
       const ingredientNames = selectedIngredients.map(item => item.name);
       
-      // Initialize Hugging Face client
-      const hf = new HfInference(import.meta.env.VITE_HUGGING_FACE_ACCESS_TOKEN);
-      
       // Create system prompt for the LLM (nutrition will be calculated by the app)
       const systemPrompt = `You are a professional chef and recipe developer. Create a detailed recipe using the provided ingredients as the main components. 
 
@@ -127,19 +123,34 @@ Return the recipe in this exact JSON format:
 
 Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')}`;
 
-      // Call Hugging Face GPT-OSS-20B model
-      const response = await hf.textGeneration({
-        model: 'openai/gpt-oss-20b',
-        inputs: systemPrompt,
-        parameters: {
-          max_new_tokens: 1000,
-          temperature: 0.7,
-          do_sample: true,
-          return_full_text: false
-        }
+      // Call OpenRouter API
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUNTER_API_KEY}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "FoodTracker Recipe Generator",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "model": "openai/gpt-oss-20b:free",
+          "messages": [
+            {
+              "role": "user",
+              "content": systemPrompt
+            }
+          ],
+          "max_tokens": 1000,
+          "temperature": 0.7
+        })
       });
 
-      let generatedText = response.generated_text;
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      let generatedText = data.choices[0]?.message?.content;
       
       // Try to extract JSON from the response
       let parsedRecipe;
@@ -185,7 +196,7 @@ Important: Use the exact ingredient names provided: ${ingredientNames.join(', ')
 
       const finalRecipe = {
         name: parsedRecipe.name,
-        instructions: parsedRecipe.instructions,
+        instructions: parsedRecipe.instructions.replace(/\\n/g, '\n'),
         servings: parsedRecipe.servings || servings,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
         ingredients: recipeIngredients,

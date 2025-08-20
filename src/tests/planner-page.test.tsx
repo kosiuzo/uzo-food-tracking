@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Planner } from '../pages/Planner';
+import Planner from '../pages/Planner';
 import { useMealPlan } from '../hooks/useMealPlan';
 import { useRecipes } from '../hooks/useRecipes';
 import { useIsMobile } from '../hooks/use-mobile';
@@ -18,7 +18,53 @@ const mockUseRecipes = vi.mocked(useRecipes);
 const mockUseIsMobile = vi.mocked(useIsMobile);
 
 describe('Planner Page', () => {
+  const mockWeeklyPlan = {
+    id: 'mock-1',
+    weekStart: '2024-01-01',
+    blocks: [
+      {
+        id: 'mock-block-1',
+        name: 'Mon-Wed Block',
+        startDay: 0,
+        endDay: 2,
+        rotations: [
+          {
+            id: 'mock-rotation-1',
+            name: 'Rotation 1',
+            recipes: ['salmon-eggs-salsa'],
+            notes: 'Salmon & eggs with salsa'
+          }
+        ],
+        snacks: ['protein-bar']
+      }
+    ]
+  };
+
   const defaultMockData = {
+    weeklyPlan: mockWeeklyPlan,
+    loading: false,
+    error: null,
+    usingMockData: true,
+    createMealPlanBlock: vi.fn(),
+    updateMealPlanBlock: vi.fn(),
+    deleteMealPlanBlock: vi.fn(),
+    addRotationToBlock: vi.fn(),
+    updateRotation: vi.fn(),
+    deleteRotation: vi.fn(),
+    getDayName: vi.fn((dayIndex: number) => {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      return days[dayIndex] || 'Unknown';
+    }),
+    getDayRange: vi.fn((startDay: number, endDay: number) => {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const startName = days[startDay] || 'Unknown';
+      const endName = days[endDay] || 'Unknown';
+      return startDay === endDay ? startName : `${startName} - ${endName}`;
+    }),
+    refreshPlan: vi.fn()
+  };
+
+  const defaultRecipesData = {
     allRecipes: [
       { id: '1', name: 'Grilled Chicken Salad' },
       { id: '2', name: 'Avocado Toast' },
@@ -27,24 +73,12 @@ describe('Planner Page', () => {
     favorites: [
       { id: '1', name: 'Grilled Chicken Salad' },
     ],
-    setMeal: vi.fn(),
-    clearMeal: vi.fn(),
-    getPlansInRange: vi.fn(() => [
-      { date: '2025-08-18', mealType: 'breakfast', recipeId: '3' },
-      { date: '2025-08-18', mealType: 'lunch', recipeId: '1' },
-    ]),
-    usingMockData: true,
-    loading: false,
-    error: null,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseMealPlan.mockReturnValue(defaultMockData);
-    mockUseRecipes.mockReturnValue({
-      allRecipes: defaultMockData.allRecipes,
-      favorites: defaultMockData.favorites,
-    });
+    mockUseRecipes.mockReturnValue(defaultRecipesData);
   });
 
   it('renders desktop view when not mobile', () => {
@@ -53,10 +87,8 @@ describe('Planner Page', () => {
     render(<Planner />);
     
     expect(screen.getByText('Meal Planner')).toBeInTheDocument();
-    expect(screen.getByText('Meal')).toBeInTheDocument();
-    expect(screen.getByText('breakfast')).toBeInTheDocument();
-    expect(screen.getByText('lunch')).toBeInTheDocument();
-    expect(screen.getByText('dinner')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Overview')).toBeInTheDocument();
+    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
   });
 
   it('renders mobile view when on mobile', () => {
@@ -65,10 +97,8 @@ describe('Planner Page', () => {
     render(<Planner />);
     
     expect(screen.getByText('Meal Planner')).toBeInTheDocument();
-    expect(screen.getByText('Monday, Aug 18')).toBeInTheDocument();
-    expect(screen.getByText('breakfast')).toBeInTheDocument();
-    expect(screen.getByText('lunch')).toBeInTheDocument();
-    expect(screen.getByText('dinner')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Overview')).toBeInTheDocument();
+    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
   });
 
   it('shows demo mode indicator when using mock data', () => {

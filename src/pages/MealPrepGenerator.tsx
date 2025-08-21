@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { GroupedMultiSelect, OptionGroup } from '@/components/ui/grouped-multi-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -90,6 +91,8 @@ const MealPrepGenerator = () => {
   const [selectedSeasoningIds, setSelectedSeasoningIds] = useState<string[]>([]);
   const [selectedVegetables, setSelectedVegetables] = useState<FoodItem[]>([]);
   const [selectedVegetableIds, setSelectedVegetableIds] = useState<string[]>([]);
+  const [selectedDairy, setSelectedDairy] = useState<FoodItem[]>([]);
+  const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [dietType, setDietType] = useState('paleo');
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
@@ -98,24 +101,15 @@ const MealPrepGenerator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showDebugPrompt, setShowDebugPrompt] = useState(false);
 
-  // Filter items by category
+  // Filter items by exact database categories
   const meats = allItems.filter(item => 
-    item.category.toLowerCase().includes('meat') || 
-    item.category.toLowerCase().includes('protein') ||
-    item.name.toLowerCase().includes('chicken') ||
-    item.name.toLowerCase().includes('beef') ||
-    item.name.toLowerCase().includes('pork') ||
-    item.name.toLowerCase().includes('fish') ||
-    item.name.toLowerCase().includes('turkey')
+    item.category === 'Proteins'
   );
 
   const seasoningsAndSauces = allItems.filter(item => 
-    item.category.toLowerCase().includes('spice') ||
-    item.category.toLowerCase().includes('seasoning') ||
-    item.category.toLowerCase().includes('sauce') ||
-    item.category.toLowerCase().includes('condiment') ||
-    item.category.toLowerCase().includes('oil') ||
-    item.category.toLowerCase().includes('vinegar')
+    item.category === 'Seasonings & Spices' ||
+    item.category === 'Condiments & Sauces' ||
+    item.category === 'Oils & Fats'
   );
 
   const vegetables = allItems.filter(item => 
@@ -124,19 +118,36 @@ const MealPrepGenerator = () => {
     item.category.toLowerCase().includes('fresh')
   );
 
-  // Convert to options for MultiSelect
+  const dairy = allItems.filter(item => 
+    item.category === 'Dairy & Eggs'
+  );
+
+  // Convert to options for MultiSelect (only show product name, no brand)
   const meatOptions: Option[] = meats.map(item => ({
-    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    label: item.name,
     value: item.id,
   }));
 
-  const seasoningOptions: Option[] = seasoningsAndSauces.map(item => ({
-    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
-    value: item.id,
-  }));
+  // Group seasonings and sauces by category for GroupedMultiSelect
+  const groupedSeasoningsAndSauces: OptionGroup = seasoningsAndSauces.reduce((acc, item) => {
+    const category = item.category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push({
+      label: item.name,
+      value: item.id,
+    });
+    return acc;
+  }, {} as OptionGroup);
 
   const vegetableOptions: Option[] = vegetables.map(item => ({
-    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    label: item.name,
+    value: item.id,
+  }));
+
+  const dairyOptions: Option[] = dairy.map(item => ({
+    label: item.name,
     value: item.id,
   }));
 
@@ -165,8 +176,14 @@ const MealPrepGenerator = () => {
     setSelectedVegetables(newSelectedVegetables);
   };
 
+  const handleDairySelectionChange = (selectedIds: string[]) => {
+    setSelectedDairyIds(selectedIds);
+    const newSelectedDairy = selectedIds.map(id => dairy.find(d => d.id === id)!).filter(Boolean);
+    setSelectedDairy(newSelectedDairy);
+  };
+
   const generateThreeRecipes = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
-    const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables];
+    const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables, ...selectedDairy];
     const ingredientNames = allIngredients.map(item => item.name);
     
     // Create user prompt with specific ingredients
@@ -312,6 +329,15 @@ Rules:
           unit: 'cup'
         });
       });
+      
+      // Add selected dairy
+      selectedDairy.slice(0, 2).forEach(dairyItem => {
+        recipeIngredients.push({
+          item_id: dairyItem.id,
+          quantity: 0.5,
+          unit: 'cup'
+        });
+      });
 
       const nutrition = calculateRecipeNutrition(recipeIngredients, 4, allItems);
 
@@ -333,6 +359,7 @@ Rules:
               `2 lbs ${meat.name.toLowerCase()}`,
               ...selectedSeasonings.slice(0, 3).map(s => `1 tsp ${s.name}`),
               ...selectedVegetables.slice(0, 3).map(v => `1 cup ${v.name}`),
+              ...selectedDairy.slice(0, 2).map(d => `1/2 cup ${d.name}`),
               "2 tbsp cooking oil",
               "Salt and pepper to taste"
             ],
@@ -500,6 +527,15 @@ Rules:
         unit: 'cup'
       });
     });
+    
+    // Add selected dairy
+    selectedDairy.slice(0, 2).forEach(dairyItem => {
+      recipeIngredients.push({
+        item_id: dairyItem.id,
+        quantity: 0.5,
+        unit: 'cup'
+      });
+    });
 
     return {
       name: generatedRecipe.name,
@@ -545,6 +581,8 @@ Rules:
       setSelectedSeasoningIds([]);
       setSelectedVegetables([]);
       setSelectedVegetableIds([]);
+      setSelectedDairy([]);
+      setSelectedDairyIds([]);
       setDietType('paleo');
       setInspiration('');
       setMeatRecipeOptions([]);
@@ -642,8 +680,8 @@ Return a single JSON object with exactly 3 recipes.`;
             {/* Seasonings & Sauces */}
             <div className="space-y-3">
               <Label>Seasonings & Sauces*</Label>
-              <MultiSelect
-                options={seasoningOptions}
+              <GroupedMultiSelect
+                optionGroups={groupedSeasoningsAndSauces}
                 onValueChange={handleSeasoningSelectionChange}
                 defaultValue={selectedSeasoningIds}
                 placeholder="Search and select seasonings and sauces..."
@@ -660,6 +698,18 @@ Return a single JSON object with exactly 3 recipes.`;
                 defaultValue={selectedVegetableIds}
                 placeholder="Search and select vegetables..."
                 maxCount={4}
+              />
+            </div>
+
+            {/* Dairy & Eggs */}
+            <div className="space-y-3">
+              <Label>Dairy & Eggs (Optional)</Label>
+              <MultiSelect
+                options={dairyOptions}
+                onValueChange={handleDairySelectionChange}
+                defaultValue={selectedDairyIds}
+                placeholder="Search and select dairy products and eggs..."
+                maxCount={3}
               />
             </div>
 

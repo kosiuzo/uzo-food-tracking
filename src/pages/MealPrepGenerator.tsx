@@ -196,7 +196,7 @@ Return a single JSON object with exactly 3 recipes.`;
           "model": "openai/gpt-oss-20b:free",
           "temperature": 0.2,
           "top_p": 0.9,
-          "max_tokens": 1000,
+          "max_tokens": 5000,
           "seed": 42,
           "response_format": { "type": "json_object" },
           "messages": [

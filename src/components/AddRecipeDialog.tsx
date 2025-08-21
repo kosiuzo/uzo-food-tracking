@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     ingredients: [] as RecipeIngredient[],
   });
 
+  const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+
   // Update form data when editingRecipe changes
   useEffect(() => {
     if (editingRecipe) {
@@ -41,6 +44,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: editingRecipe.total_time_minutes,
         ingredients: editingRecipe.ingredients,
       });
+      setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id));
     } else if (open) {
       // Reset form when opening for new recipe
       setFormData({
@@ -50,12 +54,36 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: 0,
         ingredients: [],
       });
+      setSelectedIngredientIds([]);
     }
   }, [editingRecipe, open]);
 
   // Calculate nutrition based on ingredients using the reusable utility
   const calculateNutrition = () => {
     return calculateRecipeNutrition(formData.ingredients, formData.servings, allItems);
+  };
+
+  // Convert allItems to options for MultiSelect
+  const ingredientOptions: Option[] = allItems.map(item => ({
+    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    value: item.id,
+  }));
+
+  // Handle ingredient selection from MultiSelect
+  const handleIngredientSelectionChange = (selectedIds: string[]) => {
+    setSelectedIngredientIds(selectedIds);
+    
+    // Update ingredients array based on selection
+    const newIngredients: RecipeIngredient[] = selectedIds.map(itemId => {
+      // Check if this ingredient already exists
+      const existingIngredient = formData.ingredients.find(ing => ing.item_id === itemId);
+      return existingIngredient || { item_id: itemId, quantity: 1, unit: 'cup' };
+    });
+    
+    setFormData(prev => ({
+      ...prev,
+      ingredients: newIngredients
+    }));
   };
 
   const addIngredient = () => {
@@ -66,10 +94,13 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   };
 
   const removeIngredient = (index: number) => {
+    const ingredientToRemove = formData.ingredients[index];
     setFormData(prev => ({
       ...prev,
       ingredients: prev.ingredients.filter((_, i) => i !== index)
     }));
+    // Also update selected ingredient IDs
+    setSelectedIngredientIds(prev => prev.filter(id => id !== ingredientToRemove.item_id));
   };
 
   const updateIngredient = (index: number, updates: Partial<RecipeIngredient>) => {
@@ -117,6 +148,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       total_time_minutes: 0,
       ingredients: [],
     });
+    setSelectedIngredientIds([]);
 
     toast({
       title: "Recipe added",
@@ -181,90 +213,87 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
           {/* Ingredients */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Ingredients *</Label>
-              <Button type="button" size="sm" onClick={addIngredient}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
+            <div className="space-y-2">
+              <Label>Select Ingredients *</Label>
+              <MultiSelect
+                options={ingredientOptions}
+                onValueChange={handleIngredientSelectionChange}
+                defaultValue={selectedIngredientIds}
+                placeholder="Search and select ingredients..."
+                maxCount={3}
+              />
             </div>
             
-            {formData.ingredients.map((ingredient, index) => (
-              <Card key={index} className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Ingredient {index + 1}</Label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => removeIngredient(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <Select
-                  value={ingredient.item_id}
-                  onValueChange={(value) => updateIngredient(index, { item_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select food item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allItems.map(item => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name} {item.brand && `(${item.brand})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Quantity</Label>
-                    <Input
-                      type="number"
-                      value={ingredient.quantity}
-                      onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
-                      min="0"
-                      step="0.1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Unit</Label>
-                    <Select
-                      value={ingredient.unit}
-                      onValueChange={(value) => updateIngredient(index, { unit: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Volume</div>
-                        <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
-                        <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
-                        <SelectItem value="cup">cups</SelectItem>
-                        <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
-                        <SelectItem value="ml">milliliters (ml)</SelectItem>
-                        <SelectItem value="l">liters (l)</SelectItem>
-                        
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Weight</div>
-                        <SelectItem value="g">grams (g)</SelectItem>
-                        <SelectItem value="kg">kilograms (kg)</SelectItem>
-                        <SelectItem value="oz">ounces (oz)</SelectItem>
-                        <SelectItem value="lb">pounds (lb)</SelectItem>
-                        
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Count</div>
-                        <SelectItem value="piece">pieces</SelectItem>
-                        <SelectItem value="slice">slices</SelectItem>
-                        <SelectItem value="can">cans</SelectItem>
-                        <SelectItem value="bottle">bottles</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </Card>
-            ))}
+            {formData.ingredients.length > 0 && (
+              <div className="space-y-2">
+                <Label>Ingredient Details</Label>
+                {formData.ingredients.map((ingredient, index) => {
+                  const item = allItems.find(item => item.id === ingredient.item_id);
+                  return (
+                    <Card key={index} className="p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">
+                          {item?.name} {item?.brand && `(${item.brand})`}
+                        </Label>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeIngredient(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">Quantity</Label>
+                          <Input
+                            type="number"
+                            value={ingredient.quantity}
+                            onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Unit</Label>
+                          <Select
+                            value={ingredient.unit}
+                            onValueChange={(value) => updateIngredient(index, { unit: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Volume</div>
+                              <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
+                              <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
+                              <SelectItem value="cup">cups</SelectItem>
+                              <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
+                              <SelectItem value="ml">milliliters (ml)</SelectItem>
+                              <SelectItem value="l">liters (l)</SelectItem>
+                              
+                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Weight</div>
+                              <SelectItem value="g">grams (g)</SelectItem>
+                              <SelectItem value="kg">kilograms (kg)</SelectItem>
+                              <SelectItem value="oz">ounces (oz)</SelectItem>
+                              <SelectItem value="lb">pounds (lb)</SelectItem>
+                              
+                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Count</div>
+                              <SelectItem value="piece">pieces</SelectItem>
+                              <SelectItem value="slice">slices</SelectItem>
+                              <SelectItem value="can">cans</SelectItem>
+                              <SelectItem value="bottle">bottles</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Calculated Nutrition Preview */}

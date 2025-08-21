@@ -8,11 +8,6 @@ export const useMealPlan = () => {
   const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
 
-  // Load the current week's meal plan
-  useEffect(() => {
-    loadCurrentWeekPlan();
-  }, [loadCurrentWeekPlan]);
-
   const loadCurrentWeekPlan = useCallback(async () => {
     try {
       setLoading(true);
@@ -85,7 +80,32 @@ export const useMealPlan = () => {
         setUsingMockData(false);
       } else {
         // No plan exists for this week, create a default one
-        await createDefaultWeekPlan(weekStartStr);
+        try {
+          // Create a new weekly meal plan
+          const { data: weeklyPlanData, error: weeklyError } = await supabase
+            .from('weekly_meal_plans')
+            .insert({ week_start: weekStartStr })
+            .select()
+            .single();
+
+          if (weeklyError) {
+            throw weeklyError;
+          }
+
+          const newPlan: WeeklyMealPlan = {
+            id: weeklyPlanData.id.toString(),
+            weekStart: weekStartStr,
+            blocks: []
+          };
+
+          setWeeklyPlan(newPlan);
+          setUsingMockData(false);
+        } catch (createErr) {
+          console.error('Error creating default week plan:', createErr);
+          // Fall back to mock data
+          setUsingMockData(true);
+          setWeeklyPlan(getMockWeeklyPlan());
+        }
       }
     } catch (err) {
       console.error('Error in loadCurrentWeekPlan:', err);
@@ -96,36 +116,13 @@ export const useMealPlan = () => {
     } finally {
       setLoading(false);
     }
-  }, [createDefaultWeekPlan]);
-
-  const createDefaultWeekPlan = useCallback(async (weekStart: string) => {
-    try {
-      // Create a new weekly meal plan
-      const { data: weeklyPlanData, error: weeklyError } = await supabase
-        .from('weekly_meal_plans')
-        .insert({ week_start: weekStart })
-        .select()
-        .single();
-
-      if (weeklyError) {
-        throw weeklyError;
-      }
-
-      const newPlan: WeeklyMealPlan = {
-        id: weeklyPlanData.id.toString(),
-        weekStart,
-        blocks: []
-      };
-
-      setWeeklyPlan(newPlan);
-      setUsingMockData(false);
-    } catch (err) {
-      console.error('Error creating default week plan:', err);
-      // Fall back to mock data
-      setUsingMockData(true);
-      setWeeklyPlan(getMockWeeklyPlan());
-    }
   }, []);
+
+
+  // Load the current week's meal plan
+  useEffect(() => {
+    loadCurrentWeekPlan();
+  }, [loadCurrentWeekPlan]);
 
   const createMealPlanBlock = async (block: Omit<MealPlanBlock, 'id'>) => {
     if (!weeklyPlan) return null;

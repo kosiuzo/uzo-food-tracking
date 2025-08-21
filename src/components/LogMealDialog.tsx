@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { X, Plus, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '../hooks/useRecipes';
@@ -82,31 +83,19 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     return recipes.reduce((total, recipe) => total + (recipe.cost_per_serving || 0), 0);
   };
 
-  const handleAddRecipe = (recipeId: string) => {
-    if (formData.recipe_ids.includes(recipeId)) return;
-    
-    const recipe = allRecipes.find(r => r.id === recipeId);
-    if (recipe) {
-      const newRecipeIds = [...formData.recipe_ids, recipeId];
-      const newRecipes = newRecipeIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
-      
-      setFormData(prev => ({
-        ...prev,
-        recipe_ids: newRecipeIds,
-        meal_name: newRecipes.length === 1 ? newRecipes[0].name : `${newRecipes.length} Recipe Combo`,
-        nutrition: calculateCombinedNutrition(newRecipes),
-        estimated_cost: calculateCombinedCost(newRecipes),
-      }));
-    }
-  };
+  // Convert allRecipes to options for MultiSelect
+  const recipeOptions: Option[] = allRecipes.map(recipe => ({
+    label: recipe.name,
+    value: recipe.id,
+  }));
 
-  const handleRemoveRecipe = (recipeId: string) => {
-    const newRecipeIds = formData.recipe_ids.filter(id => id !== recipeId);
-    const newRecipes = newRecipeIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
+  // Handle recipe selection from MultiSelect
+  const handleRecipeSelectionChange = (selectedIds: string[]) => {
+    const newRecipes = selectedIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
     
     setFormData(prev => ({
       ...prev,
-      recipe_ids: newRecipeIds,
+      recipe_ids: selectedIds,
       meal_name: newRecipes.length === 1 ? newRecipes[0].name : newRecipes.length > 0 ? `${newRecipes.length} Recipe Combo` : '',
       nutrition: calculateCombinedNutrition(newRecipes),
       estimated_cost: calculateCombinedCost(newRecipes),
@@ -181,6 +170,13 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           {/* Recipe Selection */}
           <div className="space-y-3">
             <Label>Recipes *</Label>
+            <MultiSelect
+              options={recipeOptions}
+              onValueChange={handleRecipeSelectionChange}
+              defaultValue={formData.recipe_ids}
+              placeholder="Search and select recipes..."
+              maxCount={2}
+            />
             
             {/* Selected Recipes Display */}
             {selectedRecipes.length > 0 && (
@@ -189,61 +185,23 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                 <div className="space-y-2">
                   {selectedRecipes.map((recipe, index) => (
                     <Card key={recipe.id} className="p-3 bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Utensils className="h-4 w-4 text-primary" />
-                          <div>
-                            <div className="font-medium text-sm">{recipe.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {recipe.nutrition.calories_per_serving.toFixed(0)} cal • 
-                              P: {recipe.nutrition.protein_per_serving.toFixed(1)}g • 
-                              C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g • 
-                              F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
-                            </div>
+                      <div className="flex items-center gap-2">
+                        <Utensils className="h-4 w-4 text-primary flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{recipe.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {recipe.nutrition.calories_per_serving.toFixed(0)} cal • 
+                            P: {recipe.nutrition.protein_per_serving.toFixed(1)}g • 
+                            C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g • 
+                            F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveRecipe(recipe.id)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
                       </div>
                     </Card>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Recipe Picker */}
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Add Recipe:</Label>
-              <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
-                {allRecipes
-                  .filter(recipe => !formData.recipe_ids.includes(recipe.id))
-                  .map(recipe => (
-                    <Button
-                      key={recipe.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddRecipe(recipe.id)}
-                      className="justify-start h-auto p-2"
-                    >
-                      <Plus className="h-3 w-3 mr-2" />
-                      <div className="text-left">
-                        <div className="font-medium text-xs">{recipe.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {recipe.nutrition.calories_per_serving.toFixed(0)} cal
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-              </div>
-            </div>
           </div>
 
           <div className="space-y-2">

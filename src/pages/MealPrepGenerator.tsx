@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -82,8 +83,11 @@ const MealPrepGenerator = () => {
   const { allItems } = useFoodInventory();
   const { addRecipe } = useRecipes();
   const [selectedMeats, setSelectedMeats] = useState<FoodItem[]>([]);
+  const [selectedMeatIds, setSelectedMeatIds] = useState<string[]>([]);
   const [selectedSeasonings, setSelectedSeasonings] = useState<FoodItem[]>([]);
+  const [selectedSeasoningIds, setSelectedSeasoningIds] = useState<string[]>([]);
   const [selectedVegetables, setSelectedVegetables] = useState<FoodItem[]>([]);
+  const [selectedVegetableIds, setSelectedVegetableIds] = useState<string[]>([]);
   const [dietType, setDietType] = useState('');
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
@@ -118,35 +122,45 @@ const MealPrepGenerator = () => {
     item.category.toLowerCase().includes('fresh')
   );
 
-  const handleMeatSelect = (meat: FoodItem) => {
-    if (selectedMeats.length < 2 && !selectedMeats.find(m => m.id === meat.id)) {
-      setSelectedMeats(prev => [...prev, meat]);
-    }
+  // Convert to options for MultiSelect
+  const meatOptions: Option[] = meats.map(item => ({
+    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    value: item.id,
+  }));
+
+  const seasoningOptions: Option[] = seasoningsAndSauces.map(item => ({
+    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    value: item.id,
+  }));
+
+  const vegetableOptions: Option[] = vegetables.map(item => ({
+    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    value: item.id,
+  }));
+
+  // Handle selection changes from MultiSelect
+  const handleMeatSelectionChange = (selectedIds: string[]) => {
+    // Limit to 2 meats
+    const limitedIds = selectedIds.slice(0, 2);
+    setSelectedMeatIds(limitedIds);
+    
+    const newSelectedMeats = limitedIds.map(id => meats.find(m => m.id === id)!).filter(Boolean);
+    setSelectedMeats(newSelectedMeats);
+    
+    // Remove recipe options for deselected meats
+    setMeatRecipeOptions(prev => prev.filter(option => limitedIds.includes(option.meat.id)));
   };
 
-  const handleMeatRemove = (meatId: string) => {
-    setSelectedMeats(prev => prev.filter(m => m.id !== meatId));
-    setMeatRecipeOptions(prev => prev.filter(option => option.meat.id !== meatId));
+  const handleSeasoningSelectionChange = (selectedIds: string[]) => {
+    setSelectedSeasoningIds(selectedIds);
+    const newSelectedSeasonings = selectedIds.map(id => seasoningsAndSauces.find(s => s.id === id)!).filter(Boolean);
+    setSelectedSeasonings(newSelectedSeasonings);
   };
 
-  const handleIngredientSelect = (item: FoodItem, type: 'seasoning' | 'vegetable') => {
-    if (type === 'seasoning') {
-      if (!selectedSeasonings.find(s => s.id === item.id)) {
-        setSelectedSeasonings(prev => [...prev, item]);
-      }
-    } else {
-      if (!selectedVegetables.find(v => v.id === item.id)) {
-        setSelectedVegetables(prev => [...prev, item]);
-      }
-    }
-  };
-
-  const handleIngredientRemove = (itemId: string, type: 'seasoning' | 'vegetable') => {
-    if (type === 'seasoning') {
-      setSelectedSeasonings(prev => prev.filter(s => s.id !== itemId));
-    } else {
-      setSelectedVegetables(prev => prev.filter(v => v.id !== itemId));
-    }
+  const handleVegetableSelectionChange = (selectedIds: string[]) => {
+    setSelectedVegetableIds(selectedIds);
+    const newSelectedVegetables = selectedIds.map(id => vegetables.find(v => v.id === id)!).filter(Boolean);
+    setSelectedVegetables(newSelectedVegetables);
   };
 
   const generateThreeRecipes = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
@@ -571,8 +585,11 @@ Each key should map to one recipe object in this exact schema:
       
       // Reset the form
       setSelectedMeats([]);
+      setSelectedMeatIds([]);
       setSelectedSeasonings([]);
+      setSelectedSeasoningIds([]);
       setSelectedVegetables([]);
+      setSelectedVegetableIds([]);
       setDietType('');
       setInspiration('');
       setMeatRecipeOptions([]);
@@ -681,132 +698,37 @@ Each key should map to one recipe object in this exact schema:
             {/* Meat Selection */}
             <div className="space-y-3">
               <Label>Select 2 Meats* ({selectedMeats.length}/2)</Label>
-              
-              {selectedMeats.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedMeats.map((meat) => (
-                    <Badge 
-                      key={meat.id} 
-                      variant="default" 
-                      className="flex items-center gap-1 px-3 py-1"
-                    >
-                      {meat.name}
-                      <button
-                        onClick={() => handleMeatRemove(meat.id)}
-                        className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {selectedMeats.length < 2 && (
-                <Select onValueChange={(value) => {
-                  const meat = meats.find(m => m.id === value);
-                  if (meat) handleMeatSelect(meat);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your meats" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {meats
-                      .filter(meat => !selectedMeats.find(m => m.id === meat.id))
-                      .map((meat) => (
-                        <SelectItem key={meat.id} value={meat.id}>
-                          {meat.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <MultiSelect
+                options={meatOptions}
+                onValueChange={handleMeatSelectionChange}
+                defaultValue={selectedMeatIds}
+                placeholder="Search and select up to 2 meats..."
+                maxCount={2}
+              />
             </div>
 
             {/* Seasonings & Sauces */}
             <div className="space-y-3">
               <Label>Seasonings & Sauces*</Label>
-              
-              {selectedSeasonings.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedSeasonings.map((seasoning) => (
-                    <Badge 
-                      key={seasoning.id} 
-                      variant="secondary" 
-                      className="flex items-center gap-1 px-3 py-1"
-                    >
-                      {seasoning.name}
-                      <button
-                        onClick={() => handleIngredientRemove(seasoning.id, 'seasoning')}
-                        className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              <Select onValueChange={(value) => {
-                const item = seasoningsAndSauces.find(s => s.id === value);
-                if (item) handleIngredientSelect(item, 'seasoning');
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Add seasonings and sauces" />
-                </SelectTrigger>
-                <SelectContent>
-                  {seasoningsAndSauces
-                    .filter(item => !selectedSeasonings.find(s => s.id === item.id))
-                    .map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={seasoningOptions}
+                onValueChange={handleSeasoningSelectionChange}
+                defaultValue={selectedSeasoningIds}
+                placeholder="Search and select seasonings and sauces..."
+                maxCount={3}
+              />
             </div>
 
             {/* Vegetables */}
             <div className="space-y-3">
               <Label>Vegetables (Optional)</Label>
-              
-              {selectedVegetables.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedVegetables.map((vegetable) => (
-                    <Badge 
-                      key={vegetable.id} 
-                      variant="outline" 
-                      className="flex items-center gap-1 px-3 py-1"
-                    >
-                      {vegetable.name}
-                      <button
-                        onClick={() => handleIngredientRemove(vegetable.id, 'vegetable')}
-                        className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              <Select onValueChange={(value) => {
-                const item = vegetables.find(v => v.id === value);
-                if (item) handleIngredientSelect(item, 'vegetable');
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Add vegetables" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vegetables
-                    .filter(item => !selectedVegetables.find(v => v.id === item.id))
-                    .map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={vegetableOptions}
+                onValueChange={handleVegetableSelectionChange}
+                defaultValue={selectedVegetableIds}
+                placeholder="Search and select vegetables..."
+                maxCount={4}
+              />
             </div>
 
             <div className="space-y-4">

@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useFoodInventory } from '../hooks/useFoodInventory';
@@ -53,31 +52,33 @@ const DIETARY_RESTRICTIONS = [
 
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
+  const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [servings, setServings] = useState(4);
   const [cuisineStyle, setCuisineStyle] = useState('none');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('none');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [ingredientSelectorOpen, setIngredientSelectorOpen] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<Omit<Recipe, 'id' | 'is_favorite'> | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
 
-  const addIngredient = (ingredient: FoodItem) => {
-    if (!selectedIngredients.some(item => item.id === ingredient.id)) {
-      setSelectedIngredients([...selectedIngredients, ingredient]);
-      setIngredientSelectorOpen(false);
-    }
-  };
+  // Convert allItems to options for MultiSelect
+  const ingredientOptions: Option[] = allItems.map(item => ({
+    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
+    value: item.id,
+  }));
 
-  const removeIngredient = (ingredientId: string) => {
-    setSelectedIngredients(selectedIngredients.filter(i => i.id !== ingredientId));
+  // Handle ingredient selection from MultiSelect
+  const handleIngredientSelectionChange = (selectedIds: string[]) => {
+    setSelectedIngredientIds(selectedIds);
+    
+    // Update selectedIngredients array based on selection
+    const newSelectedIngredients = selectedIds.map(itemId => {
+      return allItems.find(item => item.id === itemId)!;
+    }).filter(Boolean);
+    
+    setSelectedIngredients(newSelectedIngredients);
   };
-
-  // Filter out already selected ingredients
-  const availableIngredients = allItems.filter(
-    item => !selectedIngredients.some(selected => selected.id === item.id)
-  );
 
   const generateRecipe = async () => {
     if (selectedIngredients.length === 0) {
@@ -223,10 +224,10 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
 
   const resetForm = () => {
     setSelectedIngredients([]);
+    setSelectedIngredientIds([]);
     setServings(4);
     setCuisineStyle('none');
     setDietaryRestrictions('none');
-    setIngredientSelectorOpen(false);
     setGeneratedRecipe(null);
     setShowPreview(false);
   };
@@ -276,75 +277,13 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
           {/* Ingredients Selector */}
           <div className="space-y-3">
             <Label>Ingredients from Your Inventory</Label>
-            
-            {/* Ingredient Selector */}
-            <Popover open={ingredientSelectorOpen} onOpenChange={setIngredientSelectorOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                  disabled={isGenerating}
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  {selectedIngredients.length > 0 
-                    ? `${selectedIngredients.length} ingredient${selectedIngredients.length > 1 ? 's' : ''} selected`
-                    : "Select ingredients from your inventory..."
-                  }
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search your food inventory..." />
-                  <CommandList>
-                    <CommandEmpty>No ingredients found in your inventory.</CommandEmpty>
-                    <CommandGroup>
-                      {availableIngredients.map((ingredient) => (
-                        <CommandItem
-                          key={ingredient.id}
-                          value={ingredient.name}
-                          onSelect={() => addIngredient(ingredient)}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">{ingredient.name}</div>
-                            {ingredient.brand && (
-                              <div className="text-sm text-muted-foreground">{ingredient.brand}</div>
-                            )}
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {ingredient.category}
-                          </Badge>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            
-            {/* Selected Ingredients */}
-            {selectedIngredients.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
-                {selectedIngredients.map((ingredient) => (
-                  <Badge 
-                    key={ingredient.id} 
-                    variant="secondary" 
-                    className="flex items-center gap-1 pr-1"
-                  >
-                    {ingredient.name}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => removeIngredient(ingredient.id)}
-                      disabled={isGenerating}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <MultiSelect
+              options={ingredientOptions}
+              onValueChange={handleIngredientSelectionChange}
+              defaultValue={selectedIngredientIds}
+              placeholder="Search and select ingredients from your inventory..."
+              maxCount={3}
+            />
           </div>
 
           {/* Servings */}

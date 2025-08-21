@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { MealPlanBlock, RecipeRotation, Recipe } from '../types';
 
@@ -106,28 +107,20 @@ export function AddEditMealPlanBlockDialog({
     setRotations(updated);
   };
 
-  const addRecipeToRotation = (rotationIndex: number, recipeId: string) => {
-    const updated = [...rotations];
-    if (!updated[rotationIndex].recipes.includes(recipeId)) {
-      updated[rotationIndex].recipes = [...updated[rotationIndex].recipes, recipeId];
-      setRotations(updated);
-    }
-  };
+  // Convert allRecipes to options for MultiSelect
+  const recipeOptions: Option[] = allRecipes.map(recipe => ({
+    label: recipe.name,
+    value: recipe.id,
+  }));
 
-  const removeRecipeFromRotation = (rotationIndex: number, recipeId: string) => {
+  const handleRotationRecipeChange = (rotationIndex: number, selectedIds: string[]) => {
     const updated = [...rotations];
-    updated[rotationIndex].recipes = updated[rotationIndex].recipes.filter(id => id !== recipeId);
+    updated[rotationIndex].recipes = selectedIds;
     setRotations(updated);
   };
 
-  const addSnack = (recipeId: string) => {
-    if (!snacks.includes(recipeId)) {
-      setSnacks([...snacks, recipeId]);
-    }
-  };
-
-  const removeSnack = (recipeId: string) => {
-    setSnacks(snacks.filter(id => id !== recipeId));
+  const handleSnackChange = (selectedIds: string[]) => {
+    setSnacks(selectedIds);
   };
 
   const getRecipeName = (recipeId: string) => {
@@ -226,37 +219,13 @@ export function AddEditMealPlanBlockDialog({
 
                 <div className="space-y-3">
                   <Label>Recipes</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {rotation.recipes.map((recipeId) => (
-                      <Badge key={recipeId} variant="secondary" className="gap-2 text-sm px-3 py-2">
-                        {getRecipeName(recipeId)}
-                        <button
-                          type="button"
-                          onClick={() => removeRecipeFromRotation(index, recipeId)}
-                          className="ml-1 hover:text-red-600 p-1"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        addRecipeToRotation(index, e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-input rounded-md h-11 sm:h-10"
-                  >
-                    <option value="">Add a recipe...</option>
-                    {allRecipes.map((recipe) => (
-                      <option key={recipe.id} value={recipe.id}>
-                        {recipe.name}
-                      </option>
-                    ))}
-                  </select>
+                  <MultiSelect
+                    options={recipeOptions}
+                    onValueChange={(selectedIds) => handleRotationRecipeChange(index, selectedIds)}
+                    defaultValue={rotation.recipes}
+                    placeholder="Search and select recipes..."
+                    maxCount={2}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -276,37 +245,13 @@ export function AddEditMealPlanBlockDialog({
           {/* Snacks */}
           <div className="space-y-4">
             <Label className="text-base font-semibold">Snacks (Optional)</Label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {snacks.map((recipeId) => (
-                <Badge key={recipeId} variant="outline" className="gap-2 text-sm px-3 py-2">
-                  {getRecipeName(recipeId)}
-                  <button
-                    type="button"
-                    onClick={() => removeSnack(recipeId)}
-                    className="ml-1 hover:text-red-600 p-1"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <select
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  addSnack(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-              className="w-full px-3 py-2 border border-input rounded-md h-11 sm:h-10"
-            >
-              <option value="">Add a snack recipe...</option>
-              {allRecipes.map((recipe) => (
-                <option key={recipe.id} value={recipe.id}>
-                  {recipe.name}
-                </option>
-              ))}
-            </select>
+            <MultiSelect
+              options={recipeOptions}
+              onValueChange={handleSnackChange}
+              defaultValue={snacks}
+              placeholder="Search and select snack recipes..."
+              maxCount={3}
+            />
           </div>
         </div>
 

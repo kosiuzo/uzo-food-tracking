@@ -53,15 +53,46 @@ The app uses a sophisticated PostgreSQL schema with the following key tables:
 - Type mappers handle conversion between database rows and application models
 - Optimistic updates for better UX with automatic rollback on errors
 
+### Mobile-First Development Guidelines
+
+**All components and pages must be designed with mobile-first principles:**
+
+1. **Responsive Design:**
+   - Use Tailwind's mobile-first breakpoint system (`sm:`, `md:`, `lg:`, `xl:`)
+   - Start with mobile layouts and enhance for larger screens
+   - Ensure touch-friendly interactions (minimum 44px touch targets)
+
+2. **Component Responsiveness:**
+   - Dialogs and modals should be full-screen on mobile devices
+   - Cards and lists should stack vertically on small screens
+   - Navigation should be accessible via hamburger menu on mobile
+   - Forms should use appropriate input types for mobile (date pickers, number inputs)
+
+3. **Layout Considerations:**
+   - Use flexbox and grid layouts that adapt to screen size
+   - Implement proper spacing that scales with viewport
+   - Ensure content doesn't overflow horizontally on mobile
+   - Use appropriate font sizes for mobile readability
+
+4. **Mobile-Specific Features:**
+   - Leverage the existing `use-mobile.tsx` hook for responsive logic
+   - Implement swipe gestures where appropriate
+   - Ensure keyboard navigation works on mobile devices
+   - Test on various mobile screen sizes and orientations
+
 ### Key Conventions
 - All database interactions go through Supabase client in `src/lib/supabase.ts`
 - Type definitions separate database types (`DbItem`, `DbRecipe`) from app types (`FoodItem`, `Recipe`)
 - Components use controlled forms with react-hook-form and Zod validation
 - Custom hooks follow naming pattern `use[EntityName]` (e.g., `useFoodInventory`)
 - Database schema uses RPC functions for complex operations and cost calculations
+- **Mobile-first design: All new components and pages must be mobile-responsive by default**
+- **Touch-friendly: Ensure all interactive elements meet mobile accessibility standards**
 
 ### Development Notes
 - The app uses `@` alias for `src/` directory imports
 - Serving units are normalized to volume/weight/package types for consistent calculations
 - Recipe costs are automatically calculated when ingredients change
 - Meal planning supports flexible day ranges and recipe rotations within blocks
+- **Always test responsive behavior across different screen sizes during development**
+- **Use the existing mobile utilities and hooks for consistent mobile behavior**

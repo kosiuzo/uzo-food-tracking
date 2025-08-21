@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Bot, Plus, X, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { GroupedMultiSelect, OptionGroup, GroupedOption } from '@/components/ui/grouped-multi-select';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useFoodInventory } from '../hooks/useFoodInventory';
@@ -62,11 +62,28 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
 
-  // Convert allItems to options for MultiSelect
-  const ingredientOptions: Option[] = allItems.map(item => ({
-    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
-    value: item.id,
-  }));
+  // Group items by category for the GroupedMultiSelect
+  const groupedIngredients: OptionGroup = React.useMemo(() => {
+    const groups: OptionGroup = {};
+    
+    allItems.forEach(item => {
+      const category = item.category || 'Other';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push({
+        label: item.name, // Only show name, no brand
+        value: item.id,
+      });
+    });
+    
+    // Sort items within each category by name
+    Object.keys(groups).forEach(category => {
+      groups[category].sort((a, b) => a.label.localeCompare(b.label));
+    });
+    
+    return groups;
+  }, [allItems]);
 
   // Handle ingredient selection from MultiSelect
   const handleIngredientSelectionChange = (selectedIds: string[]) => {
@@ -277,8 +294,8 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
           {/* Ingredients Selector */}
           <div className="space-y-3">
             <Label>Ingredients from Your Inventory</Label>
-            <MultiSelect
-              options={ingredientOptions}
+            <GroupedMultiSelect
+              optionGroups={groupedIngredients}
               onValueChange={handleIngredientSelectionChange}
               defaultValue={selectedIngredientIds}
               placeholder="Search and select ingredients from your inventory..."

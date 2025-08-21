@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ChefHat, Clock, Users, Loader2, X, Check, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useFoodInventory } from '@/hooks/useFoodInventory';
 import { useRecipes } from '@/hooks/useRecipes';
 import { FoodItem, Recipe, RecipeIngredient } from '@/types';
@@ -82,13 +83,14 @@ interface ParsedRecipeResponse {
 const MealPrepGenerator = () => {
   const { allItems } = useFoodInventory();
   const { addRecipe } = useRecipes();
+  const { toast: toastHook } = useToast();
   const [selectedMeats, setSelectedMeats] = useState<FoodItem[]>([]);
   const [selectedMeatIds, setSelectedMeatIds] = useState<string[]>([]);
   const [selectedSeasonings, setSelectedSeasonings] = useState<FoodItem[]>([]);
   const [selectedSeasoningIds, setSelectedSeasoningIds] = useState<string[]>([]);
   const [selectedVegetables, setSelectedVegetables] = useState<FoodItem[]>([]);
   const [selectedVegetableIds, setSelectedVegetableIds] = useState<string[]>([]);
-  const [dietType, setDietType] = useState('');
+  const [dietType, setDietType] = useState('paleo');
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -167,85 +169,66 @@ const MealPrepGenerator = () => {
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables];
     const ingredientNames = allIngredients.map(item => item.name);
     
-    const systemPrompt = `Create 3 different ${dietType} recipes using the following ingredients: ${ingredientNames.join(', ')}.
-Main protein: ${meat.name} (2 lbs).
-Diet: ${dietType}.
-Serves 4.
+    // Create user prompt with specific ingredients
+    const userPrompt = `Create 3 different ${dietType} recipes using these ingredients:
+${ingredientNames.map(name => `- ${name}`).join('\n')}
 
-IMPORTANT: Return ONLY valid JSON, no extra text, no markdown, no code fences.
-The JSON must be an object with 3 keys ("Recipe 1", "Recipe 2", "Recipe 3").
-Each key should map to one recipe object in this exact schema:
+Main protein: ${meat.name} (2 lbs)
+Diet preference: ${dietType}
+Target: serves 4
+${inspiration ? `Additional notes: ${inspiration}` : ''}
 
-{
-  "Recipe 1": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
-    "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
-  },
-  "Recipe 2": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
-    "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
-  },
-  "Recipe 3": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
-    "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
-  }
-}`;
+Return a single JSON object with exactly 3 recipes.`;
 
     try {
-      // Debug: Log the system prompt being sent
-      console.log(`🤖 AI Prompt for ${meat.name} 3 recipes:`, systemPrompt);
+      // Debug: Log the user prompt being sent
+      console.log(`🤖 AI User Prompt for ${meat.name} 3 recipes:`, userPrompt);
       
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUNTER_API_KEY}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUTER_API_KEY}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "FoodTracker Meal Prep Generator",
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           "model": "openai/gpt-oss-20b:free",
+          "temperature": 0.2,
+          "top_p": 0.9,
+          "max_tokens": 1000,
+          "seed": 42,
+          "response_format": { "type": "json_object" },
           "messages": [
             {
+              "role": "system",
+              "content": `You are a meal prep recipe generator that returns VALID JSON only.
+Schema:
+{
+  "Recipe 1": {
+    "name": "string",
+    "description": "string",
+    "prepTime": "integer",
+    "cookTime": "integer",
+    "servings": 4,
+    "instructions": ["step1", "step2"],
+    "ingredients": ["ingredient1", "ingredient2"]
+  },
+  "Recipe 2": { /* same structure */ },
+  "Recipe 3": { /* same structure */ }
+}
+Rules:
+- Output JSON only. No prose, no markdown.
+- Use exact ingredient names provided.
+- Each recipe should be different in cooking method or flavor profile.
+- Instructions as array of clear steps.
+- Include cooking times and prep times.`
+            },
+            {
               "role": "user",
-              "content": systemPrompt
+              "content": userPrompt
             }
-          ],
-          "max_tokens": 2000,
-          "temperature": 0.7
+          ]
         })
       });
 
@@ -367,70 +350,17 @@ Each key should map to one recipe object in this exact schema:
       return recipes;
 
     } catch (error) {
-      console.warn(`AI generation failed for ${meat.name}, using fallback:`, error);
+      console.warn(`AI generation failed for ${meat.name}:`, error);
       
-      // Fallback to 3 structured templates if AI fails
-      const fallbackRecipeTemplates = [
-        {
-          name: `Grilled ${meat.name}`,
-          description: `Smoky grilled ${meat.name.toLowerCase()} with bold flavors`,
-          instructions: [
-            "Preheat grill to medium-high heat",
-            `Season ${meat.name.toLowerCase()} with your selected seasonings`,
-            "Let marinate for 15 minutes",
-            "Grill meat for 6-8 minutes per side until cooked through",
-            "Grill vegetables alongside the meat",
-            "Let rest for 5 minutes before serving"
-          ]
-        },
-        {
-          name: `Pan-Seared ${meat.name}`,
-          description: `Golden-crusted ${meat.name.toLowerCase()} with aromatic seasonings`,
-          instructions: [
-            "Heat oil in a large skillet over medium-high heat",
-            `Season ${meat.name.toLowerCase()} with your selected seasonings`,
-            "Sear meat for 4-5 minutes per side until golden",
-            "Add vegetables to the pan",
-            "Cook until vegetables are tender and meat is cooked through",
-            "Serve immediately"
-          ]
-        },
-        {
-          name: `Baked ${meat.name}`,
-          description: `Tender oven-baked ${meat.name.toLowerCase()} with herbs`,
-          instructions: [
-            "Preheat oven to 375°F (190°C)",
-            `Season ${meat.name.toLowerCase()} with your selected seasonings`,
-            "Place in baking dish with vegetables",
-            "Bake for 25-30 minutes until cooked through",
-            "Rest for 5 minutes before serving"
-          ]
-        }
-      ];
+      // Notify user about the API failure
+      toastHook({
+        title: 'AI Generation Failed',
+        description: `Failed to generate AI recipes for ${meat.name}. Please try again or check your API configuration.`,
+        variant: 'destructive',
+      });
       
-      return fallbackRecipeTemplates.map((template, index) => ({
-        id: `${meat.id}-fallback-${index + 1}-${Date.now()}`,
-        name: template.name,
-        description: template.description,
-        prepTime: 15,
-        cookTime: 25,
-        servings: 4,
-        instructions: template.instructions,
-        ingredients: [
-          `2 lbs ${meat.name.toLowerCase()}`,
-          ...selectedSeasonings.slice(0, 3).map(s => `1 tsp ${s.name}`),
-          ...selectedVegetables.slice(0, 3).map(v => `1 cup ${v.name}`),
-          "2 tbsp cooking oil",
-          "Salt and pepper to taste"
-        ],
-        nutrition: {
-          calories: 350 + Math.floor(Math.random() * 100),
-          protein: 35 + Math.floor(Math.random() * 15),
-          carbs: 15 + Math.floor(Math.random() * 20),
-          fat: 12 + Math.floor(Math.random() * 10),
-          fiber: 3 + Math.floor(Math.random() * 5)
-        }
-      }));
+      // Don't return fallback recipes - let the calling function handle the empty result
+      throw error;
     }
   };
 
@@ -475,16 +405,41 @@ Each key should map to one recipe object in this exact schema:
       // Filter out any failed generations
       const successfulOptions = newMeatRecipeOptions.filter(option => option.recipes.length > 0);
       
-      if (successfulOptions.length < 2) {
-        throw new Error('Failed to generate enough recipe options');
+      if (successfulOptions.length === 0) {
+        throw new Error('Failed to generate any recipes. Please check your API configuration and try again.');
       }
       
-      setMeatRecipeOptions(successfulOptions);
-      toast.success(`Generated ${successfulOptions.reduce((total, option) => total + option.recipes.length, 0)} unique recipes!`);
+      if (successfulOptions.length < 2) {
+        // Show partial success with warning
+        setMeatRecipeOptions(successfulOptions);
+        toastHook({
+          title: 'Partial Generation Success',
+          description: `Generated recipes for ${successfulOptions.length} out of ${selectedMeats.length} meats. Some failed due to API issues.`,
+          variant: 'destructive',
+        });
+      } else {
+        // Full success
+        setMeatRecipeOptions(successfulOptions);
+        toast.success(`Generated ${successfulOptions.reduce((total, option) => total + option.recipes.length, 0)} unique recipes!`);
+      }
       
     } catch (error) {
       console.error('Recipe generation failed:', error);
-      toast.error('Failed to generate recipes. Please try again or check your API configuration.');
+      
+      // More specific error handling
+      if (error instanceof Error && error.message.includes('API request failed')) {
+        toastHook({
+          title: 'API Connection Failed',
+          description: 'Unable to connect to AI service. Please check your internet connection and API configuration.',
+          variant: 'destructive',
+        });
+      } else {
+        toastHook({
+          title: 'Recipe Generation Failed',
+          description: 'Failed to generate recipes. Please try again with different ingredients.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -590,7 +545,7 @@ Each key should map to one recipe object in this exact schema:
       setSelectedSeasoningIds([]);
       setSelectedVegetables([]);
       setSelectedVegetableIds([]);
-      setDietType('');
+      setDietType('paleo');
       setInspiration('');
       setMeatRecipeOptions([]);
       setExpandedRecipes(new Set());
@@ -615,62 +570,39 @@ Each key should map to one recipe object in this exact schema:
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables];
     const ingredientNames = allIngredients.map(item => item.name);
     
-    return `Create 3 different ${dietType || 'paleo'} recipes using the following ingredients: ${ingredientNames.join(', ')}.
-Main protein: ${meat.name} (2 lbs).
-Diet: ${dietType || 'not specified'}.
-Serves 4.
-
-IMPORTANT: Return ONLY valid JSON, no extra text, no markdown, no code fences.
-The JSON must be an object with 3 keys ("Recipe 1", "Recipe 2", "Recipe 3").
-Each key should map to one recipe object in this exact schema:
-
+    return `SYSTEM PROMPT:
+You are a meal prep recipe generator that returns VALID JSON only.
+Schema:
 {
   "Recipe 1": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
+    "name": "string",
+    "description": "string",
+    "prepTime": "integer",
+    "cookTime": "integer", 
     "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
+    "instructions": ["step1", "step2"],
+    "ingredients": ["ingredient1", "ingredient2"]
   },
-  "Recipe 2": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
-    "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
-  },
-  "Recipe 3": {
-    "name": "Recipe Name",
-    "description": "Brief description",
-    "prepTime": 15,
-    "cookTime": 25,
-    "servings": 4,
-    "instructions": [
-      "Step 1: instruction",
-      "Step 2: instruction"
-    ],
-    "ingredients": [
-      "2 lbs ${meat.name.toLowerCase()}",
-      "1 tsp seasoning"
-    ]
-  }
-}`;
+  "Recipe 2": { /* same structure */ },
+  "Recipe 3": { /* same structure */ }
+}
+Rules:
+- Output JSON only. No prose, no markdown.
+- Use exact ingredient names provided.
+- Each recipe should be different in cooking method or flavor profile.
+- Instructions as array of clear steps.
+- Include cooking times and prep times.
+
+USER PROMPT:
+Create 3 different ${dietType || 'paleo'} recipes using these ingredients:
+${ingredientNames.map(name => `- ${name}`).join('\n')}
+
+Main protein: ${meat.name} (2 lbs)
+Diet preference: ${dietType || 'not specified'}
+Target: serves 4
+${inspiration ? `Additional notes: ${inspiration}` : ''}
+
+Return a single JSON object with exactly 3 recipes.`;
   };
 
   return (

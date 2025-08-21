@@ -55,7 +55,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [servings, setServings] = useState(4);
   const [cuisineStyle, setCuisineStyle] = useState('none');
-  const [dietaryRestrictions, setDietaryRestrictions] = useState('none');
+  const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<Omit<Recipe, 'id' | 'is_favorite'> | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -112,57 +112,52 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     try {
       const ingredientNames = selectedIngredients.map(item => item.name);
       
-      // Create system prompt for the LLM (nutrition will be calculated by the app)
-      const systemPrompt = `You are a professional chef and recipe developer. Create a delicious and cohesive recipe using some or all of the available ingredients. Choose ingredients that work well together to create a balanced dish.
+      // Create user prompt with selected ingredients
+      const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using ONLY these ingredients:
+${ingredientNames.map(name => `- ${name}`).join('\n')}
 
-Available ingredients: ${ingredientNames.join(', ')}
+Target: serves ${servings}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
 
-Requirements:
-- Select ingredients from the list that complement each other well
-- You don't have to use every ingredient - choose what makes sense for a good recipe
-- Serve ${servings} people
-${cuisineStyle && cuisineStyle !== 'none' ? `- Cuisine style: ${cuisineStyle}` : ''}
-${dietaryRestrictions && dietaryRestrictions !== 'none' ? `- Dietary restrictions: ${dietaryRestrictions}` : ''}
-- Include clear, step-by-step cooking instructions
-- Suggest reasonable prep time and cooking time
-- Return response in valid JSON format only
+Return a single JSON object that matches the schema exactly.`;
 
-Return the recipe in this exact JSON format:
-{
-  "name": "Recipe Name",
-  "instructions": "Step 1: ... Step 2: ... Step 3: ...",
-  "servings": ${servings},
-  "total_time_minutes": 30,
-  "ingredients": [
-    {
-      "ingredient_name": "chicken breast",
-      "quantity": 2,
-      "unit": "pieces"
-    }
-  ]
-}
-
-Important: Only use ingredient names from this list: ${ingredientNames.join(', ')}`;
-
-      // Call OpenRouter API
+      // Call OpenRouter API with streamlined approach
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUNTER_API_KEY}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUTER_API_KEY}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "FoodTracker Recipe Generator",
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           "model": "openai/gpt-oss-20b:free",
+          "temperature": 0.3,
+          "top_p": 0.9,
+          "max_tokens": 1200,
+          "seed": 42,
+          // Prefer JSON mode if the route honors it
+          "response_format": { "type": "json_object" },
           "messages": [
             {
+              "role": "system",
+              "content": `Return only valid JSON. Use this exact schema:
+{
+  "name": "Recipe Name",
+  "instructions": "Step by step cooking instructions as one paragraph.",
+  "servings": 4,
+  "total_time_minutes": 30,
+  "ingredients": [
+    { "ingredient_name": "exact ingredient name", "quantity": 1, "unit": "pieces" }
+  ]
+}
+
+Use only the provided ingredients. Make reasonable portions for the serving size.`
+            },
+            {
               "role": "user",
-              "content": systemPrompt
+              "content": userPrompt
             }
-          ],
-          "max_tokens": 1000,
-          "temperature": 0.7
+          ]
         })
       });
 
@@ -174,7 +169,17 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
       const generatedText = data.choices[0]?.message?.content;
       
       // Try to extract JSON from the response
-      let parsedRecipe;
+      let parsedRecipe: {
+        name: string;
+        instructions: string;
+        servings: number;
+        total_time_minutes: number;
+        ingredients: Array<{
+          ingredient_name: string;
+          quantity: number;
+          unit: string;
+        }>;
+      };
       try {
         // Look for JSON in the response
         const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
@@ -184,20 +189,17 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
           throw new Error('No JSON found in response');
         }
       } catch (parseError) {
-        console.warn('Failed to parse AI response as JSON, using fallback');
-        // Fallback to mock response if parsing fails
-        const recipeName = `${ingredientNames.slice(0, 2).join(' & ')} ${cuisineStyle || 'Fusion'} Delight`;
-        parsedRecipe = {
-          name: recipeName,
-          instructions: `1. Prep all ingredients by washing and chopping as needed.\n2. Heat oil in a large pan over medium heat.\n3. Add ${ingredientNames[0]} and cook for 3-4 minutes until tender.\n4. Add ${ingredientNames.slice(1).join(', ')} and season with salt and pepper.\n5. Cook for 8-10 minutes, stirring occasionally.\n6. Taste and adjust seasoning as needed.\n7. Serve hot and enjoy!`,
-          servings: servings,
-          total_time_minutes: Math.floor(Math.random() * 30) + 20,
-          ingredients: selectedIngredients.map((ingredient) => ({
-            ingredient_name: ingredient.name,
-            quantity: Math.floor(Math.random() * 3) + 1,
-            unit: ['cups', 'tbsp', 'tsp', 'pieces', 'cloves'][Math.floor(Math.random() * 5)]
-          }))
-        };
+        console.warn('Failed to parse AI response as JSON:', parseError);
+        
+        // Notify user about the failure
+        toast({
+          title: 'AI Generation Failed',
+          description: 'Failed to generate recipe. Please try again or check your API configuration.',
+          variant: 'destructive',
+        });
+        
+        // Don't create fallback recipe - just throw the error
+        throw new Error('Failed to parse AI response');
       }
 
       // Map the AI response ingredients to our expected format
@@ -215,9 +217,41 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
         };
       });
 
+      // Parse and format instructions properly
+      const formatInstructions = (instructions: string) => {
+        // First handle any escaped newlines
+        let formatted = instructions.replace(/\\n/g, '\n');
+        
+        // If instructions are in a single paragraph with "Step X:" format, split them
+        if (formatted.includes('Step ') && !formatted.includes('\n')) {
+          // Split by "Step X:" pattern and rejoin with newlines
+          formatted = formatted
+            .split(/Step \d+:\s*/)
+            .filter(step => step.trim().length > 0)
+            .map((step, index) => `${index + 1}. ${step.trim()}`)
+            .join('\n');
+        } 
+        // If instructions are in a single paragraph with sentences, split by periods
+        else if (!formatted.includes('\n') && formatted.includes('.')) {
+          // Split by sentences and create numbered steps
+          const sentences = formatted
+            .split('.')
+            .map(sentence => sentence.trim())
+            .filter(sentence => sentence.length > 0);
+          
+          if (sentences.length > 1) {
+            formatted = sentences
+              .map((sentence, index) => `${index + 1}. ${sentence}.`)
+              .join('\n');
+          }
+        }
+        
+        return formatted;
+      };
+
       const finalRecipe = {
         name: parsedRecipe.name,
-        instructions: parsedRecipe.instructions.replace(/\\n/g, '\n'),
+        instructions: formatInstructions(parsedRecipe.instructions),
         servings: parsedRecipe.servings || servings,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
         ingredients: recipeIngredients,
@@ -229,11 +263,23 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
       
     } catch (error) {
       console.error('Recipe generation failed:', error);
-      toast({
-        title: 'Generation failed',
-        description: 'Unable to generate recipe. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // More specific error handling
+      if (error instanceof Error && error.message.includes('API request failed')) {
+        toast({
+          title: 'API Connection Failed',
+          description: 'Unable to connect to AI service. Please check your internet connection and API configuration.',
+          variant: 'destructive',
+        });
+      } else if (error instanceof Error && error.message.includes('Failed to parse')) {
+        // Parsing error notification already shown above
+      } else {
+        toast({
+          title: 'Generation Failed',
+          description: 'Unable to generate recipe. Please try again with different ingredients.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -244,7 +290,7 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
     setSelectedIngredientIds([]);
     setServings(4);
     setCuisineStyle('none');
-    setDietaryRestrictions('none');
+    setDietaryRestrictions('paleo');
     setGeneratedRecipe(null);
     setShowPreview(false);
   };

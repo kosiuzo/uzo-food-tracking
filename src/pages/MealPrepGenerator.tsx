@@ -543,6 +543,7 @@ Rules:
       servings: generatedRecipe.servings,
       total_time_minutes: generatedRecipe.prepTime + generatedRecipe.cookTime,
       ingredients: recipeIngredients,
+      meal_type: ['protein-based'],
       nutrition: {
         calories_per_serving: generatedRecipe.nutrition.calories,
         protein_per_serving: generatedRecipe.nutrition.protein,

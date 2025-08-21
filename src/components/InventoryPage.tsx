@@ -80,9 +80,9 @@ export function InventoryPage() {
           />
         </div>
         
-        <div className="flex gap-2">
+        <div className="space-y-3">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -94,7 +94,7 @@ export function InventoryPage() {
           </Select>
           
           <Select value={stockFilter} onValueChange={setStockFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Stock" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +105,7 @@ export function InventoryPage() {
           </Select>
           
           <Select value={ratingFilter} onValueChange={setRatingFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Rating" />
             </SelectTrigger>
             <SelectContent>

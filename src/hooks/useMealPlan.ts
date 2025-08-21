@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { WeeklyMealPlan, MealPlanBlock, RecipeRotation } from '../types';
 
@@ -11,9 +11,9 @@ export const useMealPlan = () => {
   // Load the current week's meal plan
   useEffect(() => {
     loadCurrentWeekPlan();
-  }, []);
+  }, [loadCurrentWeekPlan]);
 
-  const loadCurrentWeekPlan = async () => {
+  const loadCurrentWeekPlan = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -96,9 +96,9 @@ export const useMealPlan = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [createDefaultWeekPlan]);
 
-  const createDefaultWeekPlan = async (weekStart: string) => {
+  const createDefaultWeekPlan = useCallback(async (weekStart: string) => {
     try {
       // Create a new weekly meal plan
       const { data: weeklyPlanData, error: weeklyError } = await supabase
@@ -125,7 +125,7 @@ export const useMealPlan = () => {
       setUsingMockData(true);
       setWeeklyPlan(getMockWeeklyPlan());
     }
-  };
+  }, []);
 
   const createMealPlanBlock = async (block: Omit<MealPlanBlock, 'id'>) => {
     if (!weeklyPlan) return null;

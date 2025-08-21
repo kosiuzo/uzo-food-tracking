@@ -100,7 +100,7 @@ export function AddEditMealPlanBlockDialog({
     setRotations(rotations.filter((_, i) => i !== index));
   };
 
-  const updateRotation = (index: number, field: keyof Omit<RecipeRotation, 'id'>, value: any) => {
+  const updateRotation = (index: number, field: keyof Omit<RecipeRotation, 'id'>, value: string | string[]) => {
     const updated = [...rotations];
     updated[index] = { ...updated[index], [field]: value };
     setRotations(updated);

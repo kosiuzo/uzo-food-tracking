@@ -153,7 +153,7 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
       }
 
       const data = await response.json();
-      let generatedText = data.choices[0]?.message?.content;
+      const generatedText = data.choices[0]?.message?.content;
       
       // Try to extract JSON from the response
       let parsedRecipe;
@@ -183,7 +183,7 @@ Important: Only use ingredient names from this list: ${ingredientNames.join(', '
       }
 
       // Map the AI response ingredients to our expected format
-      const recipeIngredients = parsedRecipe.ingredients.map((aiIngredient: any) => {
+      const recipeIngredients = parsedRecipe.ingredients.map((aiIngredient: { ingredient_name: string; quantity: number; unit: string }) => {
         // Find matching ingredient from selected ingredients
         const matchingIngredient = selectedIngredients.find(
           item => item.name.toLowerCase().includes(aiIngredient.ingredient_name.toLowerCase()) ||

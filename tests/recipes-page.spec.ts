@@ -14,10 +14,9 @@ test.describe('Recipes Page', () => {
     await expect(page.locator('h1:has-text("Recipes")')).toBeVisible();
     await expect(page.locator('text=Manage your recipes and favorites')).toBeVisible();
     
-    // Check that stats cards are visible (use more specific selectors)
+    // Check that stats cards are visible (only Total Recipes and Favorites exist)
     await expect(page.locator('text=Total Recipes')).toBeVisible();
     await expect(page.locator('.text-sm.text-muted-foreground:has-text("Favorites")')).toBeVisible();
-    await expect(page.locator('text=Avg Prep Time (min)')).toBeVisible();
     
     // Check that search input is visible
     await expect(page.locator('input[placeholder*="Search recipes"]')).toBeVisible();

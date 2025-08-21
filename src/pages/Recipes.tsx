@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot, Utensils } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -82,9 +83,17 @@ export default function Recipes() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-<h1 className="text-2xl font-bold">Recipes</h1>
-           <p className="text-muted-foreground">Manage your recipes and favorites</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Recipes</h1>
+            <p className="text-muted-foreground">Manage your recipes and favorites</p>
+          </div>
+          <Link to="/meal-prep-generator">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Utensils className="h-4 w-4" />
+              Meal Prep
+            </Button>
+          </Link>
         </div>
 
         {/* Mock Data Indicator */}

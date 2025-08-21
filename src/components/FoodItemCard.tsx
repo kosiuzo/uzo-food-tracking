@@ -62,7 +62,7 @@ export function FoodItemCard({ item, onToggleStock, onEdit, onDelete, onRatingCh
           {/* Header Row */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base truncate leading-tight">{item.name}</h3>
+              <h3 className="font-semibold text-base break-words leading-tight">{item.name}</h3>
               {item.brand && (
                 <p className="text-sm text-muted-foreground truncate mt-0.5">{item.brand}</p>
               )}

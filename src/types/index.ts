@@ -68,6 +68,8 @@ export interface Recipe {
   total_cost?: number;
   cost_last_calculated?: string;
   is_favorite?: boolean;
+  notes?: string;
+  meal_type?: string[];
 }
 
 // Database row type for recipes table

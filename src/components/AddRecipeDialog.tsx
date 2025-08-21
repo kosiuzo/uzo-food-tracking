@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { MEAL_TYPE_OPTIONS } from '@/constants/mealTypes';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     servings: 1,
     total_time_minutes: 0,
     ingredients: [] as RecipeIngredient[],
+    notes: '',
+    meal_type: [] as string[],
   });
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
@@ -43,6 +46,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         servings: editingRecipe.servings,
         total_time_minutes: editingRecipe.total_time_minutes,
         ingredients: editingRecipe.ingredients,
+        notes: editingRecipe.notes || '',
+        meal_type: editingRecipe.meal_type || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id));
     } else if (open) {
@@ -53,6 +58,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         servings: 1,
         total_time_minutes: 0,
         ingredients: [],
+        notes: '',
+        meal_type: [],
       });
       setSelectedIngredientIds([]);
     }
@@ -147,6 +154,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       servings: 1,
       total_time_minutes: 0,
       ingredients: [],
+      notes: '',
+      meal_type: [],
     });
     setSelectedIngredientIds([]);
 
@@ -201,6 +210,17 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           </div>
 
           <div className="space-y-2">
+            <Label>Meal Type</Label>
+            <MultiSelect
+              options={MEAL_TYPE_OPTIONS}
+              onValueChange={(values) => setFormData(prev => ({ ...prev, meal_type: values }))}
+              defaultValue={formData.meal_type}
+              placeholder="Select meal types..."
+              maxCount={3}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="instructions">Instructions *</Label>
             <Textarea
               id="instructions"
@@ -208,6 +228,17 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
               onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
               placeholder="1. Step one...&#10;2. Step two..."
               rows={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Any additional notes or tips..."
+              rows={3}
             />
           </div>
 

@@ -62,11 +62,12 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
 
-  // Group items by category for the GroupedMultiSelect
+  // Group items by category for the GroupedMultiSelect (in-stock items only)
   const groupedIngredients: OptionGroup = React.useMemo(() => {
     const groups: OptionGroup = {};
     
-    allItems.forEach(item => {
+    // Filter to only include in-stock items
+    allItems.filter(item => item.in_stock).forEach(item => {
       const category = item.category || 'Other';
       if (!groups[category]) {
         groups[category] = [];
@@ -130,11 +131,10 @@ Return a single JSON object that matches the schema exactly.`;
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "openai/gpt-oss-20b:free",
+          "model": "microsoft/mai-ds-r1:free",
           "temperature": 0.3,
           "top_p": 0.9,
           "max_tokens": 1200,
-          "seed": 42,
           // Prefer JSON mode if the route honors it
           "response_format": { "type": "json_object" },
           "messages": [
@@ -339,12 +339,12 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         <div className="space-y-6 py-4">
           {/* Ingredients Selector */}
           <div className="space-y-3">
-            <Label>Ingredients from Your Inventory</Label>
+            <Label>Ingredients from Your Inventory (in-stock only)</Label>
             <GroupedMultiSelect
               optionGroups={groupedIngredients}
               onValueChange={handleIngredientSelectionChange}
               defaultValue={selectedIngredientIds}
-              placeholder="Search and select ingredients from your inventory..."
+              placeholder="Search and select in-stock ingredients..."
               maxCount={3}
             />
           </div>

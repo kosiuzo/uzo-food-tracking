@@ -70,11 +70,13 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     return calculateRecipeNutrition(formData.ingredients, formData.servings, allItems);
   };
 
-  // Convert allItems to options for MultiSelect
-  const ingredientOptions: Option[] = allItems.map(item => ({
-    label: `${item.name}${item.brand ? ` (${item.brand})` : ''}`,
-    value: item.id,
-  }));
+  // Convert allItems to options for MultiSelect (in-stock items only)
+  const ingredientOptions: Option[] = allItems
+    .filter(item => item.in_stock)
+    .map(item => ({
+      label: item.name,
+      value: item.id,
+    }));
 
   // Handle ingredient selection from MultiSelect
   const handleIngredientSelectionChange = (selectedIds: string[]) => {
@@ -171,7 +173,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         <DialogHeader>
           <DialogTitle>{editingRecipe ? 'Edit Recipe' : 'Add New Recipe'}</DialogTitle>
           <DialogDescription>
-            {editingRecipe ? 'Update your recipe details and ingredients.' : 'Create a new recipe with ingredients, instructions, and nutritional information.'}
+            {editingRecipe ? 'Update your recipe details and in-stock ingredients.' : 'Create a new recipe with in-stock ingredients, instructions, and nutritional information.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -245,12 +247,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           {/* Ingredients */}
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Select Ingredients *</Label>
+              <Label>Select Ingredients * (in-stock only)</Label>
               <MultiSelect
                 options={ingredientOptions}
                 onValueChange={handleIngredientSelectionChange}
                 defaultValue={selectedIngredientIds}
-                placeholder="Search and select ingredients..."
+                placeholder="Search and select in-stock ingredients..."
                 maxCount={3}
               />
             </div>

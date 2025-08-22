@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -27,6 +28,13 @@ const dietTypes = [
   { value: 'mediterranean', label: 'Mediterranean' },
 ];
 
+const cookingMethods = [
+  { value: 'oven', label: 'Oven' },
+  { value: 'air-fryer', label: 'Air Fryer' },
+  { value: 'electric-grill', label: 'Char-Broil TRU-Infrared Electric Grill' },
+  { value: 'stovetop', label: 'Stovetop Skillet' },
+];
+
 interface GeneratedRecipe {
   id: string;
   name: string;
@@ -36,6 +44,7 @@ interface GeneratedRecipe {
   servings: number;
   ingredients: string[];
   instructions: string[];
+  notes?: string;
   nutrition: {
     calories: number;
     protein: number;
@@ -60,6 +69,7 @@ interface ParsedRecipeResponse {
     servings: number;
     instructions: string[];
     ingredients: string[];
+    notes?: string;
   };
   'Recipe 2': {
     name: string;
@@ -69,6 +79,7 @@ interface ParsedRecipeResponse {
     servings: number;
     instructions: string[];
     ingredients: string[];
+    notes?: string;
   };
   'Recipe 3': {
     name: string;
@@ -78,10 +89,12 @@ interface ParsedRecipeResponse {
     servings: number;
     instructions: string[];
     ingredients: string[];
+    notes?: string;
   };
 }
 
 const MealPrepGenerator = () => {
+  const navigate = useNavigate();
   const { allItems } = useFoodInventory();
   const { addRecipe } = useRecipes();
   const { toast: toastHook } = useToast();
@@ -94,6 +107,7 @@ const MealPrepGenerator = () => {
   const [selectedDairy, setSelectedDairy] = useState<FoodItem[]>([]);
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [dietType, setDietType] = useState('paleo');
+  const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -101,25 +115,29 @@ const MealPrepGenerator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showDebugPrompt, setShowDebugPrompt] = useState(false);
 
-  // Filter items by exact database categories
+  // Filter items by exact database categories (in-stock items only)
   const meats = allItems.filter(item => 
-    item.category === 'Proteins'
+    item.in_stock && item.category === 'Proteins'
   );
 
   const seasoningsAndSauces = allItems.filter(item => 
-    item.category === 'Seasonings & Spices' ||
-    item.category === 'Condiments & Sauces' ||
-    item.category === 'Oils & Fats'
+    item.in_stock && (
+      item.category === 'Seasonings & Spices' ||
+      item.category === 'Condiments & Sauces' ||
+      item.category === 'Oils & Fats'
+    )
   );
 
   const vegetables = allItems.filter(item => 
-    item.category.toLowerCase().includes('vegetable') ||
-    item.category.toLowerCase().includes('produce') ||
-    item.category.toLowerCase().includes('fresh')
+    item.in_stock && (
+      item.category.toLowerCase().includes('vegetable') ||
+      item.category.toLowerCase().includes('produce') ||
+      item.category.toLowerCase().includes('fresh')
+    )
   );
 
   const dairy = allItems.filter(item => 
-    item.category === 'Dairy & Eggs'
+    item.in_stock && item.category === 'Dairy & Eggs'
   );
 
   // Convert to options for MultiSelect (only show product name, no brand)
@@ -182,18 +200,33 @@ const MealPrepGenerator = () => {
     setSelectedDairy(newSelectedDairy);
   };
 
+  const handleCookingMethodsChange = (selectedMethods: string[]) => {
+    setSelectedCookingMethods(selectedMethods);
+  };
+
   const generateThreeRecipes = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables, ...selectedDairy];
     const ingredientNames = allIngredients.map(item => item.name);
     
-    // Create user prompt with specific ingredients
-    const userPrompt = `Create 3 different ${dietType} recipes using these ingredients:
+    // Create user prompt with specific ingredients and batch cooking considerations
+    const cookingMethodsText = selectedCookingMethods.map(method => 
+      cookingMethods.find(cm => cm.value === method)?.label || method
+    ).join(', ');
+    
+    const userPrompt = `Create 3 different ${dietType} MEAL PREP recipes using these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Main protein: ${meat.name} (2 lbs)
 Diet preference: ${dietType}
-Target: serves 4
+Cooking methods available: ${cookingMethodsText}
+Target: serves 4 (designed for meal prep - food will be cooked in batch for multiple days)
 ${inspiration ? `Additional notes: ${inspiration}` : ''}
+
+IMPORTANT: These recipes are for MEAL PREP, so:
+- Consider how ingredients will hold up as leftovers over 3-4 days
+- Optimize cooking methods for batch preparation
+- Include storage and reheating tips in the notes field
+- Focus on flavors and textures that improve or maintain well when reheated
 
 Return a single JSON object with exactly 3 recipes.`;
 
@@ -210,11 +243,10 @@ Return a single JSON object with exactly 3 recipes.`;
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "openai/gpt-oss-20b:free",
+          "model": "microsoft/mai-ds-r1:free",
           "temperature": 0.2,
           "top_p": 0.9,
-          "max_tokens": 5000,
-          "seed": 42,
+          "max_tokens": 10000,
           "response_format": { "type": "json_object" },
           "messages": [
             {
@@ -229,7 +261,8 @@ Schema:
     "cookTime": "integer",
     "servings": 4,
     "instructions": ["step1", "step2"],
-    "ingredients": ["ingredient1", "ingredient2"]
+    "ingredients": ["ingredient1", "ingredient2"],
+    "notes": "string with storage and reheating tips"
   },
   "Recipe 2": { /* same structure */ },
   "Recipe 3": { /* same structure */ }
@@ -238,8 +271,11 @@ Rules:
 - Output JSON only. No prose, no markdown.
 - Use exact ingredient names provided.
 - Each recipe should be different in cooking method or flavor profile.
-- Instructions as array of clear steps.
-- Include cooking times and prep times.`
+- Instructions as array of clear steps for BATCH COOKING.
+- Include cooking times and prep times.
+- REQUIRED: Include detailed notes with storage tips (refrigerator life) and reheating instructions.
+- Consider meal prep: how ingredients hold up as leftovers, best reheating methods, texture preservation.
+- Optimize for the available cooking methods provided by user.`
             },
             {
               "role": "user",
@@ -363,6 +399,7 @@ Rules:
               "2 tbsp cooking oil",
               "Salt and pepper to taste"
             ],
+            notes: parsedRecipe.notes || `Storage: Refrigerate for up to 4 days. Reheat gently in microwave or oven at 350°F until heated through.`,
             nutrition: {
               calories: Math.round(nutrition.calories_per_serving),
               protein: Math.round(nutrition.protein_per_serving),
@@ -544,6 +581,7 @@ Rules:
       total_time_minutes: generatedRecipe.prepTime + generatedRecipe.cookTime,
       ingredients: recipeIngredients,
       meal_type: ['protein-based'],
+      notes: generatedRecipe.notes,
       nutrition: {
         calories_per_serving: generatedRecipe.nutrition.calories,
         protein_per_serving: generatedRecipe.nutrition.protein,
@@ -585,9 +623,13 @@ Rules:
       setSelectedDairy([]);
       setSelectedDairyIds([]);
       setDietType('paleo');
+      setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
       setMeatRecipeOptions([]);
       setExpandedRecipes(new Set());
+      
+      // Navigate back to recipes page
+      navigate('/recipes');
       
     } catch (error) {
       console.error('Error saving recipes:', error);
@@ -650,7 +692,7 @@ Return a single JSON object with exactly 3 recipes.`;
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Meal Prep Generator</h1>
           <p className="text-muted-foreground">
-            Select 2 meats and your available ingredients to get 3 recipe options for each meat
+            Select 2 meats, cooking methods, and ingredients to get 3 batch-friendly recipe options with storage & reheating tips
           </p>
         </div>
 
@@ -662,56 +704,71 @@ Return a single JSON object with exactly 3 recipes.`;
               Meal Prep Setup
             </CardTitle>
             <CardDescription>
-              Choose your proteins and available ingredients for personalized meal prep recipes
+              Choose your proteins and available in-stock ingredients for personalized meal prep recipes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Meat Selection */}
             <div className="space-y-3">
-              <Label>Select 2 Meats* ({selectedMeats.length}/2)</Label>
+              <Label>Select 2 Meats* ({selectedMeats.length}/2) - in-stock only</Label>
               <MultiSelect
                 options={meatOptions}
                 onValueChange={handleMeatSelectionChange}
                 defaultValue={selectedMeatIds}
-                placeholder="Search and select up to 2 meats..."
+                placeholder="Search and select up to 2 in-stock meats..."
                 maxCount={2}
               />
             </div>
 
             {/* Seasonings & Sauces */}
             <div className="space-y-3">
-              <Label>Seasonings & Sauces*</Label>
+              <Label>Seasonings & Sauces* (in-stock only)</Label>
               <GroupedMultiSelect
                 optionGroups={groupedSeasoningsAndSauces}
                 onValueChange={handleSeasoningSelectionChange}
                 defaultValue={selectedSeasoningIds}
-                placeholder="Search and select seasonings and sauces..."
+                placeholder="Search and select in-stock seasonings and sauces..."
                 maxCount={3}
               />
             </div>
 
             {/* Vegetables */}
             <div className="space-y-3">
-              <Label>Vegetables (Optional)</Label>
+              <Label>Vegetables (Optional) - in-stock only</Label>
               <MultiSelect
                 options={vegetableOptions}
                 onValueChange={handleVegetableSelectionChange}
                 defaultValue={selectedVegetableIds}
-                placeholder="Search and select vegetables..."
+                placeholder="Search and select in-stock vegetables..."
                 maxCount={4}
               />
             </div>
 
             {/* Dairy & Eggs */}
             <div className="space-y-3">
-              <Label>Dairy & Eggs (Optional)</Label>
+              <Label>Dairy & Eggs (Optional) - in-stock only</Label>
               <MultiSelect
                 options={dairyOptions}
                 onValueChange={handleDairySelectionChange}
                 defaultValue={selectedDairyIds}
-                placeholder="Search and select dairy products and eggs..."
+                placeholder="Search and select in-stock dairy products and eggs..."
                 maxCount={3}
               />
+            </div>
+
+            {/* Kitchen Tools Selection */}
+            <div className="space-y-3">
+              <Label>Preferred Cooking Methods* ({selectedCookingMethods.length} selected)</Label>
+              <MultiSelect
+                options={cookingMethods.map(method => ({ label: method.label, value: method.value }))}
+                onValueChange={handleCookingMethodsChange}
+                defaultValue={selectedCookingMethods}
+                placeholder="Select your available cooking methods..."
+                maxCount={4}
+              />
+              <p className="text-sm text-muted-foreground">
+                Choose the cooking equipment you want to use for batch meal prep
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -930,6 +987,22 @@ Return a single JSON object with exactly 3 recipes.`;
                                 ))}
                               </div>
                             </div>
+
+                            {/* Storage & Reheating Notes */}
+                            {recipe.notes && (
+                              <>
+                                <Separator />
+                                <div>
+                                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    Meal Prep Notes
+                                  </h4>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                                    <p className="text-sm text-gray-700 leading-relaxed">{recipe.notes}</p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </>
                         )}
 

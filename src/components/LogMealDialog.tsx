@@ -164,6 +164,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
               type="date"
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              autoFocus={false}
             />
           </div>
 
@@ -176,6 +177,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
               defaultValue={formData.recipe_ids}
               placeholder="Search and select recipes..."
               maxCount={2}
+              autoFocus={true}
             />
             
             {/* Selected Recipes Display */}

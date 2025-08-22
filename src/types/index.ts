@@ -69,8 +69,7 @@ export interface Recipe {
   cost_last_calculated?: string;
   is_favorite?: boolean;
   notes?: string;
-  meal_type?: string[];
-  tags?: Tag[]; // New normalized tags
+  tags?: Tag[]; // Normalized tags
 }
 
 // Database row type for recipes table
@@ -78,7 +77,6 @@ export interface DbRecipe {
   id: number;
   name: string;
   cuisine_type?: string | null;
-  meal_type?: string[] | null;
   difficulty?: string | null;
   prep_time?: number | null;
   cook_time?: number | null;
@@ -86,7 +84,6 @@ export interface DbRecipe {
   servings?: number | null;
   instructions?: string | null;
   nutrition_per_serving?: Record<string, unknown> | null;
-  tags?: string[] | null;
   rating?: number | null;
   source_link?: string | null;
   cost_per_serving?: number | null;

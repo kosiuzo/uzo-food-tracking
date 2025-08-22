@@ -66,7 +66,6 @@ CREATE TABLE recipes (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     cuisine_type TEXT,
-    meal_type TEXT[],
     difficulty TEXT,
     prep_time INT,
     cook_time INT,
@@ -74,7 +73,6 @@ CREATE TABLE recipes (
     servings INT,
     instructions TEXT,
     nutrition_per_serving JSONB,
-    tags TEXT[],
     rating NUMERIC(2,1),
     source_link TEXT,
     cost_per_serving NUMERIC(10,2),
@@ -185,8 +183,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_items_barcode ON items(barcode);
 CREATE INDEX IF NOT EXISTS idx_items_category ON items(category);
 CREATE INDEX IF NOT EXISTS idx_items_in_stock ON items(in_stock);
 CREATE INDEX IF NOT EXISTS idx_items_rating ON items(rating);
-CREATE INDEX IF NOT EXISTS idx_recipes_meal_type ON recipes USING GIN(meal_type);
-CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
 CREATE INDEX IF NOT EXISTS idx_recipe_tags_recipe_id ON recipe_tags(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_recipe_tags_tag_id ON recipe_tags(tag_id);

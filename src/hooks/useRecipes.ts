@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Recipe, RecipeIngredient, DbRecipe, Tag, DbTag } from '../types';
+import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
 import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/typeMappers';
 import { mockRecipes } from '../data/mockData';
 
@@ -50,18 +50,18 @@ export function useRecipes() {
       
       if (recipesData && recipesData.length > 0) {
         console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
-        const mappedRecipes = recipesData.map((dbRecipe: Record<string, unknown>) => {
-          const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as Record<string, unknown>[]).map((ri: Record<string, unknown>) => ({
+        const mappedRecipes = recipesData.map((dbRecipe: any) => {
+          const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as any[])?.map((ri: any) => ({
             item_id: ri.item_id.toString(),
-            quantity: ri.quantity,
-            unit: ri.unit,
-          }));
+            quantity: Number(ri.quantity) || 0,
+            unit: ri.unit as string || '',
+          })) || [];
           
-          const tags: Tag[] = (dbRecipe.recipe_tags as Record<string, unknown>[])?.map((rt: Record<string, unknown>) => 
+          const tags: Tag[] = (dbRecipe.recipe_tags as any[])?.map((rt: any) => 
             dbTagToTag(rt.tags as DbTag)
           ) || [];
           
-          return dbRecipeToRecipe(dbRecipe, ingredients, tags);
+          return dbRecipeToRecipe(dbRecipe as any, ingredients, tags);
         });
         setRecipes(mappedRecipes);
         setUsingMockData(false);
@@ -175,7 +175,6 @@ const updateRecipe = async (id: string, updates: Partial<Recipe> & { selectedTag
           nutrition_per_serving: nutritionToSave,
           rating: updatesWithoutTags.is_favorite ? 5 : null,
           notes: updatesWithoutTags.notes || null,
-          meal_type: updatesWithoutTags.meal_type || null,
         })
         .eq('id', numericId);
       
@@ -248,28 +247,16 @@ const updateRecipe = async (id: string, updates: Partial<Recipe> & { selectedTag
           console.log('💰 Updated cost data:', updatedRecipe, 'Fetch Error:', fetchError);
           if (fetchError) throw fetchError;
           
-          // Update local state with the calculated nutrition and fetched costs
-          setRecipes(prev =>
-            prev.map(recipe => (recipe.id === id ? { 
-              ...recipe, 
-              ...updatesWithoutTags,
-              cost_per_serving: updatedRecipe.cost_per_serving || 0,
-              total_cost: updatedRecipe.total_cost || 0,
-              cost_last_calculated: updatedRecipe.cost_last_calculated || undefined,
-            } : recipe))
-          );
+          // Reload recipes to get the updated data including tags and costs
+          await loadRecipes();
         } catch (costError) {
           console.warn('Failed to calculate recipe cost:', costError);
-          // Still update local state even if cost calculation fails
-          setRecipes(prev =>
-            prev.map(recipe => (recipe.id === id ? { ...recipe, ...updatesWithoutTags } : recipe))
-          );
+          // Reload recipes to get the updated data including tags
+          await loadRecipes();
         }
       } else {
-        // Update local state for non-ingredient changes
-        setRecipes(prev =>
-          prev.map(recipe => (recipe.id === id ? { ...recipe, ...updatesWithoutTags } : recipe))
-        );
+        // For non-ingredient changes, reload the recipe to get updated tags
+        await loadRecipes();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update recipe');

@@ -17,7 +17,6 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
 import { useRecipeTagManagement, useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
-import { MEAL_TYPES } from '@/constants/mealTypes';
 import { Recipe } from '../types';
 
 export default function Recipes() {

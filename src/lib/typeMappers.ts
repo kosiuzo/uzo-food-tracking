@@ -81,7 +81,6 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     cost_last_calculated: dbRecipe.cost_last_calculated || undefined,
     is_favorite: dbRecipe.average_rating ? dbRecipe.average_rating >= 4 : false,
     notes: dbRecipe.notes || undefined,
-    meal_type: dbRecipe.meal_type || undefined,
     tags,
   };
 }
@@ -91,7 +90,6 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
   return {
     name: recipe.name,
     cuisine_type: null,
-    meal_type: recipe.meal_type || null,
     difficulty: null,
     prep_time: null,
     cook_time: null,
@@ -104,7 +102,6 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
       carbs: recipe.nutrition.carbs_per_serving,
       fat: recipe.nutrition.fat_per_serving,
     },
-    tags: null,
     rating: recipe.is_favorite ? 5 : null,
     source_link: null,
     cost_per_serving: null,

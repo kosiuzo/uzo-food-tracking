@@ -86,7 +86,6 @@ export interface Database {
           id: number
           name: string
           cuisine_type: string | null
-          meal_type: string[] | null
           difficulty: string | null
           prep_time: number | null
           cook_time: number | null
@@ -94,7 +93,6 @@ export interface Database {
           servings: number | null
           instructions: string | null
           nutrition_per_serving: Record<string, unknown> | null
-          tags: string[] | null
           rating: number | null
           source_link: string | null
           cost_per_serving: number | null
@@ -111,7 +109,6 @@ export interface Database {
           id?: never
           name: string
           cuisine_type?: string | null
-          meal_type?: string[] | null
           difficulty?: string | null
           prep_time?: number | null
           cook_time?: number | null
@@ -119,7 +116,6 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
-          tags?: string[] | null
           rating?: number | null
           source_link?: string | null
           cost_per_serving?: number | null
@@ -136,7 +132,6 @@ export interface Database {
           id?: never
           name?: string
           cuisine_type?: string | null
-          meal_type?: string[] | null
           difficulty?: string | null
           prep_time?: number | null
           cook_time?: number | null
@@ -144,7 +139,6 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
-          tags?: string[] | null
           rating?: number | null
           source_link?: string | null
           cost_per_serving?: number | null

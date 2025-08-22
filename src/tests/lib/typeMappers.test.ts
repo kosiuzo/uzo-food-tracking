@@ -158,7 +158,6 @@ describe('typeMappers', () => {
         id: 1,
         name: 'Apple Pie',
         cuisine_type: 'American',
-        meal_type: ['dessert'],
         difficulty: 'medium',
         prep_time: 30,
         cook_time: 45,
@@ -215,7 +214,6 @@ describe('typeMappers', () => {
         id: 2,
         name: 'Simple Recipe',
         cuisine_type: null,
-        meal_type: null,
         difficulty: null,
         prep_time: null,
         cook_time: null,
@@ -274,7 +272,6 @@ describe('typeMappers', () => {
       expect(result).toEqual({
         name: 'Apple Pie',
         cuisine_type: null,
-        meal_type: null,
         difficulty: null,
         prep_time: null,
         cook_time: null,

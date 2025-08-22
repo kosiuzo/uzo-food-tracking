@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
-import { MEAL_TYPE_OPTIONS } from '@/constants/mealTypes';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     total_time_minutes: 0,
     ingredients: [] as RecipeIngredient[],
     notes: '',
-    meal_type: [] as string[],
     selectedTagIds: [] as string[],
   });
 
@@ -50,7 +48,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: editingRecipe.total_time_minutes,
         ingredients: editingRecipe.ingredients,
         notes: editingRecipe.notes || '',
-        meal_type: editingRecipe.meal_type || [],
         selectedTagIds: editingRecipe.tags?.map(tag => tag.id) || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id));
@@ -63,7 +60,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: 0,
         ingredients: [],
         notes: '',
-        meal_type: [],
         selectedTagIds: [],
       });
       setSelectedIngredientIds([]);
@@ -164,7 +160,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       total_time_minutes: 0,
       ingredients: [],
       notes: '',
-      meal_type: [],
       selectedTagIds: [],
     });
     setSelectedIngredientIds([]);
@@ -220,27 +215,16 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           </div>
 
           <div className="space-y-2">
-            <Label>Meal Type</Label>
-            <MultiSelect
-              options={MEAL_TYPE_OPTIONS}
-              onValueChange={(values) => setFormData(prev => ({ ...prev, meal_type: values }))}
-              defaultValue={formData.meal_type}
-              placeholder="Select meal types..."
-              maxCount={3}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label>Tags</Label>
             <MultiSelect
               options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
               onValueChange={(values) => setFormData(prev => ({ ...prev, selectedTagIds: values }))}
               defaultValue={formData.selectedTagIds}
               placeholder="Select tags..."
-              maxCount={5}
+              maxCount={8}
             />
             <p className="text-xs text-muted-foreground">
-              Organize your recipes with tags like "paleo", "gluten-free", "quick-meals", etc.
+              Organize your recipes with tags like "paleo", "gluten-free", "breakfast", "main-dish", etc.
             </p>
           </div>
 

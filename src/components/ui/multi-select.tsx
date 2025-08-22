@@ -102,9 +102,9 @@ export const MultiSelect = React.forwardRef<
 
     React.useEffect(() => {
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
-        setSelectedValues(selectedValues)
+        setSelectedValues(defaultValue || [])
       }
-    }, [defaultValue, selectedValues])
+    }, [defaultValue])
 
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {

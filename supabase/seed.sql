@@ -81,6 +81,7 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 -- Insert initial tags
 INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
 ('paleo', '#8b5cf6', 'Paleo diet friendly', NOW(), NOW()),
+('paleo - allowing rice', '#8b5cf6', 'Paleo diet friendly, allowing rice', NOW(), NOW()),
 ('gluten-free', '#f59e0b', 'Contains no gluten', NOW(), NOW()),
 ('dairy-free', '#10b981', 'Contains no dairy products', NOW(), NOW()),
 ('vegetarian', '#22c55e', 'Suitable for vegetarians', NOW(), NOW()),

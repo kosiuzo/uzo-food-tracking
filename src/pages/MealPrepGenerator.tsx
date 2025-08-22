@@ -106,7 +106,7 @@ const MealPrepGenerator = () => {
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [selectedGrains, setSelectedGrains] = useState<FoodItem[]>([]);
   const [selectedGrainIds, setSelectedGrainIds] = useState<string[]>([]);
-  const [selectedDietTags, setSelectedDietTags] = useState<string[]>(['paleo']);
+  const [selectedDietTags, setSelectedDietTags] = useState<string[]>([]);
   const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
@@ -690,7 +690,7 @@ Rules:
       setSelectedDairyIds([]);
       setSelectedGrains([]);
       setSelectedGrainIds([]);
-      setSelectedDietTags(['paleo']);
+      setSelectedDietTags([]);
       setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
       setMeatRecipeOptions([]);
@@ -874,6 +874,9 @@ Return a single JSON object with exactly 3 recipes.`;
                   placeholder="Select diet preferences from tags..."
                   maxCount={3}
                 />
+                <p className="text-sm text-muted-foreground">
+                  Choose at least one diet preference to help AI generate suitable recipes
+                </p>
               </div>
 
               <div className="space-y-2">

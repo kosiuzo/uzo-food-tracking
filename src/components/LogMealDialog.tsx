@@ -34,7 +34,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       carbs: 0,
       fat: 0,
     },
-    estimated_cost: 0,
   });
 
   // Update form data when editingMealLog changes
@@ -46,7 +45,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         meal_name: editingMealLog.meal_name,
         notes: editingMealLog.notes || '',
         nutrition: editingMealLog.nutrition,
-        estimated_cost: editingMealLog.estimated_cost || 0,
       });
     } else if (open) {
       // Reset form when opening for new meal log
@@ -61,7 +59,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           carbs: 0,
           fat: 0,
         },
-        estimated_cost: 0,
       });
     }
   }, [editingMealLog, open]);
@@ -79,10 +76,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 
-  const calculateCombinedCost = (recipes: Recipe[]) => {
-    return recipes.reduce((total, recipe) => total + (recipe.cost_per_serving || 0), 0);
-  };
-
   // Convert allRecipes to options for MultiSelect
   const recipeOptions: Option[] = allRecipes.map(recipe => ({
     label: recipe.name,
@@ -98,7 +91,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       recipe_ids: selectedIds,
       meal_name: newRecipes.length === 1 ? newRecipes[0].name : newRecipes.length > 0 ? `${newRecipes.length} Recipe Combo` : '',
       nutrition: calculateCombinedNutrition(newRecipes),
-      estimated_cost: calculateCombinedCost(newRecipes),
     }));
   };
 
@@ -137,7 +129,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         carbs: 0,
         fat: 0,
       },
-      estimated_cost: 0,
     });
 
     toast({
@@ -216,10 +207,10 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
             />
           </div>
 
-          {/* Nutrition & Cost (Combined from Recipes) */}
+          {/* Nutrition Information (Combined from Recipes) */}
           {selectedRecipes.length > 0 && (
             <div className="space-y-3 bg-muted/50 p-3 rounded-md">
-              <Label>Combined Nutrition & Cost</Label>
+              <Label>Combined Nutrition</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm">
@@ -237,14 +228,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                     <span className="font-medium">Fat:</span> {formData.nutrition.fat.toFixed(1)}g
                   </div>
                 </div>
-              </div>
-              <div className="text-sm border-t pt-2">
-                <span className="font-medium">Total cost:</span> ${formData.estimated_cost.toFixed(2)}
-                {selectedRecipes.length > 1 && (
-                  <span className="text-muted-foreground ml-2">
-                    ({selectedRecipes.length} recipes)
-                  </span>
-                )}
               </div>
             </div>
           )}

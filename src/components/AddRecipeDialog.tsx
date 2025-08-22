@@ -11,19 +11,21 @@ import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFoodInventory } from '../hooks/useFoodInventory';
-import { Recipe, RecipeIngredient } from '../types';
+import { useTags, useRecipeTagManagement } from '../hooks/useTags';
+import { Recipe, RecipeIngredient, Tag } from '../types';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 interface AddRecipeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (recipe: Omit<Recipe, 'id'>) => void;
+  onSave: (recipe: Omit<Recipe, 'id'> & { selectedTagIds?: string[] }) => void;
   editingRecipe?: Recipe;
 }
 
 export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: AddRecipeDialogProps) {
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
+  const { allTags } = useTags();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -33,6 +35,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     ingredients: [] as RecipeIngredient[],
     notes: '',
     meal_type: [] as string[],
+    selectedTagIds: [] as string[],
   });
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
@@ -48,6 +51,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         ingredients: editingRecipe.ingredients,
         notes: editingRecipe.notes || '',
         meal_type: editingRecipe.meal_type || [],
+        selectedTagIds: editingRecipe.tags?.map(tag => tag.id) || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id));
     } else if (open) {
@@ -60,6 +64,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         ingredients: [],
         notes: '',
         meal_type: [],
+        selectedTagIds: [],
       });
       setSelectedIngredientIds([]);
     }
@@ -121,7 +126,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.instructions.trim()) {
@@ -144,10 +149,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
     const recipeData = {
       ...formData,
-      nutrition: calculateNutrition()
+      nutrition: calculateNutrition(),
+      // Pass selected tag IDs for the parent to handle
+      selectedTagIds: formData.selectedTagIds,
     };
 
-    onSave(recipeData);
+    await onSave(recipeData);
     
     // Reset form
     setFormData({
@@ -158,6 +165,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       ingredients: [],
       notes: '',
       meal_type: [],
+      selectedTagIds: [],
     });
     setSelectedIngredientIds([]);
 
@@ -220,6 +228,20 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
               placeholder="Select meal types..."
               maxCount={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <MultiSelect
+              options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+              onValueChange={(values) => setFormData(prev => ({ ...prev, selectedTagIds: values }))}
+              defaultValue={formData.selectedTagIds}
+              placeholder="Select tags..."
+              maxCount={5}
+            />
+            <p className="text-xs text-muted-foreground">
+              Organize your recipes with tags like "paleo", "gluten-free", "quick-meals", etc.
+            </p>
           </div>
 
           <div className="space-y-2">

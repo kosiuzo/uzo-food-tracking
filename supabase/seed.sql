@@ -78,6 +78,29 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Ground Cinnamon, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.99, 1.8, 0.1, 0.2, 200, 2, 1, 'tsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Ground cinnamon', 4, 'manual', '1234567890195', '2024-11-12', 1, '2025-01-15 10:00:00'),
 ('Pure Vanilla Extract, 8 fl oz', 'Member''s Mark', 'Baking Supplies', true, 9.99, 0, 0, 0, 96, 5, 1, 'tsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Pure vanilla extract', 4, 'manual', '1234567890196', '2024-11-11', 2, '2025-01-15 10:00:00');
 
+-- Insert initial tags
+INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
+('paleo', '#8b5cf6', 'Paleo diet friendly', NOW(), NOW()),
+('gluten-free', '#f59e0b', 'Contains no gluten', NOW(), NOW()),
+('dairy-free', '#10b981', 'Contains no dairy products', NOW(), NOW()),
+('vegetarian', '#22c55e', 'Suitable for vegetarians', NOW(), NOW()),
+('vegan', '#059669', 'Suitable for vegans', NOW(), NOW()),
+('keto-friendly', '#dc2626', 'Suitable for ketogenic diet', NOW(), NOW()),
+('high-protein', '#3b82f6', 'High in protein content', NOW(), NOW()),
+('low-carb', '#f97316', 'Low in carbohydrates', NOW(), NOW()),
+('meal-prep', '#6366f1', 'Great for meal preparation', NOW(), NOW()),
+('quick-meals', '#ec4899', 'Can be prepared quickly', NOW(), NOW()),
+('breakfast', '#eab308', 'Breakfast dishes', NOW(), NOW()),
+('lunch', '#14b8a6', 'Lunch dishes', NOW(), NOW()),
+('dinner', '#8b5cf6', 'Dinner dishes', NOW(), NOW()),
+('snack', '#f59e0b', 'Snack foods', NOW(), NOW()),
+('dessert', '#ec4899', 'Dessert dishes', NOW(), NOW()),
+('sauce', '#6b7280', 'Sauces and condiments', NOW(), NOW()),
+('side-dish', '#84cc16', 'Side dishes', NOW(), NOW()),
+('main-dish', '#dc2626', 'Main course dishes', NOW(), NOW()),
+('protein-rich', '#3b82f6', 'Rich in protein', NOW(), NOW()),
+('stir-fry', '#f97316', 'Stir-fry dishes', NOW(), NOW());
+
 -- Insert recipes from Recipes.md
 INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, tags, notes, nutrition_per_serving, created_at, updated_at) VALUES
 ('Tzatziki', 'Greek', ARRAY['sauce', 'dip', 'condiment'], 'easy', 15, 0, 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
@@ -129,6 +152,40 @@ INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_
 6. Pour ~1/3–1/2 cup of batter per waffle and cook for 3–5 min or until golden brown.
 
 7. Serve hot or store for later!', ARRAY['paleo', 'gluten-free', 'dairy-free', 'protein-rich', 'meal-prep'], 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', NOW(), NOW());
+
+-- Insert recipe_tags relationships
+INSERT INTO recipe_tags (recipe_id, tag_id, created_at) VALUES
+-- Tzatziki (Recipe 1)
+(1, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
+(1, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
+(1, (SELECT id FROM tags WHERE name = 'vegetarian'), NOW()),
+(1, (SELECT id FROM tags WHERE name = 'sauce'), NOW()),
+-- Coconut Aminos Sauce (Recipe 2)
+(2, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
+(2, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
+(2, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
+(2, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
+(2, (SELECT id FROM tags WHERE name = 'sauce'), NOW()),
+-- Paleo Pineapple Fried Rice with Chicken Breast (Recipe 3)
+(3, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'stir-fry'), NOW()),
+-- Bacon Brussels Sprouts (Recipe 4)
+(4, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
+(4, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
+(4, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
+(4, (SELECT id FROM tags WHERE name = 'keto-friendly'), NOW()),
+(4, (SELECT id FROM tags WHERE name = 'side-dish'), NOW()),
+-- Paleo Banana Almond Flour Protein Waffles (Recipe 5)
+(5, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'protein-rich'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'meal-prep'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'breakfast'), NOW());
 
 -- Insert recipe ingredients for new recipes
 INSERT INTO recipe_items (recipe_id, item_id, quantity, unit, cost_per_unit, total_cost, cost_calculated_at) VALUES

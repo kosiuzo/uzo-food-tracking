@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Layout } from '../components/Layout';
@@ -14,6 +15,7 @@ import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useRecipes } from '../hooks/useRecipes';
 import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useRecipeTagManagement, useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { MEAL_TYPES } from '@/constants/mealTypes';
 import { Recipe } from '../types';
@@ -21,6 +23,7 @@ import { Recipe } from '../types';
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
   const { allItems } = useFoodInventory();
+  const { allTags } = useTags();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -28,14 +31,16 @@ export default function Recipes() {
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [mealTypeFilter, setMealTypeFilter] = useState<string>('all');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
 
   const displayedRecipes = recipes
     .filter(recipe => favoritesOnly ? recipe.is_favorite : true)
     .filter(recipe => {
-      if (mealTypeFilter === 'all') return true;
-      return recipe.meal_type?.includes(mealTypeFilter);
+      if (selectedTagIds.length === 0) return true;
+      return selectedTagIds.some(tagId => 
+        recipe.tags?.some(tag => tag.id === tagId)
+      );
     });
   const toggleRecipeExpansion = (recipeId: string) => {
     setExpandedRecipes(prev => {
@@ -158,21 +163,15 @@ export default function Recipes() {
           />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="meal-type-filter" className="text-sm whitespace-nowrap">Meal type:</Label>
-            <Select value={mealTypeFilter} onValueChange={setMealTypeFilter}>
-              <SelectTrigger id="meal-type-filter" className="w-full sm:w-[180px]">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All types</SelectItem>
-                {MEAL_TYPES.map(type => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex-1">
+            <Label className="text-sm whitespace-nowrap mb-2 block">Filter by tags:</Label>
+            <MultiSelect
+              options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+              onValueChange={setSelectedTagIds}
+              defaultValue={selectedTagIds}
+              placeholder="Select tags to filter..."
+              maxCount={5}
+            />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="favorites-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
@@ -205,11 +204,16 @@ export default function Recipes() {
                           </div>
                         )}
                       </div>
-                      {recipe.meal_type && recipe.meal_type.length > 0 && (
+                      {recipe.tags && recipe.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {recipe.meal_type.map((type, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {type}
+                          {recipe.tags.map((tag) => (
+                            <Badge 
+                              key={tag.id} 
+                              variant="outline" 
+                              className="text-xs text-white"
+                              style={{ backgroundColor: tag.color, borderColor: tag.color }}
+                            >
+                              {tag.name}
                             </Badge>
                           ))}
                         </div>
@@ -353,11 +357,13 @@ export default function Recipes() {
             setIsAddDialogOpen(open);
             if (!open) setEditingRecipe(null);
           }}
-          onSave={(recipeData) => {
+          onSave={async (recipeData) => {
+            const { selectedTagIds, ...recipeWithoutTags } = recipeData;
+            
             if (editingRecipe) {
-              updateRecipe(editingRecipe, recipeData);
+              await updateRecipe(editingRecipe, { ...recipeWithoutTags, selectedTagIds });
             } else {
-              addRecipe(recipeData);
+              await addRecipe({ ...recipeWithoutTags, selectedTagIds });
             }
             setIsAddDialogOpen(false);
             setEditingRecipe(null);

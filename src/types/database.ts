@@ -331,6 +331,49 @@ export interface Database {
           created_at?: string | null
         }
       }
+      tags: {
+        Row: {
+          id: number
+          name: string
+          color: string | null
+          description: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          name: string
+          color?: string | null
+          description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          name?: string
+          color?: string | null
+          description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      recipe_tags: {
+        Row: {
+          recipe_id: number
+          tag_id: number
+          created_at: string | null
+        }
+        Insert: {
+          recipe_id: number
+          tag_id: number
+          created_at?: string | null
+        }
+        Update: {
+          recipe_id?: number
+          tag_id?: number
+          created_at?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Recipe, RecipeIngredient, DbRecipe } from '../types';
-import { dbRecipeToRecipe, recipeToDbInsert } from '../lib/typeMappers';
+import { Recipe, RecipeIngredient, DbRecipe, Tag, DbTag } from '../types';
+import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/typeMappers';
 import { mockRecipes } from '../data/mockData';
 
 export function useRecipes() {
@@ -31,6 +31,10 @@ export function useRecipes() {
             quantity,
             unit,
             item_id
+          ),
+          recipe_tags (
+            tag_id,
+            tags (*)
           )
         `)
         .order('name');
@@ -53,7 +57,11 @@ export function useRecipes() {
             unit: ri.unit,
           }));
           
-          return dbRecipeToRecipe(dbRecipe, ingredients);
+          const tags: Tag[] = (dbRecipe.recipe_tags as Record<string, unknown>[])?.map((rt: Record<string, unknown>) => 
+            dbTagToTag(rt.tags as DbTag)
+          ) || [];
+          
+          return dbRecipeToRecipe(dbRecipe, ingredients, tags);
         });
         setRecipes(mappedRecipes);
         setUsingMockData(false);
@@ -82,9 +90,10 @@ const filteredRecipes = recipes.filter(recipe =>
 
   const favoriteRecipes = filteredRecipes.filter(r => r.is_favorite);
 
-const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
+const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] }) => {
     try {
-      const dbRecipe = recipeToDbInsert(recipe);
+      const { selectedTagIds, ...recipeWithoutTags } = recipe;
+      const dbRecipe = recipeToDbInsert(recipeWithoutTags);
       
       const { data: recipeData, error: recipeError } = await supabase
         .from('recipes')
@@ -95,8 +104,8 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
       if (recipeError) throw recipeError;
       
       // Insert recipe ingredients
-      if (recipe.ingredients.length > 0) {
-        const recipeIngredients = recipe.ingredients.map(ingredient => ({
+      if (recipeWithoutTags.ingredients.length > 0) {
+        const recipeIngredients = recipeWithoutTags.ingredients.map(ingredient => ({
           recipe_id: recipeData.id,
           item_id: parseInt(ingredient.item_id),
           quantity: ingredient.quantity,
@@ -108,6 +117,20 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
           .insert(recipeIngredients);
         
         if (ingredientsError) throw ingredientsError;
+      }
+      
+      // Insert recipe tags
+      if (selectedTagIds && selectedTagIds.length > 0) {
+        const recipeTags = selectedTagIds.map(tagId => ({
+          recipe_id: recipeData.id,
+          tag_id: parseInt(tagId),
+        }));
+        
+        const { error: tagsError } = await supabase
+          .from('recipe_tags')
+          .insert(recipeTags);
+        
+        if (tagsError) throw tagsError;
       }
       
       // Calculate recipe cost after ingredients are inserted
@@ -131,34 +154,58 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
     }
   };
 
-const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+const updateRecipe = async (id: string, updates: Partial<Recipe> & { selectedTagIds?: string[] }) => {
     console.log('🎯 updateRecipe called for ID:', id, 'Updates:', updates);
-    console.log('📝 Updates includes ingredients?', !!updates.ingredients, 'Ingredient count:', updates.ingredients?.length);
     try {
       const numericId = parseInt(id);
+      const { selectedTagIds, ...updatesWithoutTags } = updates;
+      console.log('📝 Updates includes ingredients?', !!updatesWithoutTags.ingredients, 'Ingredient count:', updatesWithoutTags.ingredients?.length);
       
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
-      const nutritionToSave = updates.nutrition;
+      const nutritionToSave = updatesWithoutTags.nutrition;
       
       // Update recipe
       const { error: recipeError } = await supabase
         .from('recipes')
         .update({
-          name: updates.name,
-          instructions: updates.instructions,
-          servings: updates.servings,
-          total_time: updates.total_time_minutes,
+          name: updatesWithoutTags.name,
+          instructions: updatesWithoutTags.instructions,
+          servings: updatesWithoutTags.servings,
+          total_time: updatesWithoutTags.total_time_minutes,
           nutrition_per_serving: nutritionToSave,
-          rating: updates.is_favorite ? 5 : null,
-          notes: updates.notes || null,
-          meal_type: updates.meal_type || null,
+          rating: updatesWithoutTags.is_favorite ? 5 : null,
+          notes: updatesWithoutTags.notes || null,
+          meal_type: updatesWithoutTags.meal_type || null,
         })
         .eq('id', numericId);
       
       if (recipeError) throw recipeError;
       
+      // Update tags if provided
+      if (selectedTagIds !== undefined) {
+        // Delete existing tags
+        await supabase
+          .from('recipe_tags')
+          .delete()
+          .eq('recipe_id', numericId);
+        
+        // Insert new tags
+        if (selectedTagIds.length > 0) {
+          const recipeTags = selectedTagIds.map(tagId => ({
+            recipe_id: numericId,
+            tag_id: parseInt(tagId),
+          }));
+          
+          const { error: tagsError } = await supabase
+            .from('recipe_tags')
+            .insert(recipeTags);
+          
+          if (tagsError) throw tagsError;
+        }
+      }
+      
       // Update ingredients if provided
-      if (updates.ingredients) {
+      if (updatesWithoutTags.ingredients) {
         // Delete existing ingredients
         await supabase
           .from('recipe_items')
@@ -166,8 +213,8 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           .eq('recipe_id', numericId);
         
         // Insert new ingredients
-        if (updates.ingredients.length > 0) {
-          const recipeIngredients = updates.ingredients.map(ingredient => ({
+        if (updatesWithoutTags.ingredients.length > 0) {
+          const recipeIngredients = updatesWithoutTags.ingredients.map(ingredient => ({
             recipe_id: numericId,
             item_id: parseInt(ingredient.item_id),
             quantity: ingredient.quantity,
@@ -183,7 +230,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
       }
       
       // Recalculate recipe cost if ingredients were updated
-      if (updates.ingredients) {
+      if (updatesWithoutTags.ingredients) {
         console.log('🔄 Updating recipe with ingredients, triggering cost calculation for recipe ID:', numericId);
         try {
           console.log('📞 Calling calculate_recipe_cost RPC function...');
@@ -205,7 +252,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           setRecipes(prev =>
             prev.map(recipe => (recipe.id === id ? { 
               ...recipe, 
-              ...updates,
+              ...updatesWithoutTags,
               cost_per_serving: updatedRecipe.cost_per_serving || 0,
               total_cost: updatedRecipe.total_cost || 0,
               cost_last_calculated: updatedRecipe.cost_last_calculated || undefined,
@@ -215,13 +262,13 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           console.warn('Failed to calculate recipe cost:', costError);
           // Still update local state even if cost calculation fails
           setRecipes(prev =>
-            prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+            prev.map(recipe => (recipe.id === id ? { ...recipe, ...updatesWithoutTags } : recipe))
           );
         }
       } else {
         // Update local state for non-ingredient changes
         setRecipes(prev =>
-          prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+          prev.map(recipe => (recipe.id === id ? { ...recipe, ...updatesWithoutTags } : recipe))
         );
       }
     } catch (err) {

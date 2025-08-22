@@ -1,4 +1,4 @@
-import { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, RecipeIngredient } from '../types';
+import { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, RecipeIngredient, Tag, DbTag } from '../types';
 
 // Convert database item to FoodItem format
 export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
@@ -59,7 +59,7 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
 }
 
 // Convert database recipe to Recipe format
-export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredient[] = []): Recipe {
+export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredient[] = [], tags: Tag[] = []): Recipe {
   const nutrition = dbRecipe.nutrition_per_serving || {};
   
   return {
@@ -82,6 +82,7 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     is_favorite: dbRecipe.average_rating ? dbRecipe.average_rating >= 4 : false,
     notes: dbRecipe.notes || undefined,
     meal_type: dbRecipe.meal_type || undefined,
+    tags,
   };
 }
 
@@ -147,6 +148,27 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
     rating: null,
     macros: mealLog.nutrition,
     cost: mealLog.estimated_cost,
+  };
+}
+
+// Convert database tag to Tag format
+export function dbTagToTag(dbTag: DbTag): Tag {
+  return {
+    id: dbTag.id.toString(),
+    name: dbTag.name,
+    color: dbTag.color || '#3b82f6',
+    description: dbTag.description || undefined,
+    created_at: dbTag.created_at || new Date().toISOString(),
+    updated_at: dbTag.updated_at || new Date().toISOString(),
+  };
+}
+
+// Convert Tag to database insert format
+export function tagToDbInsert(tag: Omit<Tag, 'id' | 'created_at' | 'updated_at'>): Omit<DbTag, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    name: tag.name,
+    color: tag.color,
+    description: tag.description || null,
   };
 }
 

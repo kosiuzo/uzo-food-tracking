@@ -70,6 +70,7 @@ export interface Recipe {
   is_favorite?: boolean;
   notes?: string;
   meal_type?: string[];
+  tags?: Tag[]; // New normalized tags
 }
 
 // Database row type for recipes table
@@ -156,6 +157,33 @@ export interface DbMealLog {
   rating?: number | null;
   macros?: Record<string, unknown> | null;
   cost?: number | null;
+  created_at?: string | null;
+}
+
+// Tag types
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Database row type for tags table
+export interface DbTag {
+  id: number;
+  name: string;
+  color?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+// Database row type for recipe_tags table
+export interface DbRecipeTag {
+  recipe_id: number;
+  tag_id: number;
   created_at?: string | null;
 }
 

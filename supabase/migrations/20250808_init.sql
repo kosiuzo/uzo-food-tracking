@@ -88,6 +88,24 @@ CREATE TABLE recipes (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create tags table
+CREATE TABLE tags (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    color TEXT DEFAULT '#3b82f6',
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create recipe_tags junction table
+CREATE TABLE recipe_tags (
+    recipe_id BIGINT REFERENCES recipes(id) ON DELETE CASCADE,
+    tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (recipe_id, tag_id)
+);
+
 -- Create recipe_items junction table
 CREATE TABLE recipe_items (
     recipe_id BIGINT REFERENCES recipes(id) ON DELETE CASCADE,
@@ -169,6 +187,9 @@ CREATE INDEX IF NOT EXISTS idx_items_in_stock ON items(in_stock);
 CREATE INDEX IF NOT EXISTS idx_items_rating ON items(rating);
 CREATE INDEX IF NOT EXISTS idx_recipes_meal_type ON recipes USING GIN(meal_type);
 CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+CREATE INDEX IF NOT EXISTS idx_recipe_tags_recipe_id ON recipe_tags(recipe_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_tags_tag_id ON recipe_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_cooked_at ON meal_logs(cooked_at);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_recipe_ids ON meal_logs USING GIN(recipe_ids);
 CREATE INDEX IF NOT EXISTS idx_weekly_meal_plans_week_start ON weekly_meal_plans(week_start);
@@ -551,6 +572,20 @@ CREATE TRIGGER trigger_weekly_meal_plans_update_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_weekly_meal_plans_updated_at();
 
+-- Create trigger to update updated_at timestamp on tags
+CREATE OR REPLACE FUNCTION trigger_update_tags_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_tags_update_updated_at
+    BEFORE UPDATE ON tags
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_tags_updated_at();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
@@ -561,6 +596,8 @@ ALTER TABLE meal_plan_blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipe_rotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rotation_recipes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE block_snacks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recipe_tags ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public access (since this is a single-user app)
 CREATE POLICY "Allow public access to items" ON items FOR ALL USING (true);
@@ -572,3 +609,5 @@ CREATE POLICY "Allow public access to meal_plan_blocks" ON meal_plan_blocks FOR 
 CREATE POLICY "Allow public access to recipe_rotations" ON recipe_rotations FOR ALL USING (true);
 CREATE POLICY "Allow public access to rotation_recipes" ON rotation_recipes FOR ALL USING (true);
 CREATE POLICY "Allow public access to block_snacks" ON block_snacks FOR ALL USING (true);
+CREATE POLICY "Allow public access to tags" ON tags FOR ALL USING (true);
+CREATE POLICY "Allow public access to recipe_tags" ON recipe_tags FOR ALL USING (true);

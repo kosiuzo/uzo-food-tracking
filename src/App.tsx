@@ -10,6 +10,7 @@ import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import Planner from "./pages/Planner";
 import MealPrepGenerator from "./pages/MealPrepGenerator";
+import Tags from "./pages/Tags";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/meals" element={<Meals />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/planner" element={<Planner />} />
+          <Route path="/tags" element={<Tags />} />
 
           <Route path="/meal-prep-generator" element={<MealPrepGenerator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

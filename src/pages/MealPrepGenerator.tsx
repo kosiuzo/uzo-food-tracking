@@ -106,6 +106,8 @@ const MealPrepGenerator = () => {
   const [selectedVegetableIds, setSelectedVegetableIds] = useState<string[]>([]);
   const [selectedDairy, setSelectedDairy] = useState<FoodItem[]>([]);
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
+  const [selectedGrains, setSelectedGrains] = useState<FoodItem[]>([]);
+  const [selectedGrainIds, setSelectedGrainIds] = useState<string[]>([]);
   const [dietType, setDietType] = useState('paleo');
   const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
@@ -140,6 +142,17 @@ const MealPrepGenerator = () => {
     item.in_stock && item.category === 'Dairy & Eggs'
   );
 
+  const grains = allItems.filter(item => 
+    item.in_stock && (
+      item.category === 'Grains & Starches' ||
+      item.category.toLowerCase().includes('grain') ||
+      item.category.toLowerCase().includes('starch') ||
+      item.category.toLowerCase().includes('rice') ||
+      item.category.toLowerCase().includes('pasta') ||
+      item.category.toLowerCase().includes('bread')
+    )
+  );
+
   // Convert to options for MultiSelect (only show product name, no brand)
   const meatOptions: Option[] = meats.map(item => ({
     label: item.name,
@@ -165,6 +178,11 @@ const MealPrepGenerator = () => {
   }));
 
   const dairyOptions: Option[] = dairy.map(item => ({
+    label: item.name,
+    value: item.id,
+  }));
+
+  const grainOptions: Option[] = grains.map(item => ({
     label: item.name,
     value: item.id,
   }));
@@ -200,12 +218,18 @@ const MealPrepGenerator = () => {
     setSelectedDairy(newSelectedDairy);
   };
 
+  const handleGrainSelectionChange = (selectedIds: string[]) => {
+    setSelectedGrainIds(selectedIds);
+    const newSelectedGrains = selectedIds.map(id => grains.find(g => g.id === id)!).filter(Boolean);
+    setSelectedGrains(newSelectedGrains);
+  };
+
   const handleCookingMethodsChange = (selectedMethods: string[]) => {
     setSelectedCookingMethods(selectedMethods);
   };
 
   const generateThreeRecipes = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
-    const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables, ...selectedDairy];
+    const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables, ...selectedDairy, ...selectedGrains];
     const ingredientNames = allIngredients.map(item => item.name);
     
     // Create user prompt with specific ingredients and batch cooking considerations
@@ -374,6 +398,15 @@ Rules:
           unit: 'cup'
         });
       });
+      
+      // Add selected grains
+      selectedGrains.slice(0, 2).forEach(grainItem => {
+        recipeIngredients.push({
+          item_id: grainItem.id,
+          quantity: 1,
+          unit: 'cup'
+        });
+      });
 
       const nutrition = calculateRecipeNutrition(recipeIngredients, 4, allItems);
 
@@ -394,6 +427,7 @@ Rules:
             ingredients: parsedRecipe.ingredients || [
               `2 lbs ${meat.name.toLowerCase()}`,
               ...selectedSeasonings.slice(0, 3).map(s => `1 tsp ${s.name}`),
+              ...selectedGrains.slice(0, 2).map(g => `1 cup ${g.name}`),
               ...selectedVegetables.slice(0, 3).map(v => `1 cup ${v.name}`),
               ...selectedDairy.slice(0, 2).map(d => `1/2 cup ${d.name}`),
               "2 tbsp cooking oil",
@@ -565,6 +599,15 @@ Rules:
       });
     });
     
+    // Add selected grains
+    selectedGrains.slice(0, 2).forEach(grainItem => {
+      recipeIngredients.push({
+        item_id: grainItem.id,
+        quantity: 1,
+        unit: 'cup'
+      });
+    });
+    
     // Add selected dairy
     selectedDairy.slice(0, 2).forEach(dairyItem => {
       recipeIngredients.push({
@@ -622,6 +665,8 @@ Rules:
       setSelectedVegetableIds([]);
       setSelectedDairy([]);
       setSelectedDairyIds([]);
+      setSelectedGrains([]);
+      setSelectedGrainIds([]);
       setDietType('paleo');
       setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
@@ -728,6 +773,18 @@ Return a single JSON object with exactly 3 recipes.`;
                 onValueChange={handleSeasoningSelectionChange}
                 defaultValue={selectedSeasoningIds}
                 placeholder="Search and select in-stock seasonings and sauces..."
+                maxCount={3}
+              />
+            </div>
+
+            {/* Grains & Starches */}
+            <div className="space-y-3">
+              <Label>Grains & Starches (Optional) - in-stock only</Label>
+              <MultiSelect
+                options={grainOptions}
+                onValueChange={handleGrainSelectionChange}
+                defaultValue={selectedGrainIds}
+                placeholder="Search and select in-stock grains and starches..."
                 maxCount={3}
               />
             </div>

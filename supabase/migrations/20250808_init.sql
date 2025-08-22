@@ -100,16 +100,18 @@ CREATE TABLE recipe_items (
     PRIMARY KEY (recipe_id, item_id)
 );
 
--- Create meal_logs table
+-- Create meal_logs table with support for multiple recipes per meal
 CREATE TABLE meal_logs (
     id BIGSERIAL PRIMARY KEY,
-    recipe_id BIGINT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+    recipe_ids BIGINT[] NOT NULL,
+    meal_name TEXT,
     cooked_at DATE,
     notes TEXT,
     rating NUMERIC(2,1),
     macros JSONB,
     cost NUMERIC(10,2),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT meal_logs_recipe_ids_check CHECK (array_length(recipe_ids, 1) > 0)
 );
 
 -- Create new meal planning tables
@@ -168,7 +170,7 @@ CREATE INDEX IF NOT EXISTS idx_items_rating ON items(rating);
 CREATE INDEX IF NOT EXISTS idx_recipes_meal_type ON recipes USING GIN(meal_type);
 CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_cooked_at ON meal_logs(cooked_at);
-CREATE INDEX IF NOT EXISTS idx_meal_logs_recipe_id ON meal_logs(recipe_id);
+CREATE INDEX IF NOT EXISTS idx_meal_logs_recipe_ids ON meal_logs USING GIN(recipe_ids);
 CREATE INDEX IF NOT EXISTS idx_weekly_meal_plans_week_start ON weekly_meal_plans(week_start);
 CREATE INDEX IF NOT EXISTS idx_meal_plan_blocks_weekly_plan_id ON meal_plan_blocks(weekly_plan_id);
 CREATE INDEX IF NOT EXISTS idx_recipe_rotations_block_id ON recipe_rotations(block_id);
@@ -343,7 +345,7 @@ BEGIN
             COUNT(ml.id) as times_cooked,
             AVG(ml.rating) as avg_rating
         FROM recipes r
-        JOIN meal_logs ml ON r.id = ml.recipe_id
+        JOIN meal_logs ml ON r.id = ANY(ml.recipe_ids)
         WHERE ml.cooked_at >= CURRENT_DATE - INTERVAL '1 day' * p_days_back
         GROUP BY r.id, r.name
         ORDER BY times_cooked DESC, avg_rating DESC
@@ -433,17 +435,17 @@ BEGIN
         times_cooked = (
             SELECT COUNT(*) 
             FROM meal_logs 
-            WHERE recipe_id = p_recipe_id
+            WHERE p_recipe_id = ANY(recipe_ids)
         ),
         average_rating = (
             SELECT AVG(rating) 
             FROM meal_logs 
-            WHERE recipe_id = p_recipe_id AND rating IS NOT NULL
+            WHERE p_recipe_id = ANY(recipe_ids) AND rating IS NOT NULL
         ),
         last_cooked = (
             SELECT MAX(cooked_at) 
             FROM meal_logs 
-            WHERE recipe_id = p_recipe_id
+            WHERE p_recipe_id = ANY(recipe_ids)
         )
     WHERE id = p_recipe_id;
 END;
@@ -452,18 +454,36 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Create trigger to automatically update recipe stats when meal logs are added/updated
 CREATE OR REPLACE FUNCTION trigger_update_recipe_stats()
 RETURNS TRIGGER AS $$
+DECLARE
+    recipe_id BIGINT;
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        PERFORM update_recipe_stats(NEW.recipe_id);
+        -- Update stats for all recipes in the new meal log
+        FOREACH recipe_id IN ARRAY NEW.recipe_ids
+        LOOP
+            PERFORM update_recipe_stats(recipe_id);
+        END LOOP;
         RETURN NEW;
     ELSIF TG_OP = 'UPDATE' THEN
-        PERFORM update_recipe_stats(NEW.recipe_id);
-        IF OLD.recipe_id != NEW.recipe_id THEN
-            PERFORM update_recipe_stats(OLD.recipe_id);
+        -- Update stats for all recipes in the new meal log
+        FOREACH recipe_id IN ARRAY NEW.recipe_ids
+        LOOP
+            PERFORM update_recipe_stats(recipe_id);
+        END LOOP;
+        -- If recipe_ids changed, update stats for old recipes too
+        IF OLD.recipe_ids != NEW.recipe_ids THEN
+            FOREACH recipe_id IN ARRAY OLD.recipe_ids
+            LOOP
+                PERFORM update_recipe_stats(recipe_id);
+            END LOOP;
         END IF;
         RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
-        PERFORM update_recipe_stats(OLD.recipe_id);
+        -- Update stats for all recipes in the deleted meal log
+        FOREACH recipe_id IN ARRAY OLD.recipe_ids
+        LOOP
+            PERFORM update_recipe_stats(recipe_id);
+        END LOOP;
         RETURN OLD;
     END IF;
     RETURN NULL;

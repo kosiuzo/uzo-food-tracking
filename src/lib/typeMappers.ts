@@ -112,20 +112,14 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
 }
 
 // Convert database meal log to MealLog format
-export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
-  // Skip meal logs without recipe_id as they are now mandatory
-  if (!dbMealLog.recipe_id) {
-    console.warn('Skipping meal log without recipe_id:', dbMealLog);
-    return null;
-  }
-  
+export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
   const macros = dbMealLog.macros || {};
   
   const mealLog = {
     id: dbMealLog.id.toString(),
-    recipe_ids: [dbMealLog.recipe_id.toString()], // Convert single recipe_id to array
+    recipe_ids: dbMealLog.recipe_ids.map(id => id.toString()),
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
-    meal_name: 'Meal', // Default name since it's not in the database
+    meal_name: dbMealLog.meal_name || 'Meal',
     notes: dbMealLog.notes || undefined,
     nutrition: {
       calories: (macros.calories as number) || 0,
@@ -142,12 +136,12 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog | null {
 
 // Convert MealLog to database insert format
 export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog, 'id' | 'created_at'> {
-  // For now, we'll use the first recipe_id for database compatibility
-  // In the future, we might want to create a separate table for multiple recipes per meal
-  const firstRecipeId = mealLog.recipe_ids.length > 0 ? parseInt(mealLog.recipe_ids[0]) : null;
+  // Only use the new recipe_ids array format
+  const recipeIdsArray = mealLog.recipe_ids.map(id => parseInt(id));
   
   return {
-    recipe_id: firstRecipeId,
+    recipe_ids: recipeIdsArray,
+    meal_name: mealLog.meal_name || null,
     cooked_at: mealLog.date,
     notes: mealLog.notes || null,
     rating: null,

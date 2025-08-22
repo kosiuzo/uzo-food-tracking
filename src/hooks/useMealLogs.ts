@@ -38,7 +38,7 @@ export function useMealLogs() {
       
       if (data && data.length > 0) {
         console.log('✅ Loaded data from Supabase:', data.length, 'meal logs');
-        const mappedMealLogs = data.map(dbMealLogToMealLog).filter(Boolean) as MealLog[];
+        const mappedMealLogs = data.map(dbMealLogToMealLog);
         setMealLogs(mappedMealLogs);
         setUsingMockData(false);
       } else {

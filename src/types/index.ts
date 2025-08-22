@@ -149,7 +149,8 @@ export interface WeeklyMealPlan {
 // Database row type for meal_logs table
 export interface DbMealLog {
   id: number;
-  recipe_id?: number | null;
+  recipe_ids: number[];
+  meal_name?: string | null;
   cooked_at?: string | null;
   notes?: string | null;
   rating?: number | null;

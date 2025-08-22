@@ -190,7 +190,8 @@ export interface Database {
       meal_logs: {
         Row: {
           id: number
-          recipe_id: number | null
+          recipe_ids: number[]
+          meal_name: string | null
           cooked_at: string | null
           notes: string | null
           rating: number | null
@@ -200,7 +201,8 @@ export interface Database {
         }
         Insert: {
           id?: never
-          recipe_id?: number | null
+          recipe_ids: number[]
+          meal_name?: string | null
           cooked_at?: string | null
           notes?: string | null
           rating?: number | null
@@ -210,7 +212,8 @@ export interface Database {
         }
         Update: {
           id?: never
-          recipe_id?: number | null
+          recipe_ids?: number[]
+          meal_name?: string | null
           cooked_at?: string | null
           notes?: string | null
           rating?: number | null

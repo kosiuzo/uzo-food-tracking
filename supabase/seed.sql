@@ -175,13 +175,13 @@ INSERT INTO recipe_items (recipe_id, item_id, quantity, unit, cost_per_unit, tot
 (5, 73, 1.5, 'tsp', 0.04, 0.06, NOW()),        -- Ground Cinnamon (1.5 tsp)
 (5, 74, 1.5, 'tsp', 0.10, 0.15, NOW());        -- Pure Vanilla Extract (1.5 tsp)
 
--- Insert sample meal logs for new recipes
-INSERT INTO meal_logs (recipe_id, cooked_at, notes, rating, macros, cost, created_at) VALUES
-(1, '2024-01-15', 'Perfect creamy tzatziki! Great with grilled chicken.', 4.5, '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', 7.39, NOW()),
-(2, '2024-01-14', 'Delicious sauce, perfect for stir-fries', 4.8, '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', 9.09, NOW()),
-(3, '2024-01-13', 'Amazing paleo fried rice! Love the pineapple addition.', 4.7, '{"calories": 320, "protein": 28, "carbs": 15, "fat": 18}', 34.71, NOW()),
-(4, '2024-01-12', 'Crispy Brussels sprouts with bacon - amazing!', 4.6, '{"calories": 180, "protein": 8, "carbs": 12, "fat": 12}', 8.74, NOW()),
-(5, '2024-01-11', 'Perfect paleo waffles, great texture and flavor!', 4.8, '{"calories": 280, "protein": 12, "carbs": 18, "fat": 20}', 9.39, NOW());
+-- Insert sample meal logs with new multiple recipe format
+INSERT INTO meal_logs (recipe_ids, meal_name, cooked_at, notes, rating, macros, cost, created_at) VALUES
+(ARRAY[1], 'Tzatziki', '2024-01-15', 'Perfect creamy tzatziki! Great with grilled chicken.', 4.5, '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', 7.39, NOW()),
+(ARRAY[2], 'Coconut Aminos Sauce', '2024-01-14', 'Delicious sauce, perfect for stir-fries', 4.8, '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', 9.09, NOW()),
+(ARRAY[3], 'Paleo Pineapple Fried Rice with Chicken Breast', '2024-01-13', 'Amazing paleo fried rice! Love the pineapple addition.', 4.7, '{"calories": 320, "protein": 28, "carbs": 15, "fat": 18}', 34.71, NOW()),
+(ARRAY[4], 'Bacon Brussels Sprouts', '2024-01-12', 'Crispy Brussels sprouts with bacon - amazing!', 4.6, '{"calories": 180, "protein": 8, "carbs": 12, "fat": 12}', 8.74, NOW()),
+(ARRAY[5], 'Paleo Banana Almond Flour Protein Waffles', '2024-01-11', 'Perfect paleo waffles, great texture and flavor!', 4.8, '{"calories": 280, "protein": 12, "carbs": 18, "fat": 20}', 9.39, NOW());
 
 -- Insert sample weekly meal plan
 INSERT INTO weekly_meal_plans (week_start, created_at) VALUES

@@ -70,10 +70,11 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     total_time_minutes: dbRecipe.total_time || undefined,
     ingredients,
     nutrition: {
-      calories_per_serving: (nutrition.calories as number) || 0,
-      protein_per_serving: (nutrition.protein as number) || 0,
-      carbs_per_serving: (nutrition.carbs as number) || 0,
-      fat_per_serving: (nutrition.fat as number) || 0,
+      // Handle both formats: with and without _per_serving suffix
+      calories_per_serving: (nutrition.calories_per_serving as number) || (nutrition.calories as number) || 0,
+      protein_per_serving: (nutrition.protein_per_serving as number) || (nutrition.protein as number) || 0,
+      carbs_per_serving: (nutrition.carbs_per_serving as number) || (nutrition.carbs as number) || 0,
+      fat_per_serving: (nutrition.fat_per_serving as number) || (nutrition.fat as number) || 0,
     },
     cost_per_serving: dbRecipe.cost_per_serving || undefined,
     total_cost: dbRecipe.total_cost || undefined,

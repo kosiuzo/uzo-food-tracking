@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
+import type { Database } from '../types/database';
+
+type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'] & {
+  recipe_items: { quantity: number | null; unit: string | null; item_id: number }[];
+  recipe_tags: { tag_id: number; tags: DbTag }[];
+};
 import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/typeMappers';
 import { mockRecipes } from '../data/mockData';
 
@@ -50,18 +56,18 @@ export function useRecipes() {
       
       if (recipesData && recipesData.length > 0) {
         console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
-        const mappedRecipes = recipesData.map((dbRecipe: any) => {
-          const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as any[])?.map((ri: any) => ({
+        const mappedRecipes = recipesData.map((dbRecipe: DbRecipeWithRelations) => {
+          const ingredients: RecipeIngredient[] = dbRecipe.recipe_items?.map((ri) => ({
             item_id: ri.item_id.toString(),
             quantity: Number(ri.quantity) || 0,
-            unit: ri.unit as string || '',
+            unit: ri.unit || '',
           })) || [];
           
-          const tags: Tag[] = (dbRecipe.recipe_tags as any[])?.map((rt: any) => 
-            dbTagToTag(rt.tags as DbTag)
+          const tags: Tag[] = dbRecipe.recipe_tags?.map((rt) => 
+            dbTagToTag(rt.tags)
           ) || [];
           
-          return dbRecipeToRecipe(dbRecipe as any, ingredients, tags);
+          return dbRecipeToRecipe(dbRecipe, ingredients, tags);
         });
         setRecipes(mappedRecipes);
         setUsingMockData(false);

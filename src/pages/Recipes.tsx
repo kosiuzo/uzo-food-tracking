@@ -76,12 +76,16 @@ export default function Recipes() {
     }
   };
 
-  const handleRecipeGenerated = async (generatedRecipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
+  const handleRecipeGenerated = async (generatedRecipe: Omit<Recipe, 'id' | 'is_favorite'> & { tagIds?: string[] }) => {
     try {
-      await addRecipe(generatedRecipe);
+      const { tagIds, ...recipeData } = generatedRecipe;
+      await addRecipe({ 
+        ...recipeData, 
+        selectedTagIds: tagIds 
+      });
       toast({
         title: 'AI Recipe Added!',
-        description: `"${generatedRecipe.name}" has been generated and saved successfully.`,
+        description: `"${generatedRecipe.name}" has been generated and saved successfully with auto-assigned tags.`,
       });
     } catch (error) {
       toast({

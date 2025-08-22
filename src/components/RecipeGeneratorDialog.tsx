@@ -10,13 +10,14 @@ import { GroupedMultiSelect, OptionGroup, GroupedOption } from '@/components/ui/
 import { useToast } from '@/hooks/use-toast';
 import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
 import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
 
 interface RecipeGeneratorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeGenerated: (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => void;
+  onRecipeGenerated: (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { tagIds?: string[] }) => void;
 }
 
 const CUISINE_STYLES = [
@@ -61,6 +62,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const { allItems } = useFoodInventory();
+  const { allTags } = useTags();
 
   // Group items by category for the GroupedMultiSelect (in-stock items only)
   const groupedIngredients: OptionGroup = React.useMemo(() => {
@@ -113,11 +115,17 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     try {
       const ingredientNames = selectedIngredients.map(item => item.name);
       
-      // Create user prompt with selected ingredients
+      // Create user prompt with selected ingredients and available tags
+      const availableTagsList = allTags.map(tag => tag.name).join(', ');
+      
       const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using ONLY these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Target: serves ${servings}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
+
+Available tags to choose from: ${availableTagsList}
+
+Please auto-assign relevant tags from the available list based on the recipe characteristics (diet type, meal category, cooking method, etc.).
 
 Return a single JSON object that matches the schema exactly.`;
 
@@ -148,10 +156,11 @@ Return a single JSON object that matches the schema exactly.`;
   "total_time_minutes": 30,
   "ingredients": [
     { "ingredient_name": "exact ingredient name", "quantity": 1, "unit": "pieces" }
-  ]
+  ],
+  "tags": ["tag1", "tag2", "tag3"]
 }
 
-Use only the provided ingredients. Make reasonable portions for the serving size.`
+Use only the provided ingredients. Make reasonable portions for the serving size. Select relevant tags from the available tags list provided by the user.`
             },
             {
               "role": "user",
@@ -179,6 +188,7 @@ Use only the provided ingredients. Make reasonable portions for the serving size
           quantity: number;
           unit: string;
         }>;
+        tags?: string[];
       };
       try {
         // Look for JSON in the response
@@ -249,13 +259,27 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         return formatted;
       };
 
+      // Map AI-suggested tags to actual tag IDs
+      const suggestedTagIds: string[] = [];
+      if (parsedRecipe.tags && Array.isArray(parsedRecipe.tags)) {
+        parsedRecipe.tags.forEach(tagName => {
+          const matchingTag = allTags.find(tag => 
+            tag.name.toLowerCase() === tagName.toLowerCase()
+          );
+          if (matchingTag) {
+            suggestedTagIds.push(matchingTag.id);
+          }
+        });
+      }
+
       const finalRecipe = {
         name: parsedRecipe.name,
         instructions: formatInstructions(parsedRecipe.instructions),
         servings: parsedRecipe.servings || servings,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
         ingredients: recipeIngredients,
-        nutrition: calculateRecipeNutrition(recipeIngredients, servings, allItems)
+        nutrition: calculateRecipeNutrition(recipeIngredients, servings, allItems),
+        tagIds: suggestedTagIds
       };
 
       setGeneratedRecipe(finalRecipe);

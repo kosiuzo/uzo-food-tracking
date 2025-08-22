@@ -15,18 +15,11 @@ import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { useFoodInventory } from '@/hooks/useFoodInventory';
 import { useRecipes } from '@/hooks/useRecipes';
+import { useTags } from '@/hooks/useTags';
 import { FoodItem, Recipe, RecipeIngredient } from '@/types';
 import { calculateRecipeNutrition } from '@/lib/servingUnitUtils';
 
-const dietTypes = [
-  { value: 'paleo', label: 'Paleo' },
-  { value: 'whole30', label: 'Whole30' },
-  { value: 'standard', label: 'Original/Standard' },
-  { value: 'keto', label: 'Keto' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'vegan', label: 'Vegan' },
-  { value: 'mediterranean', label: 'Mediterranean' },
-];
+// Diet types now come from tags system
 
 const cookingMethods = [
   { value: 'oven', label: 'Oven' },
@@ -52,6 +45,7 @@ interface GeneratedRecipe {
     fat: number;
     fiber: number;
   };
+  tagIds?: string[];
 }
 
 interface MeatRecipeOptions {
@@ -70,6 +64,7 @@ interface ParsedRecipeResponse {
     instructions: string[];
     ingredients: string[];
     notes?: string;
+    tags?: string[];
   };
   'Recipe 2': {
     name: string;
@@ -80,6 +75,7 @@ interface ParsedRecipeResponse {
     instructions: string[];
     ingredients: string[];
     notes?: string;
+    tags?: string[];
   };
   'Recipe 3': {
     name: string;
@@ -90,6 +86,7 @@ interface ParsedRecipeResponse {
     instructions: string[];
     ingredients: string[];
     notes?: string;
+    tags?: string[];
   };
 }
 
@@ -97,6 +94,7 @@ const MealPrepGenerator = () => {
   const navigate = useNavigate();
   const { allItems } = useFoodInventory();
   const { addRecipe } = useRecipes();
+  const { allTags } = useTags();
   const { toast: toastHook } = useToast();
   const [selectedMeats, setSelectedMeats] = useState<FoodItem[]>([]);
   const [selectedMeatIds, setSelectedMeatIds] = useState<string[]>([]);
@@ -108,7 +106,7 @@ const MealPrepGenerator = () => {
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [selectedGrains, setSelectedGrains] = useState<FoodItem[]>([]);
   const [selectedGrainIds, setSelectedGrainIds] = useState<string[]>([]);
-  const [dietType, setDietType] = useState('paleo');
+  const [selectedDietTags, setSelectedDietTags] = useState<string[]>(['paleo']);
   const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
@@ -237,14 +235,24 @@ const MealPrepGenerator = () => {
       cookingMethods.find(cm => cm.value === method)?.label || method
     ).join(', ');
     
-    const userPrompt = `Create 3 different ${dietType} MEAL PREP recipes using these ingredients:
+    // Get available tags list for AI
+    const availableTagsList = allTags.map(tag => tag.name).join(', ');
+    const dietPreferences = selectedDietTags.map(tagId => {
+      const tag = allTags.find(t => t.id === tagId);
+      return tag ? tag.name : tagId;
+    }).join(', ');
+    
+    const userPrompt = `Create 3 different ${dietPreferences} MEAL PREP recipes using these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Main protein: ${meat.name} (2 lbs)
-Diet preference: ${dietType}
+Diet preferences: ${dietPreferences}
 Cooking methods available: ${cookingMethodsText}
 Target: serves 4 (designed for meal prep - food will be cooked in batch for multiple days)
 ${inspiration ? `Additional notes: ${inspiration}` : ''}
+
+Available tags to choose from: ${availableTagsList}
+Please auto-assign relevant tags from the available list based on recipe characteristics.
 
 IMPORTANT: These recipes are for MEAL PREP, so:
 - Consider how ingredients will hold up as leftovers over 3-4 days
@@ -286,7 +294,8 @@ Schema:
     "servings": 4,
     "instructions": ["step1", "step2"],
     "ingredients": ["ingredient1", "ingredient2"],
-    "notes": "string with storage and reheating tips"
+    "notes": "string with storage and reheating tips",
+    "tags": ["tag1", "tag2", "tag3"]
   },
   "Recipe 2": { /* same structure */ },
   "Recipe 3": { /* same structure */ }
@@ -414,6 +423,19 @@ Rules:
       ['Recipe 1', 'Recipe 2', 'Recipe 3'].forEach((recipeKey, index) => {
         const parsedRecipe = parsedRecipes[recipeKey];
         if (parsedRecipe) {
+          // Map AI-suggested tags to actual tag IDs
+          const suggestedTagIds: string[] = [];
+          if (parsedRecipe.tags && Array.isArray(parsedRecipe.tags)) {
+            parsedRecipe.tags.forEach(tagName => {
+              const matchingTag = allTags.find(tag => 
+                tag.name.toLowerCase() === tagName.toLowerCase()
+              );
+              if (matchingTag) {
+                suggestedTagIds.push(matchingTag.id);
+              }
+            });
+          }
+          
           recipes.push({
             id: `${meat.id}-recipe-${index + 1}-${Date.now()}`,
             name: parsedRecipe.name || `${meat.name} Recipe ${index + 1}`,
@@ -440,7 +462,8 @@ Rules:
               carbs: Math.round(nutrition.carbs_per_serving),
               fat: Math.round(nutrition.fat_per_serving),
               fiber: 2 // Default fiber value since calculateRecipeNutrition doesn't calculate it
-            }
+            },
+            tagIds: suggestedTagIds
           });
         }
       });
@@ -477,8 +500,8 @@ Rules:
       return;
     }
     
-    if (!dietType) {
-      toast.error('Please select a diet type');
+    if (selectedDietTags.length === 0) {
+      toast.error('Please select at least one diet preference');
       return;
     }
 
@@ -565,7 +588,7 @@ Rules:
     });
   };
 
-  const convertToRecipeFormat = (generatedRecipe: GeneratedRecipe): Omit<Recipe, 'id' | 'is_favorite'> => {
+  const convertToRecipeFormat = (generatedRecipe: GeneratedRecipe): Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] } => {
     // Create recipe ingredients by mapping to actual items in inventory
     const recipeIngredients: RecipeIngredient[] = [];
     
@@ -629,7 +652,8 @@ Rules:
         protein_per_serving: generatedRecipe.nutrition.protein,
         carbs_per_serving: generatedRecipe.nutrition.carbs,
         fat_per_serving: generatedRecipe.nutrition.fat
-      }
+      },
+      selectedTagIds: generatedRecipe.tagIds
     };
   };
 
@@ -666,7 +690,7 @@ Rules:
       setSelectedDairyIds([]);
       setSelectedGrains([]);
       setSelectedGrainIds([]);
-      setDietType('paleo');
+      setSelectedDietTags(['paleo']);
       setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
       setMeatRecipeOptions([]);
@@ -695,6 +719,11 @@ Rules:
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables];
     const ingredientNames = allIngredients.map(item => item.name);
     
+    const dietPreferences = selectedDietTags.map(tagId => {
+      const tag = allTags.find(t => t.id === tagId);
+      return tag ? tag.name : tagId;
+    }).join(', ');
+    
     return `SYSTEM PROMPT:
 You are a meal prep recipe generator that returns VALID JSON only.
 Schema:
@@ -719,11 +748,11 @@ Rules:
 - Include cooking times and prep times.
 
 USER PROMPT:
-Create 3 different ${dietType || 'paleo'} recipes using these ingredients:
+Create 3 different ${dietPreferences || 'healthy'} recipes using these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Main protein: ${meat.name} (2 lbs)
-Diet preference: ${dietType || 'not specified'}
+Diet preferences: ${dietPreferences || 'not specified'}
 Target: serves 4
 ${inspiration ? `Additional notes: ${inspiration}` : ''}
 
@@ -829,19 +858,22 @@ Return a single JSON object with exactly 3 recipes.`;
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="diet-type">Diet Type*</Label>
-                <Select value={dietType} onValueChange={setDietType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a diet type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dietTypes.map((diet) => (
-                      <SelectItem key={diet.value} value={diet.value}>
-                        {diet.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="diet-tags">Diet Preferences* (Select from available tags)</Label>
+                <MultiSelect
+                  options={allTags.filter(tag => 
+                    tag.name.includes('paleo') || 
+                    tag.name.includes('keto') || 
+                    tag.name.includes('vegetarian') || 
+                    tag.name.includes('vegan') ||
+                    tag.name.includes('gluten-free') ||
+                    tag.name.includes('dairy-free') ||
+                    tag.name.includes('low-carb')
+                  ).map(tag => ({ label: tag.name, value: tag.id }))}
+                  onValueChange={setSelectedDietTags}
+                  defaultValue={selectedDietTags}
+                  placeholder="Select diet preferences from tags..."
+                  maxCount={3}
+                />
               </div>
 
               <div className="space-y-2">

@@ -62,76 +62,126 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('The New Primal, Noble Made Organic All-Purpose Seasoning, 2 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 81, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_724cd215-3482-4ba7-9d67-65c893a7e642.jpg', 'Organic Dehydrated Garlic, Sea Salt, Organic Ground Mustard Seed, Organic Black Pepper, Organic Lemon Peel, Organic Apple Cider Vinegar Powder (Organic Apple Cider Vinegar, Organic Acacia Gum), Organic Rosemary, Organic Basil, Citric Acid, Organic Lemon Juice Powder.', 3, 'manual', '1234567890180', '2024-11-27', 2, '2025-01-15 10:00:00'),
 ('The New Primal, Noble Made Poultry Seasoning, 2.6 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 82, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_03aa38c4-213d-4a6f-a695-c35bff5b7b56.jpg', 'Organic Dehydrated Garlic, Organic Dehydrated Onion, Sea Salt, Organic Cracked Black Pepper, Organic Orange Peel, Organic Cayenne, Organic Sage, Organic Parsley, Organic Dehydrated Green Bell Pepper.', 3, 'manual', '1234567890181', '2024-11-26', 4, '2025-01-15 10:00:00'),
 ('The New Primal, Noble Made Steak Seasoning, 2.5 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 89, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/5/850000398412_front_1__1_1.jpg', 'Sea salt, organic cracked black pepper, organic dehydrated garlic, organic dehydrated onion, organic coriander, organic dill seed powder, organic coriander seed, organic dill seed.', 4, 'manual', '1234567890182', '2024-11-25', 2, '2025-01-15 10:00:00'),
--- Insert sample recipes with volume-based measurements
-INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, nutrition_per_serving, tags, rating, cost_per_serving, total_cost, cost_last_calculated, notes, created_at, updated_at) VALUES
-('Coconut Rice', 'Asian', ARRAY['dinner'], 'Easy', 5, 25, 30, 4, '1. Rinse rice until water runs clear
-2. Heat coconut oil in a pot
-3. Add rice and toast for 2 minutes
-4. Add water and salt
-5. Bring to boil, then simmer covered for 18 minutes
-6. Let rest 5 minutes before fluffing', '{"calories": 220, "protein": 4, "carbs": 45, "fat": 3}', ARRAY['asian', 'side'], 4.5, 1.25, 5.00, NOW(), 'Perfect with curry or stir-fry', NOW(), NOW()),
-('Honey Glazed Chicken', 'American', ARRAY['lunch', 'dinner'], 'Medium', 10, 20, 30, 2, '1. Season chicken with salt and pepper
-2. Heat olive oil in pan
-3. Cook chicken 6-7 minutes per side
-4. Add honey glaze in last 2 minutes
-5. Rest for 5 minutes before serving', '{"calories": 380, "protein": 35, "carbs": 18, "fat": 12}', ARRAY['protein', 'sweet'], 4.8, 8.50, 17.00, NOW(), 'Great for meal prep', NOW(), NOW()),
-('Simple Scrambled Eggs', 'American', ARRAY['breakfast'], 'Easy', 2, 5, 7, 1, '1. Heat olive oil in pan over medium heat
-2. Crack eggs into bowl and whisk
-3. Add to pan and gently scramble
-4. Season with salt and pepper
-5. Serve immediately', '{"calories": 180, "protein": 12, "carbs": 2, "fat": 14}', ARRAY['breakfast', 'quick'], 4.0, 1.50, 1.50, NOW(), 'Perfect protein breakfast', NOW(), NOW()),
--- Additional recipes for meal planning
-('Salmon & Eggs with Salsa', 'American', ARRAY['breakfast', 'lunch'], 'Medium', 10, 15, 25, 2, '1. Season salmon with salt and pepper
-2. Cook salmon in olive oil 4-5 minutes per side
-3. Scramble eggs in same pan
-4. Serve with fresh salsa', '{"calories": 420, "protein": 38, "carbs": 8, "fat": 26}', ARRAY['protein', 'breakfast'], 4.7, 12.50, 25.00, NOW(), 'High protein breakfast', NOW(), NOW()),
-('Chicken Breast with Orange Sauce', 'Asian', ARRAY['lunch', 'dinner'], 'Medium', 15, 20, 35, 2, '1. Season chicken with salt and pepper
-2. Cook chicken in olive oil 6-7 minutes per side
-3. Prepare orange sauce with honey and garlic
-4. Glaze chicken with sauce', '{"calories": 350, "protein": 35, "carbs": 15, "fat": 18}', ARRAY['protein', 'asian'], 4.6, 9.00, 18.00, NOW(), 'Sweet and savory', NOW(), NOW()),
-('Steak with Honey and Garlic Sauce', 'American', ARRAY['dinner'], 'Medium', 10, 15, 25, 2, '1. Season steak with salt and pepper
-2. Cook steak to desired doneness
-3. Prepare honey garlic sauce
-4. Serve with sauce drizzled on top', '{"calories": 450, "protein": 40, "carbs": 12, "fat": 28}', ARRAY['protein', 'steak'], 4.8, 15.00, 30.00, NOW(), 'Restaurant quality', NOW(), NOW()),
-('Ground Beef with Bacon and Guacamole', 'Mexican', ARRAY['lunch', 'dinner'], 'Easy', 10, 20, 30, 2, '1. Cook bacon until crispy
-2. Cook ground beef in bacon fat
-3. Season with salt and pepper
-4. Serve with guacamole and lettuce', '{"calories": 520, "protein": 42, "carbs": 6, "fat": 38}', ARRAY['protein', 'mexican'], 4.5, 11.00, 22.00, NOW(), 'Keto friendly', NOW(), NOW());
+-- Additional items needed for recipes
+('Fresh Cucumber, 1 lb', 'Member''s Mark', 'Vegetables', true, 1.99, 3.6, 0.1, 0.7, 4, 100, 1, 'piece', 'package', 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400', 'Fresh cucumber', 4, 'manual', '1234567890183', '2024-11-24', 3, '2025-01-15 10:00:00'),
+('Fresh Lemon Juice, 32 fl oz', 'Member''s Mark', 'Condiments & Sauces', true, 4.98, 2.5, 0, 0.2, 64, 15, 1, 'tbsp', 'volume', 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400', 'Fresh lemon juice', 4, 'manual', '1234567890184', '2024-11-23', 2, '2025-01-15 10:00:00'),
+('Fresh Dill, 1 oz', 'Member''s Mark', 'Vegetables', true, 2.49, 1.1, 0.1, 0.4, 8, 3.5, 1, 'tbsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Fresh dill', 4, 'manual', '1234567890185', '2024-11-22', 1, '2025-01-15 10:00:00'),
+('Coconut Aminos, 16 fl oz', 'Coconut Secret', 'Condiments & Sauces', true, 8.99, 0, 0, 0, 32, 15, 1, 'tbsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Coconut aminos', 4, 'manual', '1234567890186', '2024-11-21', 2, '2025-01-15 10:00:00'),
+('Red Pepper Flakes, 2 oz', 'Member''s Mark', 'Seasonings & Spices', true, 3.99, 0, 0, 0, 100, 2, 1, 'tsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Red pepper flakes', 4, 'manual', '1234567890187', '2024-11-20', 1, '2025-01-15 10:00:00'),
+('Fresh Cauliflower, 1 head', 'Member''s Mark', 'Vegetables', true, 3.99, 5.3, 0.3, 2.0, 6, 100, 1, 'cup', 'volume', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400', 'Fresh cauliflower', 4, 'manual', '1234567890188', '2024-11-19', 2, '2025-01-15 10:00:00'),
+('Fresh Pineapple, 1 piece', 'Member''s Mark', 'Fruits', true, 4.99, 22.0, 0.1, 0.9, 8, 100, 1, 'cup', 'volume', 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400', 'Fresh pineapple', 4, 'manual', '1234567890189', '2024-11-18', 1, '2025-01-15 10:00:00'),
+('Fresh Red Bell Pepper, 1 piece', 'Member''s Mark', 'Vegetables', true, 1.49, 6.0, 0.3, 1.0, 1, 100, 1, 'piece', 'package', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400', 'Fresh red bell pepper', 4, 'manual', '1234567890190', '2024-11-17', 2, '2025-01-15 10:00:00'),
+('Fresh Green Onions, 1 bunch', 'Member''s Mark', 'Vegetables', true, 1.99, 1.8, 0.1, 0.5, 8, 15, 1, 'tbsp', 'volume', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400', 'Fresh green onions', 4, 'manual', '1234567890191', '2024-11-16', 1, '2025-01-15 10:00:00'),
+('Raw Cashews, 16 oz', 'Member''s Mark', 'Snacks', true, 8.99, 8.6, 12.4, 5.2, 16, 28, 0.25, 'cup', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Raw cashews', 4, 'manual', '1234567890192', '2024-11-15', 2, '2025-01-15 10:00:00'),
+('Almond Flour, 16 oz', 'Member''s Mark', 'Baking Supplies', true, 12.99, 6.0, 14.0, 6.0, 32, 28, 0.25, 'cup', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Almond flour', 4, 'manual', '1234567890193', '2024-11-14', 1, '2025-01-15 10:00:00'),
+('Vanilla Protein Powder, 1 lb', 'Member''s Mark', 'Proteins', true, 24.99, 3.0, 1.5, 24.0, 30, 30, 1, 'scoop', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Vanilla protein powder', 4, 'manual', '1234567890194', '2024-11-13', 2, '2025-01-15 10:00:00'),
+('Ground Cinnamon, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.99, 1.8, 0.1, 0.2, 200, 2, 1, 'tsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Ground cinnamon', 4, 'manual', '1234567890195', '2024-11-12', 1, '2025-01-15 10:00:00'),
+('Pure Vanilla Extract, 8 fl oz', 'Member''s Mark', 'Baking Supplies', true, 9.99, 0, 0, 0, 96, 5, 1, 'tsp', 'volume', 'https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400', 'Pure vanilla extract', 4, 'manual', '1234567890196', '2024-11-11', 2, '2025-01-15 10:00:00');
 
--- Insert recipe ingredients with volume measurements
+-- Insert recipes from Recipes.md
+INSERT INTO recipes (name, cuisine_type, meal_type, difficulty, prep_time, cook_time, total_time, servings, instructions, tags, notes, created_at, updated_at) VALUES
+('Tzatziki', 'Greek', ARRAY['sauce', 'dip', 'condiment'], 'easy', 15, 0, 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
+
+2. Combine ingredients: Return the drained cucumber to the food processor. Add the Greek yogurt, minced garlic, olive oil, lemon juice, dill, and a pinch of salt and black pepper.
+
+3. Blend: Pulse the mixture until you reach your desired consistency: For chunky tzatziki: Pulse briefly. For smooth tzatziki: Blend longer.
+
+4. Taste and adjust: Taste the mixture and adjust seasoning as needed. Add more lemon juice, dill, or salt to suit your preferences.
+
+5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', ARRAY['paleo', 'dairy-free-option', 'gluten-free', 'vegetarian'], 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', NOW(), NOW()),
+('Coconut Aminos Sauce', 'Asian', ARRAY['sauce', 'marinade', 'condiment'], 'easy', 5, 3, 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
+
+2. Heat and simmer: Bring the mixture to a simmer over medium heat. Let it simmer for 2-3 minutes, or until the flavors have combined and the sauce has thickened slightly.
+
+3. Cool and use: Remove from heat and let cool slightly before using.', ARRAY['paleo', 'gluten-free', 'vegan', 'dairy-free'], 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', NOW(), NOW()),
+('Paleo Pineapple Fried Rice with Chicken Breast', 'Asian', ARRAY['main-dish', 'protein-based', 'stir-fry'], 'medium', 15, 20, 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
+
+2. Cook the chicken: Heat the remaining avocado oil in the same skillet over medium-high heat. Add the diced chicken and cook for 5-7 minutes, or until golden brown and cooked through. Remove the chicken from the pan and set aside.
+
+3. Sauté the aromatics: Add the garlic and ginger to the pan and cook for 30 seconds, or until fragrant.
+
+4. Incorporate vegetables and pineapple: Add the chopped red bell pepper and white parts of the green onion to the pan. Cook for 2-3 minutes, or until softened slightly. Then, add the chopped pineapple and cook for another minute.
+
+5. Scramble the eggs: Push the vegetables to one side of the pan and pour in the beaten eggs. Scramble the eggs until cooked through, then stir them together with the vegetables.
+
+6. Combine everything: Add the cooked cauliflower rice, chicken, coconut aminos, and cashews (if using) back to the pan. Stir-fry for 2-3 minutes, or until everything is heated through.
+
+7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', ARRAY['paleo', 'gluten-free', 'dairy-free', 'high-protein'], 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', NOW(), NOW()),
+('Bacon Brussels Sprouts', 'American', ARRAY['side-dish', 'vegetables'], 'easy', 10, 30, 40, 4, '1. Preheat oven to 400°F (200°C).
+
+2. Prepare sprouts: Trim the stem end of each Brussels sprout. Remove loose or yellow leaves. Cut each sprout in half lengthwise (through the stem). Quarter large ones.
+
+3. Combine: In a bowl, toss Brussels sprouts with chopped raw bacon, oil, salt, and pepper.
+
+4. Roast: Spread on a parchment-lined baking sheet in a single layer, cut side down. Roast for 25–30 minutes, flipping halfway, until Brussels are golden and bacon is crisp.
+
+5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', ARRAY['paleo', 'gluten-free', 'dairy-free', 'keto-friendly'], 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', NOW(), NOW()),
+('Paleo Banana Almond Flour Protein Waffles', 'American', ARRAY['breakfast', 'starch-grains', 'protein'], 'medium', 15, 20, 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
+
+2. In a large bowl, mash the bananas or blend them until smooth.
+
+3. Whisk in the eggs, melted oil, and vanilla.
+
+4. In another bowl, mix almond flour, protein powder, baking soda, cinnamon, and salt.
+
+5. Combine wet and dry until just mixed (don''t over-stir).
+
+6. Pour ~1/3–1/2 cup of batter per waffle and cook for 3–5 min or until golden brown.
+
+7. Serve hot or store for later!', ARRAY['paleo', 'gluten-free', 'dairy-free', 'protein-rich', 'meal-prep'], 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', NOW(), NOW());
+
+-- Insert recipe ingredients for new recipes
 INSERT INTO recipe_items (recipe_id, item_id, quantity, unit, cost_per_unit, total_cost, cost_calculated_at) VALUES
--- Coconut Rice
-(1, 1, 1, 'cup', 0.10, 0.40, NOW()),    -- Rice (1 cup)
-(1, 3, 2, 'tbsp', 0.15, 0.30, NOW()),   -- Coconut Oil (2 tbsp)
--- Honey Glazed Chicken  
-(2, 6, 2, 'piece', 6.00, 12.00, NOW()), -- Chicken Breast (2 pieces)
-(2, 2, 1, 'tbsp', 0.20, 0.20, NOW()),   -- Olive Oil (1 tbsp)
-(2, 4, 2, 'tbsp', 0.30, 0.60, NOW()),   -- Honey (2 tbsp)
--- Simple Scrambled Eggs
-(3, 7, 2, 'piece', 0.50, 1.00, NOW()),  -- Eggs (2 pieces)
-(3, 2, 1, 'tsp', 0.05, 0.05, NOW()),    -- Olive Oil (1 tsp)
--- Salmon & Eggs with Salsa
-(4, 8, 2, 'piece', 3.00, 6.00, NOW()),  -- Salmon (2 pieces)
-(4, 7, 4, 'piece', 0.50, 2.00, NOW()),  -- Eggs (4 pieces)
-(4, 2, 1, 'tbsp', 0.20, 0.20, NOW()),   -- Olive Oil (1 tbsp)
--- Chicken Breast with Orange Sauce
-(5, 6, 2, 'piece', 6.00, 12.00, NOW()), -- Chicken Breast (2 pieces)
-(5, 2, 1, 'tbsp', 0.20, 0.20, NOW()),   -- Olive Oil (1 tbsp)
-(5, 4, 2, 'tbsp', 0.30, 0.60, NOW()),   -- Honey (2 tbsp)
--- Steak with Honey and Garlic Sauce
-(6, 9, 200, 'g', 0.18, 36.00, NOW()),   -- Ground Beef (200g)
-(6, 4, 2, 'tbsp', 0.30, 0.60, NOW()),   -- Honey (2 tbsp)
-(6, 2, 1, 'tbsp', 0.20, 0.20, NOW()),   -- Olive Oil (1 tbsp)
--- Ground Beef with Bacon and Guacamole
-(7, 9, 200, 'g', 0.18, 36.00, NOW()),   -- Ground Beef (200g)
-(7, 20, 4, 'slice', 1.08, 4.32, NOW()), -- Bacon (4 slices)
-(7, 22, 4, 'tbsp', 0.75, 3.00, NOW());  -- Guacamole (4 tbsp)
+-- Tzatziki (Recipe 1)
+(1, 2, 2, 'tbsp', 0.20, 0.40, NOW()),          -- Olive Oil (2 tbsp)
+(1, 14, 1, 'container', 4.28, 4.28, NOW()),    -- Greek Yogurt (1 container)
+(1, 16, 1, 'tsp', 0.04, 0.04, NOW()),          -- Black Pepper (1 tsp)
+(1, 17, 1.5, 'tsp', 0.04, 0.06, NOW()),        -- Garlic Powder (1.5 tsp)
+(1, 61, 1, 'lb', 1.99, 1.99, NOW()),           -- Fresh Cucumber (1 lb)
+(1, 62, 1, 'tbsp', 0.31, 0.31, NOW()),         -- Fresh Lemon Juice (1 tbsp)
+(1, 63, 1, 'tbsp', 0.31, 0.31, NOW()),         -- Fresh Dill (1 tbsp)
+-- Coconut Aminos Sauce (Recipe 2)
+(2, 4, 1, 'tbsp', 0.30, 0.30, NOW()),          -- Honey (1 tbsp)
+(2, 17, 0.25, 'tsp', 0.04, 0.01, NOW()),       -- Garlic Powder (1/4 tsp)
+(2, 18, 0.25, 'tsp', 0.04, 0.01, NOW()),       -- Ground Ginger (1/4 tsp)
+(2, 34, 0.25, 'cup', 26.00, 6.50, NOW()),      -- Apple Cider Vinegar (1/4 cup)
+(2, 64, 0.25, 'cup', 8.99, 2.25, NOW()),       -- Coconut Aminos (1/4 cup)
+(2, 65, 0.5, 'tsp', 0.04, 0.02, NOW()),        -- Red Pepper Flakes (1/2 tsp)
+-- Paleo Pineapple Fried Rice with Chicken Breast (Recipe 3)
+(3, 3, 1, 'tbsp', 0.15, 0.15, NOW()),          -- Coconut Oil (1 tbsp)
+(3, 6, 1, 'lb', 21.11, 21.11, NOW()),          -- Chicken Breast (1 lb)
+(3, 7, 2, 'piece', 0.50, 1.00, NOW()),         -- Eggs (2 pieces)
+(3, 16, 1, 'tsp', 0.04, 0.04, NOW()),          -- Black Pepper (1 tsp)
+(3, 17, 2, 'tsp', 0.04, 0.08, NOW()),          -- Garlic Powder (2 tsp)
+(3, 18, 1, 'tsp', 0.04, 0.04, NOW()),          -- Ground Ginger (1 tsp)
+(3, 64, 3, 'tbsp', 8.99, 1.69, NOW()),         -- Coconut Aminos (3 tbsp)
+(3, 66, 1, 'head', 3.99, 3.99, NOW()),         -- Fresh Cauliflower (1 head)
+(3, 67, 1, 'cup', 4.99, 4.99, NOW()),          -- Fresh Pineapple (1 cup)
+(3, 68, 0.5, 'piece', 1.49, 0.75, NOW()),      -- Fresh Red Bell Pepper (1/2 piece)
+(3, 69, 0.25, 'bunch', 1.99, 0.50, NOW()),     -- Fresh Green Onions (1/4 bunch)
+(3, 70, 0.25, 'cup', 8.99, 2.25, NOW()),       -- Raw Cashews (1/4 cup, optional)
+-- Bacon Brussels Sprouts (Recipe 4)
+(4, 2, 1, 'tbsp', 0.20, 0.20, NOW()),          -- Olive Oil (1-2 tbsp)
+(4, 16, 1, 'tsp', 0.04, 0.04, NOW()),          -- Black Pepper (1 tsp)
+(4, 21, 1, 'lb', 4.18, 4.18, NOW()),           -- Brussels Sprouts (1 lb)
+-- Paleo Banana Almond Flour Protein Waffles (Recipe 5)
+(5, 3, 0.75, 'cup', 0.15, 0.11, NOW()),        -- Coconut Oil (3/4 cup)
+(5, 7, 5, 'piece', 0.50, 2.50, NOW()),         -- Eggs (5-6 pieces)
+(5, 12, 6, 'piece', 0.58, 3.48, NOW()),        -- Bananas (6 pieces)
+(5, 15, 0.75, 'tsp', 0.04, 0.03, NOW()),       -- Salt (0.75 tsp)
+(5, 31, 0.75, 'tsp', 0.28, 0.21, NOW()),       -- Baking Soda (0.75 tsp)
+(5, 71, 3, 'cup', 12.99, 1.22, NOW()),         -- Almond Flour (3 cups)
+(5, 72, 2, 'scoop', 24.99, 1.67, NOW()),       -- Vanilla Protein Powder (2 scoops)
+(5, 73, 1.5, 'tsp', 0.04, 0.06, NOW()),        -- Ground Cinnamon (1.5 tsp)
+(5, 74, 1.5, 'tsp', 0.10, 0.15, NOW());        -- Pure Vanilla Extract (1.5 tsp)
 
--- Insert sample meal logs
+-- Insert sample meal logs for new recipes
 INSERT INTO meal_logs (recipe_id, cooked_at, notes, rating, macros, cost, created_at) VALUES
-(1, '2024-01-15', 'Perfect fluffy rice!', 4.5, '{"calories": 220, "protein": 4, "carbs": 45, "fat": 3}', 1.25, NOW()),
-(2, '2024-01-14', 'Sweet and savory combo', 4.8, '{"calories": 380, "protein": 35, "carbs": 18, "fat": 12}', 8.50, NOW()),
-(3, '2024-01-13', 'Quick protein breakfast', 4.0, '{"calories": 180, "protein": 12, "carbs": 2, "fat": 14}', 1.50, NOW());
+(1, '2024-01-15', 'Perfect creamy tzatziki! Great with grilled chicken.', 4.5, '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', 7.39, NOW()),
+(2, '2024-01-14', 'Delicious sauce, perfect for stir-fries', 4.8, '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', 9.09, NOW()),
+(3, '2024-01-13', 'Amazing paleo fried rice! Love the pineapple addition.', 4.7, '{"calories": 320, "protein": 28, "carbs": 15, "fat": 18}', 34.71, NOW()),
+(4, '2024-01-12', 'Crispy Brussels sprouts with bacon - amazing!', 4.6, '{"calories": 180, "protein": 8, "carbs": 12, "fat": 12}', 8.74, NOW()),
+(5, '2024-01-11', 'Perfect paleo waffles, great texture and flavor!', 4.8, '{"calories": 280, "protein": 12, "carbs": 18, "fat": 20}', 9.39, NOW());
 
 -- Insert sample weekly meal plan
 INSERT INTO weekly_meal_plans (week_start, created_at) VALUES
@@ -142,19 +192,19 @@ INSERT INTO meal_plan_blocks (weekly_plan_id, name, start_day, end_day, created_
 (1, 'Mon-Wed Block', 0, 2, NOW()),
 (1, 'Thu-Sat Block', 3, 5, NOW());
 
--- Insert recipe rotations
+-- Insert recipe rotations for new recipes
 INSERT INTO recipe_rotations (block_id, name, notes, created_at) VALUES
-(1, 'Rotation 1', 'Salmon & eggs with salsa', NOW()),
-(1, 'Rotation 2', 'Chicken breast with orange chicken sauce, and broccoli', NOW()),
-(2, 'Rotation 1', 'Steak with honey and garlic sauce, cabbage', NOW()),
-(2, 'Rotation 2', 'Ground beef, bacon, lettuce, and guacamole', NOW());
+(1, 'Rotation 1', 'Tzatziki with grilled chicken and vegetables', NOW()),
+(1, 'Rotation 2', 'Coconut aminos sauce with stir-fry and rice', NOW()),
+(2, 'Rotation 1', 'Paleo pineapple fried rice with chicken', NOW()),
+(2, 'Rotation 2', 'Bacon Brussels sprouts with protein', NOW());
 
 -- Assign recipes to rotations
 INSERT INTO rotation_recipes (rotation_id, recipe_id, created_at) VALUES
-(1, 4, NOW()),  -- Salmon & Eggs with Salsa
-(2, 5, NOW()),  -- Chicken Breast with Orange Sauce
-(3, 6, NOW()),  -- Steak with Honey and Garlic Sauce
-(4, 7, NOW());  -- Ground Beef with Bacon and Guacamole
+(1, 1, NOW()),  -- Tzatziki
+(2, 2, NOW()),  -- Coconut Aminos Sauce
+(3, 3, NOW()),  -- Paleo Pineapple Fried Rice with Chicken Breast
+(4, 4, NOW());  -- Bacon Brussels Sprouts
 
 -- We don't have snack recipes defined yet, so commenting out snacks for now
 -- INSERT INTO block_snacks (block_id, recipe_id, created_at) VALUES

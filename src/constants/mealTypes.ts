@@ -3,7 +3,8 @@ export const MEAL_TYPES = [
   'protein-based',
   'vegetables',
   'starch & grains',
-  'smoothie'
+  'smoothie',
+  'sauce'
 ] as const;
 
 export type MealType = typeof MEAL_TYPES[number];

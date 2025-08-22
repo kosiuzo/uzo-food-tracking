@@ -284,7 +284,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                             value={ingredient.quantity}
                             onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
                             min="0"
-                            step="0.1"
+                            step="0.01"
                           />
                         </div>
                         <div>

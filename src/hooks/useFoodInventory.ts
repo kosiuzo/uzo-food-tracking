@@ -106,13 +106,26 @@ export function useFoodInventory() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate constraint error
+        if (error.code === '23505' && error.message.includes('ux_items_normalized_name')) {
+          const duplicateError = new Error(`An item with the name "${item.name}" already exists in your inventory.`);
+          duplicateError.name = 'DuplicateItemError';
+          throw duplicateError;
+        }
+        throw error;
+      }
 
       const newItem = dbItemToFoodItem(data as DbItem);
       setItems(prev => [...prev, newItem]);
       return newItem;
     } catch (err) {
-      // Fallback: if Supabase insert fails, add locally and switch to mock mode
+      // If it's a duplicate error, don't fall back to mock mode
+      if (err instanceof Error && err.name === 'DuplicateItemError') {
+        throw err;
+      }
+
+      // For other errors, fall back to local mock mode
       console.warn('Add item failed, falling back to local mock mode:', err);
       const newItem: FoodItem = {
         ...item,

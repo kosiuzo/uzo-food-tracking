@@ -15,7 +15,7 @@ interface AddEditItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item?: FoodItem;
-  onSave: (item: Omit<FoodItem, 'id' | 'last_edited'>) => void;
+  onSave: (item: Omit<FoodItem, 'id' | 'last_edited'>) => Promise<void>;
 }
 
 const categories = ['Fruits', 'Vegetables', 'Proteins', 'Dairy & Eggs', 'Grains & Starches', 'Snacks', 'Beverages', 'Oils & Fats', 'Seasonings & Spices', 'Condiments & Sauces', 'Baking Supplies'];
@@ -134,7 +134,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     setLoading(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Name and category are required
@@ -147,19 +147,40 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
       return;
     }
 
-    // Prepare the data to save, converting empty strings to null for optional fields
-    const dataToSave = {
-      ...formData,
-      image_url: formData.image_url.trim() || null,
-      brand: formData.brand.trim() || null,
-      ingredients: formData.ingredients.trim() || null,
-    };
+    try {
+      setLoading(true);
+      
+      // Prepare the data to save, converting empty strings to null for optional fields
+      const dataToSave = {
+        ...formData,
+        image_url: formData.image_url.trim() || null,
+        brand: formData.brand.trim() || null,
+        ingredients: formData.ingredients.trim() || null,
+      };
 
-    onSave(dataToSave);
-    toast({
-      title: item ? "Item updated" : "Item added",
-      description: `${formData.name} has been ${item ? 'updated' : 'added to your inventory'}.`,
-    });
+      await onSave(dataToSave);
+      
+      toast({
+        title: item ? "Item updated" : "Item added",
+        description: `${formData.name} has been ${item ? 'updated' : 'added to your inventory'}.`,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === 'DuplicateItemError') {
+        toast({
+          title: "Item already exists",
+          description: err.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: err instanceof Error ? err.message : 'Failed to save item',
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -159,11 +159,11 @@ export function InventoryPage() {
           }
         }}
         item={editingItem ? items.find(item => item.id === editingItem) : undefined}
-        onSave={(itemData) => {
+        onSave={async (itemData) => {
           if (editingItem) {
-            updateItem(editingItem, itemData);
+            await updateItem(editingItem, itemData);
           } else {
-            addItem(itemData);
+            await addItem(itemData);
           }
           setIsAddDialogOpen(false);
           setEditingItem(null);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FoodItem, DbItem } from '../types';
 import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
+import { searchItems } from '../lib/search';
 import { mockFoodItems } from '../data/mockData';
 
 export function useFoodInventory() {
@@ -65,9 +66,18 @@ export function useFoodInventory() {
     }
   };
 
+  // Enhanced filtering with search capabilities
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+    let matchesSearch = true;
+    
+    // If we have a search query, use it for filtering (fallback for mock data)
+    if (searchQuery && usingMockData) {
+      matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.ingredients?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesStock = stockFilter === 'all' || 
                         (stockFilter === 'in-stock' && item.in_stock) ||
@@ -78,6 +88,33 @@ export function useFoodInventory() {
     
     return matchesSearch && matchesCategory && matchesStock && matchesRating;
   });
+
+  // Enhanced search function for real-time search
+  const performSearch = async (query: string) => {
+    if (usingMockData) {
+      // For mock data, use the existing filter approach
+      setSearchQuery(query);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const searchOptions = {
+        includeInactive: stockFilter !== 'in-stock',
+        categories: categoryFilter !== 'all' ? [categoryFilter] : [],
+        sortBy: 'relevance' as const,
+      };
+
+      const result = await searchItems(query, searchOptions);
+      setItems(result.items);
+      setSearchQuery(query);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setError('Search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = Array.from(new Set(items.map(item => item.category)));
 
@@ -250,6 +287,7 @@ export function useFoodInventory() {
     usingMockData,
     searchQuery,
     setSearchQuery,
+    performSearch,
     categoryFilter,
     setCategoryFilter,
     stockFilter,

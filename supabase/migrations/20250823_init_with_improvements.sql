@@ -531,6 +531,89 @@ CREATE TRIGGER trigger_recipe_items_update_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_recipe_items_updated_at();
 
+-- Enhanced Search Capabilities
+-- Add full-text search vector columns
+ALTER TABLE items ADD COLUMN search_vector tsvector;
+ALTER TABLE recipes ADD COLUMN search_vector tsvector;
+ALTER TABLE tags ADD COLUMN search_vector tsvector;
+
+-- Create function to update search vectors for items
+CREATE OR REPLACE FUNCTION update_items_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.brand, '')), 'B') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.category, '')), 'C') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.ingredients, '')), 'D');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to update search vectors for recipes
+CREATE OR REPLACE FUNCTION update_recipes_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.instructions, '')), 'C') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.notes, '')), 'D') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.cuisine_type, '')), 'B');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to update search vectors for tags
+CREATE OR REPLACE FUNCTION update_tags_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
+                        setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for search vector updates
+CREATE TRIGGER trigger_items_search_vector_update
+    BEFORE INSERT OR UPDATE ON items
+    FOR EACH ROW
+    EXECUTE FUNCTION update_items_search_vector();
+
+CREATE TRIGGER trigger_recipes_search_vector_update
+    BEFORE INSERT OR UPDATE ON recipes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_recipes_search_vector();
+
+CREATE TRIGGER trigger_tags_search_vector_update
+    BEFORE INSERT OR UPDATE ON tags
+    FOR EACH ROW
+    EXECUTE FUNCTION update_tags_search_vector();
+
+-- Create GIN indexes for full-text search
+CREATE INDEX idx_items_search_vector ON items USING gin(search_vector);
+CREATE INDEX idx_recipes_search_vector ON recipes USING gin(search_vector);
+CREATE INDEX idx_tags_search_vector ON tags USING gin(search_vector);
+
+-- Create composite search indexes for common queries
+CREATE INDEX idx_items_name_brand ON items(name, brand);
+CREATE INDEX idx_items_category_name ON items(category, name);
+CREATE INDEX idx_recipes_name_cuisine ON recipes(name, cuisine_type);
+
+-- Update existing records with search vectors
+UPDATE items SET search_vector = 
+    setweight(to_tsvector('english', COALESCE(name, '')), 'A') ||
+    setweight(to_tsvector('english', COALESCE(brand, '')), 'B') ||
+    setweight(to_tsvector('english', COALESCE(category, '')), 'C') ||
+    setweight(to_tsvector('english', COALESCE(ingredients, '')), 'D');
+
+UPDATE recipes SET search_vector = 
+    setweight(to_tsvector('english', COALESCE(name, '')), 'A') ||
+    setweight(to_tsvector('english', COALESCE(instructions, '')), 'C') ||
+    setweight(to_tsvector('english', COALESCE(notes, '')), 'D') ||
+    setweight(to_tsvector('english', COALESCE(cuisine_type, '')), 'B');
+
+UPDATE tags SET search_vector = 
+    setweight(to_tsvector('english', COALESCE(name, '')), 'A') ||
+    setweight(to_tsvector('english', COALESCE(description, '')), 'B');
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;

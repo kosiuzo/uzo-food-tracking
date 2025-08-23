@@ -71,7 +71,7 @@ export function foodItemToDbInsert(item: Partial<FoodItem>): Database['public'][
  * Convert database recipe row to application Recipe
  */
 export function dbRecipeToRecipe(dbRecipe: DbRecipeRow): Recipe {
-  const nutrition = dbRecipe.nutrition_per_serving as any || {};
+  const nutrition = (dbRecipe.nutrition_per_serving as Record<string, number>) || {};
   
   return {
     id: dbRecipe.id,
@@ -121,7 +121,7 @@ export function recipeToDbInsert(recipe: Partial<Recipe>): Database['public']['T
  * Convert database meal log row to application MealLog
  */
 export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
-  const macros = dbMealLog.macros as any || {};
+  const macros = (dbMealLog.macros as Record<string, number>) || {};
   
   return {
     id: dbMealLog.id,

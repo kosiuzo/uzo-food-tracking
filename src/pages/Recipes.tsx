@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Recipe } from '../types';
 
 export default function Recipes() {
-  const { recipes, searchQuery, setSearchQuery, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
+  const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
   const { allItems } = useFoodInventory();
   const { allTags } = useTags();
   const { toast } = useToast();
@@ -153,18 +153,38 @@ export default function Recipes() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search recipes..."
+            placeholder="Search recipes by name, instructions, or ingredients..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchQuery(value);
+              // Use enhanced search if available, otherwise fall back to basic filtering
+              if (performSearch) {
+                performSearch(value, selectedTagIds.map(id => parseInt(id)));
+              }
+            }}
             className="pl-10"
           />
+          {!usingMockData && searchQuery && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Badge variant="secondary" className="text-xs">
+                Full-text search
+              </Badge>
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <Label className="text-sm whitespace-nowrap mb-2 block">Filter by tags:</Label>
             <MultiSelect
               options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
-              onValueChange={setSelectedTagIds}
+              onValueChange={(tagIds) => {
+                setSelectedTagIds(tagIds);
+                // Trigger search with updated tag filter
+                if (performSearch && searchQuery) {
+                  performSearch(searchQuery, tagIds.map(id => parseInt(id)));
+                }
+              }}
               defaultValue={selectedTagIds}
               placeholder="Select tags to filter..."
               maxCount={5}

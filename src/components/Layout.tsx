@@ -1,9 +1,10 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Package, ChefHat, BookOpen, CalendarDays, MoreHorizontal, Tag, Settings, TrendingUp } from 'lucide-react';
+import { Package, ChefHat, BookOpen, CalendarDays, MoreHorizontal, Tag, Settings, TrendingUp, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { GlobalSearch } from './GlobalSearch';
 
 interface LayoutProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Check if current path is in more items
   const isMoreActive = moreNavItems.some(item => item.path === location.pathname);
@@ -34,11 +36,63 @@ export function Layout({ children }: LayoutProps) {
     setIsMoreOpen(false);
   };
 
+  // Global search keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Header with Search */}
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center justify-between px-4">
+          <h1 className="text-lg font-semibold">Food Tracker</h1>
+          
+          {/* Search Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="hidden sm:flex items-center justify-between w-64 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <span className="flex items-center">
+              <Search className="mr-2 h-4 w-4" />
+              Search...
+            </span>
+            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </Button>
+
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="sm:hidden p-2"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
+
       <main className="container px-4 py-6 pb-20">
         {children}
       </main>
+
+      {/* Global Search Modal */}
+      <GlobalSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="grid grid-cols-5">

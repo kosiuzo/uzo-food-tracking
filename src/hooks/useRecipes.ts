@@ -8,6 +8,7 @@ type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'] & {
   recipe_tags: { tag_id: number; tags: DbTag }[];
 };
 import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/type-mappers';
+import { searchRecipes } from '../lib/search';
 import { mockRecipes } from '../data/mockData';
 
 export function useRecipes() {
@@ -90,11 +91,47 @@ export function useRecipes() {
     }
   };
 
-const filteredRecipes = recipes.filter(recipe =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+// Enhanced filtering with search capabilities
+  const filteredRecipes = recipes.filter(recipe => {
+    let matchesSearch = true;
+    
+    // If we have a search query, use it for filtering (fallback for mock data)
+    if (searchQuery && usingMockData) {
+      matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     recipe.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    
+    return matchesSearch;
+  });
 
   const favoriteRecipes = filteredRecipes.filter(r => r.is_favorite);
+
+  // Enhanced search function for real-time search
+  const performSearch = async (query: string, tagIds: number[] = []) => {
+    if (usingMockData) {
+      // For mock data, use the existing filter approach
+      setSearchQuery(query);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const searchOptions = {
+        tags: tagIds,
+        sortBy: 'relevance' as const,
+      };
+
+      const result = await searchRecipes(query, searchOptions);
+      setRecipes(result.items);
+      setSearchQuery(query);
+    } catch (err) {
+      console.error('Recipe search failed:', err);
+      setError('Recipe search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] }) => {
     try {
@@ -305,6 +342,7 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
     usingMockData,
     searchQuery,
     setSearchQuery,
+    performSearch,
     addRecipe,
     updateRecipe,
     toggleFavorite,

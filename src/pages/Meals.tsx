@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Calendar, Utensils, Edit, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Utensils, Edit, Trash2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +12,10 @@ import { useMealLogs } from '../hooks/useMealLogs';
 import { useRecipes } from '../hooks/useRecipes';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function Meals() {
-  const { mealLogs, addMealLog, updateMealLog, deleteMealLog, usingMockData, error, loading } = useMealLogs();
+  const { mealLogs, addMealLog, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
   const { getRecipeById } = useRecipes();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
@@ -22,6 +23,7 @@ export default function Meals() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
+  const [reLoggedMeals, setReLoggedMeals] = useState<Set<string>>(new Set());
 
   // Debug logging
   console.log('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
@@ -79,6 +81,42 @@ export default function Meals() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleReLogMeal = async (mealLog: MealLog) => {
+    try {
+      await reLogMeal(mealLog);
+      // Track this meal as successfully re-logged
+      setReLoggedMeals(prev => new Set(prev).add(mealLog.id));
+      toast({
+        title: 'Meal re-logged',
+        description: `${mealLog.meal_name} has been logged for today.`,
+      });
+      // Clear the success state after 3 seconds
+      setTimeout(() => {
+        setReLoggedMeals(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(mealLog.id);
+          return newSet;
+        });
+      }, 3000);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to re-log meal. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Check if a meal is already logged for today
+  const isMealLoggedToday = (mealLog: MealLog) => {
+    const today = new Date().toISOString().split('T')[0];
+    return safeMealLogs.some(log => 
+      log.date === today && 
+      log.recipe_ids.length === mealLog.recipe_ids.length &&
+      log.recipe_ids.every(id => mealLog.recipe_ids.includes(id))
+    );
   };
 
   return (
@@ -292,7 +330,14 @@ export default function Meals() {
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-medium">{log.meal_name}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium">{log.meal_name}</h3>
+                              {isMealLoggedToday(log) && (
+                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                                  ✓ Today
+                                </Badge>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                               <Calendar className="h-4 w-4" />
                               {formatDate(log.date)}
@@ -313,6 +358,45 @@ export default function Meals() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
+                                                         <Tooltip>
+                               <TooltipTrigger asChild>
+                                 <Button
+                                   size="sm"
+                                   variant={reLoggedMeals.has(log.id) ? "default" : "outline"}
+                                   onClick={() => handleReLogMeal(log)}
+                                   disabled={isMealLoggedToday(log)}
+                                   className={`${
+                                     reLoggedMeals.has(log.id)
+                                       ? 'bg-green-600 hover:bg-green-700 text-white'
+                                       : isMealLoggedToday(log) 
+                                         ? 'text-muted-foreground border-muted-foreground/20 cursor-not-allowed' 
+                                         : 'text-primary hover:text-primary border-primary/20 hover:bg-primary/10'
+                                   }`}
+                                 >
+                                   {reLoggedMeals.has(log.id) ? (
+                                     <span className="flex items-center gap-1">
+                                       <span className="text-sm">✓</span>
+                                       Logged
+                                     </span>
+                                   ) : (
+                                     <>
+                                       <Clock className="h-4 w-4 mr-1" />
+                                       {isMealLoggedToday(log) ? 'Already Today' : 'Re-log'}
+                                     </>
+                                   )}
+                                 </Button>
+                               </TooltipTrigger>
+                               <TooltipContent>
+                                 <p>
+                                   {reLoggedMeals.has(log.id)
+                                     ? 'Successfully re-logged for today!'
+                                     : isMealLoggedToday(log) 
+                                       ? 'This meal is already logged for today' 
+                                       : 'Re-log this meal for today'
+                                   }
+                                 </p>
+                               </TooltipContent>
+                             </Tooltip>
                             <Button
                               size="sm"
                               variant="ghost"

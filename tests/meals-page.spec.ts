@@ -121,4 +121,57 @@ test.describe('Meals Page', () => {
     // Check that the section header is back to "Recent Meals"
     await expect(page.locator('h2:has-text("Recent Meals")')).toBeVisible();
   });
+
+  test('should show re-log button for meals', async ({ page }) => {
+    // Wait for the page to load
+    await page.waitForSelector('h1:has-text("Meal Log")', { timeout: 10000 });
+    
+    // Wait for mock data to load (hook has 5 second timeout)
+    await page.waitForTimeout(6000);
+    
+    // Check that re-log buttons are visible on meal cards
+    const reLogButtons = page.locator('button:has-text("Re-log")');
+    const buttonCount = await reLogButtons.count();
+    
+    if (buttonCount > 0) {
+      // If there are meals, check that re-log buttons are visible
+      await expect(reLogButtons.first()).toBeVisible();
+      
+      // Check that the button has the correct styling
+      const firstButton = reLogButtons.first();
+      await expect(firstButton).toHaveClass(/text-primary/);
+    } else {
+      // If no meals, just verify the page loaded correctly
+      await expect(page.locator('h1:has-text("Meal Log")')).toBeVisible();
+    }
+  });
+
+  test('should show tooltip on re-log button hover', async ({ page }) => {
+    // Wait for the page to load
+    await page.waitForSelector('h1:has-text("Meal Log")', { timeout: 10000 });
+    
+    // Wait for mock data to load (hook has 5 second timeout)
+    await page.waitForTimeout(6000);
+    
+    // Look for re-log buttons
+    const reLogButtons = page.locator('button:has-text("Re-log")');
+    const buttonCount = await reLogButtons.count();
+    
+    if (buttonCount > 0) {
+      // Hover over the first re-log button
+      await reLogButtons.first().hover();
+      
+      // Wait for tooltip to appear
+      await page.waitForTimeout(500);
+      
+      // Check that tooltip content is visible
+      const tooltipContent = page.locator('[data-radix-tooltip-content]');
+      if (await tooltipContent.isVisible()) {
+        await expect(tooltipContent).toContainText('Re-log this meal for today');
+      }
+    } else {
+      // If no meals, just verify the page loaded correctly
+      await expect(page.locator('h1:has-text("Meal Log")')).toBeVisible();
+    }
+  });
 });

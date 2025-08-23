@@ -138,6 +138,28 @@ export function useMealLogs() {
     return mealLogs.filter(log => log.date >= cutoffDateString);
   };
 
+  const reLogMeal = async (mealLog: MealLog) => {
+    try {
+      // Create a copy of the meal log with today's date
+      const today = new Date().toISOString().split('T')[0];
+      const newMealLog: Omit<MealLog, 'id'> = {
+        recipe_ids: mealLog.recipe_ids,
+        meal_name: mealLog.meal_name,
+        date: today,
+        notes: mealLog.notes,
+        nutrition: mealLog.nutrition,
+        estimated_cost: mealLog.estimated_cost,
+      };
+      
+      // Use the existing addMealLog function
+      const addedMealLog = await addMealLog(newMealLog);
+      return addedMealLog;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to re-log meal');
+      throw err;
+    }
+  };
+
   return {
     mealLogs,
     loading,
@@ -146,6 +168,7 @@ export function useMealLogs() {
     addMealLog,
     updateMealLog,
     deleteMealLog,
+    reLogMeal,
     getMealLogsByDateRange,
     getRecentMealLogs,
     refetch: loadMealLogs,

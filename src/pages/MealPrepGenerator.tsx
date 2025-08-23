@@ -18,6 +18,7 @@ import { useRecipes } from '@/hooks/useRecipes';
 import { useTags } from '@/hooks/useTags';
 import { FoodItem, Recipe, RecipeIngredient } from '@/types';
 import { calculateRecipeNutrition } from '@/lib/servingUnitUtils';
+import { DIETARY_RESTRICTIONS } from '@/lib/constants';
 
 // Diet types now come from tags system
 
@@ -106,7 +107,7 @@ const MealPrepGenerator = () => {
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [selectedGrains, setSelectedGrains] = useState<FoodItem[]>([]);
   const [selectedGrainIds, setSelectedGrainIds] = useState<string[]>([]);
-  const [selectedDietTags, setSelectedDietTags] = useState<string[]>([]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
   const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
   const [meatRecipeOptions, setMeatRecipeOptions] = useState<MeatRecipeOptions[]>([]);
@@ -237,16 +238,13 @@ const MealPrepGenerator = () => {
     
     // Get available tags list for AI
     const availableTagsList = allTags.map(tag => tag.name).join(', ');
-    const dietPreferences = selectedDietTags.map(tagId => {
-      const tag = allTags.find(t => t.id === tagId);
-      return tag ? tag.name : tagId;
-    }).join(', ');
+    const dietPreference = DIETARY_RESTRICTIONS.find(restriction => restriction.value === dietaryRestrictions)?.label || 'Healthy';
     
-    const userPrompt = `Create 3 different ${dietPreferences} MEAL PREP recipes using these ingredients:
+    const userPrompt = `Create 3 different ${dietPreference} MEAL PREP recipes using these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Main protein: ${meat.name} (2 lbs)
-Diet preferences: ${dietPreferences}
+Diet preference: ${dietPreference}
 Cooking methods available: ${cookingMethodsText}
 Target: serves 4 (designed for meal prep - food will be cooked in batch for multiple days)
 ${inspiration ? `Additional notes: ${inspiration}` : ''}
@@ -499,11 +497,6 @@ Rules:
       toast.error('Please select exactly 2 meats');
       return;
     }
-    
-    if (selectedDietTags.length === 0) {
-      toast.error('Please select at least one diet preference');
-      return;
-    }
 
     if (selectedSeasonings.length === 0) {
       toast.error('Please select some seasonings or sauces');
@@ -690,7 +683,7 @@ Rules:
       setSelectedDairyIds([]);
       setSelectedGrains([]);
       setSelectedGrainIds([]);
-      setSelectedDietTags([]);
+      setDietaryRestrictions('paleo');
       setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
       setMeatRecipeOptions([]);
@@ -719,10 +712,7 @@ Rules:
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables];
     const ingredientNames = allIngredients.map(item => item.name);
     
-    const dietPreferences = selectedDietTags.map(tagId => {
-      const tag = allTags.find(t => t.id === tagId);
-      return tag ? tag.name : tagId;
-    }).join(', ');
+    const dietPreference = DIETARY_RESTRICTIONS.find(restriction => restriction.value === dietaryRestrictions)?.label || 'Healthy';
     
     return `SYSTEM PROMPT:
 You are a meal prep recipe generator that returns VALID JSON only.
@@ -748,11 +738,11 @@ Rules:
 - Include cooking times and prep times.
 
 USER PROMPT:
-Create 3 different ${dietPreferences || 'healthy'} recipes using these ingredients:
+Create 3 different ${dietPreference} recipes using these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Main protein: ${meat.name} (2 lbs)
-Diet preferences: ${dietPreferences || 'not specified'}
+Diet preference: ${dietPreference}
 Target: serves 4
 ${inspiration ? `Additional notes: ${inspiration}` : ''}
 
@@ -856,28 +846,24 @@ Return a single JSON object with exactly 3 recipes.`;
               </p>
             </div>
 
+            {/* Dietary Restrictions */}
+            <div className="space-y-2">
+              <Label htmlFor="dietary">Dietary Restrictions (optional)</Label>
+              <Select value={dietaryRestrictions} onValueChange={setDietaryRestrictions} disabled={isGenerating}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select dietary restriction..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIETARY_RESTRICTIONS.map((restriction) => (
+                    <SelectItem key={restriction.value} value={restriction.value}>
+                      {restriction.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="diet-tags">Diet Preferences* (Select from available tags)</Label>
-                <MultiSelect
-                  options={allTags.filter(tag => 
-                    tag.name.includes('paleo') || 
-                    tag.name.includes('keto') || 
-                    tag.name.includes('vegetarian') || 
-                    tag.name.includes('vegan') ||
-                    tag.name.includes('gluten-free') ||
-                    tag.name.includes('dairy-free') ||
-                    tag.name.includes('low-carb')
-                  ).map(tag => ({ label: tag.name, value: tag.id }))}
-                  onValueChange={setSelectedDietTags}
-                  defaultValue={selectedDietTags}
-                  placeholder="Select diet preferences from tags..."
-                  maxCount={3}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Choose at least one diet preference to help AI generate suitable recipes
-                </p>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="inspiration">Additional Notes (Optional)</Label>

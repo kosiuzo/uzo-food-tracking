@@ -13,6 +13,7 @@ import { useFoodInventory } from '../hooks/useFoodInventory';
 import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
 import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
+import { CUISINE_STYLES, DIETARY_RESTRICTIONS } from '../lib/constants';
 
 interface RecipeGeneratorDialogProps {
   open: boolean;
@@ -20,36 +21,6 @@ interface RecipeGeneratorDialogProps {
   onRecipeGenerated: (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { tagIds?: string[] }) => void;
 }
 
-const CUISINE_STYLES = [
-  'Italian',
-  'Chinese',
-  'Mexican',
-  'Indian',
-  'Japanese',
-  'French',
-  'Thai',
-  'Mediterranean',
-  'American',
-  'Korean',
-  'Vietnamese',
-  'Greek',
-  'Spanish',
-  'Middle Eastern',
-  'Fusion'
-];
-
-const DIETARY_RESTRICTIONS = [
-  { value: 'none', label: 'None' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'vegan', label: 'Vegan' },
-  { value: 'gluten-free', label: 'Gluten-Free' },
-  { value: 'dairy-free', label: 'Dairy-Free' },
-  { value: 'paleo', label: 'Paleo' },
-  { value: 'keto', label: 'Keto' },
-  { value: 'low-carb', label: 'Low-Carb' },
-  { value: 'low-sodium', label: 'Low-Sodium' },
-  { value: 'diabetic-friendly', label: 'Diabetic-Friendly' }
-];
 
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);

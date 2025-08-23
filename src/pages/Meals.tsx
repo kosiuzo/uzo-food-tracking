@@ -21,6 +21,7 @@ export default function Meals() {
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
 
   // Debug logging
   console.log('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
@@ -28,9 +29,11 @@ export default function Meals() {
   // Ensure mealLogs is always an array
   const safeMealLogs = Array.isArray(mealLogs) ? mealLogs : [];
 
-  // Filter meals by selected date or show all if no date selected
+  // Filter meals by selected date, date range, or show all if no filter
   const filteredMeals = selectedDate 
     ? safeMealLogs.filter(log => log.date === selectedDate)
+    : dateRange
+    ? safeMealLogs.filter(log => log.date >= dateRange.start && log.date <= dateRange.end)
     : safeMealLogs;
 
   const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
@@ -141,11 +144,14 @@ export default function Meals() {
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="w-40"
                 />
-                {selectedDate && (
+                {(selectedDate || dateRange) && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedDate('')}
+                    onClick={() => {
+                      setSelectedDate('');
+                      setDateRange(null);
+                    }}
                     className="h-8 px-2"
                   >
                     Clear Filter
@@ -180,9 +186,17 @@ export default function Meals() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    const thisWeek = new Date();
-                    thisWeek.setDate(thisWeek.getDate() - 7);
-                    setSelectedDate(thisWeek.toISOString().split('T')[0]);
+                    const today = new Date();
+                    const startOfWeek = new Date(today);
+                    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of current week (Saturday)
+                    
+                    setSelectedDate('');
+                    setDateRange({
+                      start: startOfWeek.toISOString().split('T')[0],
+                      end: endOfWeek.toISOString().split('T')[0]
+                    });
                   }}
                   className="h-7 px-2 text-xs"
                 >
@@ -192,9 +206,17 @@ export default function Meals() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    const lastWeek = new Date();
-                    lastWeek.setDate(lastWeek.getDate() - 14);
-                    setSelectedDate(lastWeek.toISOString().split('T')[0]);
+                    const today = new Date();
+                    const startOfLastWeek = new Date(today);
+                    startOfLastWeek.setDate(today.getDate() - today.getDay() - 7); // Start of last week (Sunday)
+                    const endOfLastWeek = new Date(startOfLastWeek);
+                    endOfLastWeek.setDate(startOfLastWeek.getDate() + 6); // End of last week (Saturday)
+                    
+                    setSelectedDate('');
+                    setDateRange({
+                      start: startOfLastWeek.toISOString().split('T')[0],
+                      end: endOfLastWeek.toISOString().split('T')[0]
+                    });
                   }}
                   className="h-7 px-2 text-xs"
                 >
@@ -208,7 +230,12 @@ export default function Meals() {
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
                 <div className="text-sm text-muted-foreground">
-                  {selectedDate ? 'Meals on ' + new Date(selectedDate).toLocaleDateString() : 'Total Meals'}
+                  {selectedDate 
+                    ? 'Meals on ' + new Date(selectedDate).toLocaleDateString()
+                    : dateRange
+                    ? `Meals ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    : 'Total Meals'
+                  }
                 </div>
               </Card>
               <Card className="p-4 text-center">
@@ -216,7 +243,12 @@ export default function Meals() {
                   {filteredMeals.reduce((sum, log) => sum + log.nutrition.calories, 0).toFixed(1)}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {selectedDate ? 'Calories on ' + new Date(selectedDate).toLocaleDateString() : 'Total Calories'}
+                  {selectedDate 
+                    ? 'Calories on ' + new Date(selectedDate).toLocaleDateString()
+                    : dateRange
+                    ? `Calories ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    : 'Total Calories'
+                  }
                 </div>
               </Card>
             </div>
@@ -225,7 +257,12 @@ export default function Meals() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
-                  {selectedDate ? `Meals on ${new Date(selectedDate).toLocaleDateString()}` : 'Recent Meals'}
+                  {selectedDate 
+                    ? `Meals on ${new Date(selectedDate).toLocaleDateString()}`
+                    : dateRange
+                    ? `Meals ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    : 'Recent Meals'
+                  }
                 </h2>
                 {selectedDate && (
                   <Badge variant="outline" className="text-xs">
@@ -240,6 +277,8 @@ export default function Meals() {
                   <p className="text-muted-foreground">
                     {selectedDate 
                       ? `No meals logged on ${new Date(selectedDate).toLocaleDateString()}`
+                      : dateRange
+                      ? `No meals logged ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
                       : 'No meals logged yet'
                     }
                   </p>

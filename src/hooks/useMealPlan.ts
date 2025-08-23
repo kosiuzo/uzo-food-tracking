@@ -59,21 +59,27 @@ export const useMealPlan = () => {
       if (weeklyPlanData) {
         // Convert database format to our app format
         const convertedPlan: WeeklyMealPlan = {
-          id: weeklyPlanData.id.toString(),
+          id: weeklyPlanData.id,
           weekStart: weeklyPlanData.week_start,
           blocks: weeklyPlanData.meal_plan_blocks?.map(block => ({
-            id: block.id.toString(),
+            id: block.id,
             name: block.name,
             startDay: block.start_day,
             endDay: block.end_day,
             rotations: block.recipe_rotations?.map(rotation => ({
-              id: rotation.id.toString(),
+              id: rotation.id,
               name: rotation.name,
               notes: rotation.notes || undefined,
-              recipes: rotation.rotation_recipes?.map(rr => rr.recipe_id.toString()) || []
+              recipes: rotation.rotation_recipes?.map(rr => rr.recipe_id) || [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })) || [],
-            snacks: block.block_snacks?.map(snack => snack.recipe_id.toString()) || []
-          })) || []
+            snacks: block.block_snacks?.map(snack => snack.recipe_id) || [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })) || [],
+          created_at: weeklyPlanData.created_at || new Date().toISOString(),
+          updated_at: weeklyPlanData.updated_at || new Date().toISOString(),
         };
 
         setWeeklyPlan(convertedPlan);
@@ -93,9 +99,11 @@ export const useMealPlan = () => {
           }
 
           const newPlan: WeeklyMealPlan = {
-            id: weeklyPlanData.id.toString(),
+            id: weeklyPlanData.id,
             weekStart: weekStartStr,
-            blocks: []
+            blocks: [],
+            created_at: weeklyPlanData.created_at || new Date().toISOString(),
+            updated_at: weeklyPlanData.updated_at || new Date().toISOString(),
           };
 
           setWeeklyPlan(newPlan);
@@ -132,7 +140,7 @@ export const useMealPlan = () => {
       const { data: blockData, error: blockError } = await supabase
         .from('meal_plan_blocks')
         .insert({
-          weekly_plan_id: parseInt(weeklyPlan.id),
+          weekly_plan_id: weeklyPlan.id,
           name: block.name,
           start_day: block.startDay,
           end_day: block.endDay
@@ -162,7 +170,7 @@ export const useMealPlan = () => {
             .from('rotation_recipes')
             .insert({
               rotation_id: rotationData.id,
-              recipe_id: parseInt(recipeId)
+              recipe_id: recipeId
             });
         }
       }
@@ -173,13 +181,13 @@ export const useMealPlan = () => {
           .from('block_snacks')
           .insert({
             block_id: blockData.id,
-            recipe_id: parseInt(snackId)
+            recipe_id: snackId
           });
       }
 
       // Reload the plan
       await loadCurrentWeekPlan();
-      return blockData.id.toString();
+      return blockData.id;
     } catch (err) {
       console.error('Error creating meal plan block:', err);
       setError('Failed to create meal plan block');
@@ -187,7 +195,7 @@ export const useMealPlan = () => {
     }
   };
 
-  const updateMealPlanBlock = async (blockId: string, updates: Partial<MealPlanBlock>) => {
+  const updateMealPlanBlock = async (blockId: number, updates: Partial<MealPlanBlock>) => {
     if (!weeklyPlan) return false;
 
     try {
@@ -200,7 +208,7 @@ export const useMealPlan = () => {
             start_day: updates.startDay,
             end_day: updates.endDay
           })
-          .eq('id', parseInt(blockId));
+          .eq('id', blockId);
 
         if (blockError) throw blockError;
       }
@@ -215,7 +223,7 @@ export const useMealPlan = () => {
     }
   };
 
-  const deleteMealPlanBlock = async (blockId: string) => {
+  const deleteMealPlanBlock = async (blockId: number) => {
     if (!weeklyPlan) return false;
 
     try {
@@ -223,7 +231,7 @@ export const useMealPlan = () => {
       const { error } = await supabase
         .from('meal_plan_blocks')
         .delete()
-        .eq('id', parseInt(blockId));
+        .eq('id', blockId);
 
       if (error) throw error;
 
@@ -237,7 +245,7 @@ export const useMealPlan = () => {
     }
   };
 
-  const addRotationToBlock = async (blockId: string, rotation: Omit<RecipeRotation, 'id'>) => {
+  const addRotationToBlock = async (blockId: number, rotation: Omit<RecipeRotation, 'id'>) => {
     if (!weeklyPlan) return null;
 
     try {
@@ -245,7 +253,7 @@ export const useMealPlan = () => {
       const { data: rotationData, error: rotationError } = await supabase
         .from('recipe_rotations')
         .insert({
-          block_id: parseInt(blockId),
+          block_id: blockId,
           name: rotation.name,
           notes: rotation.notes
         })
@@ -260,13 +268,13 @@ export const useMealPlan = () => {
           .from('rotation_recipes')
           .insert({
             rotation_id: rotationData.id,
-            recipe_id: parseInt(recipeId)
+            recipe_id: recipeId
           });
       }
 
       // Reload the plan
       await loadCurrentWeekPlan();
-      return rotationData.id.toString();
+      return rotationData.id;
     } catch (err) {
       console.error('Error adding rotation:', err);
       setError('Failed to add rotation');
@@ -274,7 +282,7 @@ export const useMealPlan = () => {
     }
   };
 
-  const updateRotation = async (blockId: string, rotationId: string, updates: Partial<RecipeRotation>) => {
+  const updateRotation = async (blockId: number, rotationId: number, updates: Partial<RecipeRotation>) => {
     if (!weeklyPlan) return false;
 
     try {
@@ -286,7 +294,7 @@ export const useMealPlan = () => {
             name: updates.name,
             notes: updates.notes
           })
-          .eq('id', parseInt(rotationId));
+          .eq('id', rotationId);
 
         if (rotationError) throw rotationError;
       }
@@ -297,15 +305,15 @@ export const useMealPlan = () => {
         await supabase
           .from('rotation_recipes')
           .delete()
-          .eq('rotation_id', parseInt(rotationId));
+          .eq('rotation_id', rotationId);
 
         // Add new recipes
         for (const recipeId of updates.recipes) {
           await supabase
             .from('rotation_recipes')
             .insert({
-              rotation_id: parseInt(rotationId),
-              recipe_id: parseInt(recipeId)
+              rotation_id: rotationId,
+              recipe_id: recipeId
             });
         }
       }
@@ -320,7 +328,7 @@ export const useMealPlan = () => {
     }
   };
 
-  const deleteRotation = async (blockId: string, rotationId: string) => {
+  const deleteRotation = async (blockId: number, rotationId: number) => {
     if (!weeklyPlan) return false;
 
     try {
@@ -328,7 +336,7 @@ export const useMealPlan = () => {
       const { error } = await supabase
         .from('recipe_rotations')
         .delete()
-        .eq('id', parseInt(rotationId));
+        .eq('id', rotationId);
 
       if (error) throw error;
 
@@ -355,52 +363,66 @@ export const useMealPlan = () => {
 
   // Mock data fallback
   const getMockWeeklyPlan = (): WeeklyMealPlan => ({
-    id: 'mock-1',
+    id: 1,
     weekStart: '2024-01-01',
     blocks: [
       {
-        id: 'mock-block-1',
+        id: 1,
         name: 'Mon-Wed Block',
         startDay: 0,
         endDay: 2,
         rotations: [
           {
-            id: 'mock-rotation-1',
+            id: 1,
             name: 'Rotation 1',
-            recipes: ['salmon-eggs-salsa'],
-            notes: 'Salmon & eggs with salsa'
+            recipes: [1, 2], // Mock recipe IDs
+            notes: 'Salmon & eggs with salsa',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
           {
-            id: 'mock-rotation-2',
+            id: 2,
             name: 'Rotation 2',
-            recipes: ['chicken-orange-broccoli'],
-            notes: 'Chicken breast with orange chicken sauce, and broccoli'
+            recipes: [3, 4], // Mock recipe IDs
+            notes: 'Chicken breast with orange chicken sauce, and broccoli',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }
         ],
-        snacks: ['protein-bar', 'nuts']
+        snacks: [5, 6], // Mock recipe IDs for snacks
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
-        id: 'mock-block-2',
+        id: 2,
         name: 'Thu-Sat Block',
         startDay: 3,
         endDay: 5,
         rotations: [
           {
-            id: 'mock-rotation-3',
+            id: 3,
             name: 'Rotation 1',
-            recipes: ['steak-honey-garlic', 'cabbage'],
-            notes: 'Steak with honey and garlic sauce, cabbage'
+            recipes: [7, 8], // Mock recipe IDs
+            notes: 'Steak with honey and garlic sauce, cabbage',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
           {
-            id: 'mock-rotation-4',
+            id: 4,
             name: 'Rotation 2',
-            recipes: ['ground-beef-bacon', 'lettuce-guacamole'],
-            notes: 'Ground beef, bacon, lettuce, and guacamole'
+            recipes: [9, 10], // Mock recipe IDs
+            notes: 'Ground beef, bacon, lettuce, and guacamole',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }
         ],
-        snacks: ['yogurt', 'berries']
+        snacks: [11, 12], // Mock recipe IDs for snacks
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
-    ]
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   return {

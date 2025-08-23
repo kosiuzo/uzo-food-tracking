@@ -1,3 +1,6 @@
+-- Food Tracking App Database Schema
+-- Created: 2025-08-08, Updated: 2025-08-23 with data validation and audit improvements
+
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
@@ -22,14 +25,14 @@ CREATE TABLE items (
     brand TEXT,
     category TEXT,
     in_stock BOOLEAN DEFAULT TRUE,
-    price NUMERIC(10,2),
-    carbs_per_serving NUMERIC(10,2),
-    fat_per_serving NUMERIC(10,2),
-    protein_per_serving NUMERIC(10,2),
-    calories_per_serving NUMERIC(10,2),
-    servings_per_container NUMERIC(10,2),
-    serving_size_grams NUMERIC(10,2) DEFAULT 100,
-    serving_quantity NUMERIC(10,2),
+    price NUMERIC(10,2) CHECK (price IS NULL OR price >= 0),
+    carbs_per_serving NUMERIC(10,2) CHECK (carbs_per_serving IS NULL OR carbs_per_serving >= 0),
+    fat_per_serving NUMERIC(10,2) CHECK (fat_per_serving IS NULL OR fat_per_serving >= 0),
+    protein_per_serving NUMERIC(10,2) CHECK (protein_per_serving IS NULL OR protein_per_serving >= 0),
+    calories_per_serving NUMERIC(10,2) CHECK (calories_per_serving IS NULL OR calories_per_serving >= 0),
+    servings_per_container NUMERIC(10,2) CHECK (servings_per_container IS NULL OR servings_per_container > 0),
+    serving_size_grams NUMERIC(10,2) DEFAULT 100 CHECK (serving_size_grams IS NULL OR serving_size_grams > 0),
+    serving_quantity NUMERIC(10,2) CHECK (serving_quantity IS NULL OR serving_quantity > 0),
     serving_unit TEXT,
     serving_unit_type serving_unit_type,
     image_url TEXT,
@@ -37,10 +40,12 @@ CREATE TABLE items (
     nutrition_source TEXT,
     barcode TEXT,
     last_purchased DATE,
-    purchase_count INTEGER DEFAULT 0,
+    purchase_count INTEGER DEFAULT 0 CHECK (purchase_count IS NULL OR purchase_count >= 0),
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     last_edited TIMESTAMP DEFAULT NOW(),
-    normalized_name TEXT
+    normalized_name TEXT,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
 -- Trigger function to set normalized_name
@@ -67,19 +72,19 @@ CREATE TABLE recipes (
     name TEXT NOT NULL,
     cuisine_type TEXT,
     difficulty TEXT,
-    prep_time INT,
-    cook_time INT,
-    total_time INT,
-    servings INT,
+    prep_time INT CHECK (prep_time IS NULL OR prep_time >= 0),
+    cook_time INT CHECK (cook_time IS NULL OR cook_time >= 0),
+    total_time INT CHECK (total_time IS NULL OR total_time >= 0),
+    servings INT CHECK (servings IS NULL OR servings > 0),
     instructions TEXT,
     nutrition_per_serving JSONB,
     is_favorite BOOLEAN DEFAULT FALSE,
     source_link TEXT,
-    cost_per_serving NUMERIC(10,2),
-    total_cost NUMERIC(10,4),
+    cost_per_serving NUMERIC(10,2) CHECK (cost_per_serving IS NULL OR cost_per_serving >= 0),
+    total_cost NUMERIC(10,4) CHECK (total_cost IS NULL OR total_cost >= 0),
     cost_last_calculated TIMESTAMP,
     notes TEXT,
-    times_cooked INT DEFAULT 0,
+    times_cooked INT DEFAULT 0 CHECK (times_cooked IS NULL OR times_cooked >= 0),
     last_cooked TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -107,11 +112,13 @@ CREATE TABLE recipe_tags (
 CREATE TABLE recipe_items (
     recipe_id BIGINT REFERENCES recipes(id) ON DELETE CASCADE,
     item_id BIGINT REFERENCES items(id) ON DELETE CASCADE,
-    quantity NUMERIC(10,2),
+    quantity NUMERIC(10,2) CHECK (quantity IS NULL OR quantity > 0),
     unit TEXT,
-    cost_per_unit NUMERIC(10,4),
-    total_cost NUMERIC(10,4),
+    cost_per_unit NUMERIC(10,4) CHECK (cost_per_unit IS NULL OR cost_per_unit >= 0),
+    total_cost NUMERIC(10,4) CHECK (total_cost IS NULL OR total_cost >= 0),
     cost_calculated_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
     PRIMARY KEY (recipe_id, item_id)
 );
 
@@ -122,9 +129,9 @@ CREATE TABLE meal_logs (
     meal_name TEXT,
     cooked_at DATE,
     notes TEXT,
-    rating NUMERIC(2,1),
+    rating NUMERIC(2,1) CHECK (rating IS NULL OR (rating >= 0 AND rating <= 5)),
     macros JSONB,
-    cost NUMERIC(10,2),
+    cost NUMERIC(10,2) CHECK (cost IS NULL OR cost >= 0),
     created_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT meal_logs_recipe_ids_check CHECK (array_length(recipe_ids, 1) > 0)
 );
@@ -192,6 +199,12 @@ CREATE INDEX IF NOT EXISTS idx_meal_plan_blocks_weekly_plan_id ON meal_plan_bloc
 CREATE INDEX IF NOT EXISTS idx_recipe_rotations_block_id ON recipe_rotations(block_id);
 CREATE INDEX IF NOT EXISTS idx_rotation_recipes_rotation_id ON rotation_recipes(rotation_id);
 CREATE INDEX IF NOT EXISTS idx_block_snacks_block_id ON block_snacks(block_id);
+
+-- Additional indexes for audit fields
+CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at);
+CREATE INDEX IF NOT EXISTS idx_items_updated_at ON items(updated_at);
+CREATE INDEX IF NOT EXISTS idx_recipe_items_created_at ON recipe_items(created_at);
+CREATE INDEX IF NOT EXISTS idx_recipe_items_updated_at ON recipe_items(updated_at);
 
 -- Create RPC function for upserting items by name
 CREATE OR REPLACE FUNCTION upsert_item_by_name(
@@ -294,41 +307,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create RPC function for getting suggested recipes based on in-stock items
-CREATE OR REPLACE FUNCTION get_suggested_recipes(
-    p_limit INTEGER DEFAULT 10
-) RETURNS TABLE(
-    recipe_id BIGINT,
-    recipe_name TEXT,
-    total_ingredients INTEGER,
-    available_ingredients INTEGER,
-    availability_percentage NUMERIC
-) AS $$
-BEGIN
-    RETURN QUERY
-    WITH recipe_ingredient_counts AS (
-        SELECT 
-            r.id as recipe_id,
-            r.name as recipe_name,
-            COUNT(ri.item_id) as total_ingredients,
-            COUNT(CASE WHEN i.in_stock = TRUE THEN 1 END) as available_ingredients
-        FROM recipes r
-        JOIN recipe_items ri ON r.id = ri.recipe_id
-        JOIN items i ON ri.item_id = i.id
-        GROUP BY r.id, r.name
-    )
-    SELECT 
-        ric.recipe_id,
-        ric.recipe_name,
-        ric.total_ingredients,
-        ric.available_ingredients,
-        ROUND((ric.available_ingredients::NUMERIC / ric.total_ingredients::NUMERIC) * 100, 2) as availability_percentage
-    FROM recipe_ingredient_counts ric
-    WHERE ric.available_ingredients > 0
-    ORDER BY availability_percentage DESC, ric.recipe_name
-    LIMIT p_limit;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create RPC function for getting analytics data
 CREATE OR REPLACE FUNCTION get_analytics_data(
@@ -388,58 +366,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create RPC function for calculating recipe costs
-CREATE OR REPLACE FUNCTION calculate_recipe_cost(
-    p_recipe_id BIGINT
-) RETURNS NUMERIC AS $$
-DECLARE
-    v_total_cost NUMERIC(10,4) := 0;
-    v_cost_per_serving NUMERIC(10,2) := 0;
-    v_servings_count INT := 1;
-BEGIN
-    -- Calculate total cost from recipe ingredients
-    SELECT COALESCE(SUM(
-        ri.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-    ), 0) INTO v_total_cost
-    FROM recipe_items ri
-    JOIN items i ON ri.item_id = i.id
-    WHERE ri.recipe_id = p_recipe_id;
-
-    -- Get number of servings
-    SELECT COALESCE(servings, 1) INTO v_servings_count
-    FROM recipes
-    WHERE id = p_recipe_id;
-
-    -- Calculate cost per serving
-    v_cost_per_serving := v_total_cost / v_servings_count;
-
-    -- Update the recipe with calculated costs
-    UPDATE recipes 
-    SET 
-        total_cost = v_total_cost,
-        cost_per_serving = v_cost_per_serving,
-        cost_last_calculated = NOW()
-    WHERE id = p_recipe_id;
-
-    -- Update recipe_items with individual costs
-    UPDATE recipe_items 
-    SET 
-        cost_per_unit = (
-            SELECT COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-            FROM items i 
-            WHERE i.id = recipe_items.item_id
-        ),
-        total_cost = (
-            SELECT recipe_items.quantity * COALESCE(i.price, 0) / COALESCE(i.servings_per_container, 1)
-            FROM items i 
-            WHERE i.id = recipe_items.item_id
-        ),
-        cost_calculated_at = NOW()
-    WHERE recipe_id = p_recipe_id;
-
-    RETURN v_total_cost;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create RPC function for updating recipe statistics
 CREATE OR REPLACE FUNCTION update_recipe_stats(
@@ -575,6 +501,35 @@ CREATE TRIGGER trigger_tags_update_updated_at
     BEFORE UPDATE ON tags
     FOR EACH ROW
     EXECUTE FUNCTION trigger_update_tags_updated_at();
+
+-- Updated items trigger to maintain both updated_at and last_edited
+CREATE OR REPLACE FUNCTION trigger_update_items_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    NEW.last_edited = NOW(); -- Keep last_edited for backward compatibility
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_items_update_updated_at
+    BEFORE UPDATE ON items
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_items_updated_at();
+
+-- Recipe items trigger
+CREATE OR REPLACE FUNCTION trigger_update_recipe_items_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_recipe_items_update_updated_at
+    BEFORE UPDATE ON recipe_items
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_recipe_items_updated_at();
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { MealLog, DbMealLog } from '../types';
-import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/typeMappers';
+import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
 
 export function useMealLogs() {
@@ -88,15 +88,14 @@ export function useMealLogs() {
     }
   };
 
-  const updateMealLog = async (id: string, updatedData: Omit<MealLog, 'id'>) => {
+  const updateMealLog = async (id: number, updatedData: Omit<MealLog, 'id'>) => {
     try {
-      const numericId = parseInt(id);
       const dbMealLog = mealLogToDbInsert(updatedData);
       
       const { error } = await supabase
         .from('meal_logs')
         .update(dbMealLog)
-        .eq('id', numericId);
+        .eq('id', id);
       
       if (error) throw error;
       
@@ -109,13 +108,12 @@ export function useMealLogs() {
     }
   };
 
-  const deleteMealLog = async (id: string) => {
+  const deleteMealLog = async (id: number) => {
     try {
-      const numericId = parseInt(id);
       const { error } = await supabase
         .from('meal_logs')
         .delete()
-        .eq('id', numericId);
+        .eq('id', id);
       
       if (error) throw error;
       

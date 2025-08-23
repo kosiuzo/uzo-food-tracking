@@ -3,7 +3,7 @@ import { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, RecipeIngredien
 // Convert database item to FoodItem format
 export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
   return {
-    id: dbItem.id.toString(),
+    id: dbItem.id, // Now using number directly
     name: dbItem.name,
     brand: dbItem.brand || undefined,
     category: dbItem.category || 'Other',
@@ -27,7 +27,9 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     },
     last_purchased: dbItem.last_purchased || undefined,
     rating: dbItem.rating || undefined,
-    last_edited: dbItem.last_edited || new Date().toISOString(),
+    last_edited: dbItem.last_edited || dbItem.updated_at, // Use updated_at as fallback
+    created_at: dbItem.created_at,
+    updated_at: dbItem.updated_at,
   };
 }
 
@@ -55,6 +57,8 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     barcode: null,
     rating: item.rating || null,
     last_edited: item.last_edited,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
   };
 }
 
@@ -63,7 +67,7 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
   const nutrition = dbRecipe.nutrition_per_serving || {};
   
   return {
-    id: dbRecipe.id.toString(),
+    id: dbRecipe.id, // Now using number directly
     name: dbRecipe.name,
     instructions: dbRecipe.instructions || '',
     servings: dbRecipe.servings || 1,
@@ -82,6 +86,8 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     is_favorite: dbRecipe.is_favorite || false,
     notes: dbRecipe.notes || undefined,
     tags,
+    created_at: dbRecipe.created_at || new Date().toISOString(),
+    updated_at: dbRecipe.updated_at || new Date().toISOString(),
   };
 }
 
@@ -114,8 +120,8 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
   const macros = dbMealLog.macros || {};
   
   const mealLog = {
-    id: dbMealLog.id.toString(),
-    recipe_ids: dbMealLog.recipe_ids.map(id => id.toString()),
+    id: dbMealLog.id, // Now using number directly
+    recipe_ids: dbMealLog.recipe_ids, // Already numbers
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
     meal_name: dbMealLog.meal_name || 'Meal',
     notes: dbMealLog.notes || undefined,
@@ -126,6 +132,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
       fat: (macros.fat as number) || 0,
     },
     estimated_cost: dbMealLog.cost || 0,
+    created_at: dbMealLog.created_at || new Date().toISOString(),
   };
   
   console.log('Mapped meal log:', mealLog);
@@ -134,11 +141,9 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
 
 // Convert MealLog to database insert format
 export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog, 'id' | 'created_at'> {
-  // Only use the new recipe_ids array format
-  const recipeIdsArray = mealLog.recipe_ids.map(id => parseInt(id));
-  
+  // recipe_ids are already numbers in the updated type system
   return {
-    recipe_ids: recipeIdsArray,
+    recipe_ids: mealLog.recipe_ids,
     meal_name: mealLog.meal_name || null,
     cooked_at: mealLog.date,
     notes: mealLog.notes || null,
@@ -151,7 +156,7 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
 // Convert database tag to Tag format
 export function dbTagToTag(dbTag: DbTag): Tag {
   return {
-    id: dbTag.id.toString(),
+    id: dbTag.id, // Now using number directly
     name: dbTag.name,
     color: dbTag.color || '#3b82f6',
     description: dbTag.description || undefined,

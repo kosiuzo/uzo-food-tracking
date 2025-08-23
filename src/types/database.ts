@@ -27,6 +27,8 @@ export interface Database {
           last_edited: string | null
           normalized_name: string | null
           ingredients: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: never
@@ -53,6 +55,8 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: never
@@ -79,6 +83,8 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       recipes: {
@@ -158,6 +164,8 @@ export interface Database {
           cost_per_unit: number | null
           total_cost: number | null
           cost_calculated_at: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           recipe_id: number
@@ -167,6 +175,8 @@ export interface Database {
           cost_per_unit?: number | null
           total_cost?: number | null
           cost_calculated_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           recipe_id?: number
@@ -176,6 +186,8 @@ export interface Database {
           cost_per_unit?: number | null
           total_cost?: number | null
           cost_calculated_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       meal_logs: {

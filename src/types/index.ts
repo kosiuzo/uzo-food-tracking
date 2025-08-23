@@ -1,5 +1,5 @@
 export interface FoodItem {
-  id: string;
+  id: number; // Changed from string to match database
   name: string;
   brand?: string;
   category: string;
@@ -21,6 +21,8 @@ export interface FoodItem {
   last_purchased?: string;
   rating?: number;
   last_edited: string;
+  created_at: string; // Added for consistency
+  updated_at: string; // Added for consistency
 }
 
 // Database row type for items table
@@ -49,10 +51,12 @@ export interface DbItem {
   rating?: number | null;
   last_edited?: string | null;
   normalized_name?: string | null;
+  created_at: string; // Added new audit field
+  updated_at: string; // Added new audit field
 }
 
 export interface Recipe {
-  id: string;
+  id: number; // Changed from string to match database
   name: string;
   instructions: string;
   servings: number;
@@ -70,6 +74,8 @@ export interface Recipe {
   is_favorite?: boolean;
   notes?: string;
   tags?: Tag[]; // Normalized tags
+  created_at: string; // Added for consistency
+  updated_at: string; // Added for consistency
 }
 
 // Database row type for recipes table
@@ -97,17 +103,19 @@ export interface DbRecipe {
 }
 
 export interface RecipeIngredient {
-  item_id: string;
+  item_id: number; // Changed from string to match database
   quantity: number;
   unit: string;
   cost_per_unit?: number;
   total_cost?: number;
   cost_calculated_at?: string;
+  created_at?: string; // Added for consistency
+  updated_at?: string; // Added for consistency
 }
 
 export interface MealLog {
-  id: string;
-  recipe_ids: string[]; // Now supports multiple recipes
+  id: number; // Changed from string to match database
+  recipe_ids: number[]; // Changed from string[] to match database
   date: string;
   meal_name: string;
   notes?: string;
@@ -118,29 +126,36 @@ export interface MealLog {
     fat: number;
   };
   estimated_cost: number; // Now mandatory, derived from recipes
+  created_at: string; // Added for consistency
 }
 
 // New types for the reimagined meal planner
 export interface RecipeRotation {
-  id: string;
+  id: number; // Changed from string to match database
   name: string;
-  recipes: string[]; // Array of recipe IDs
+  recipes: number[]; // Changed from string[] to match database
   notes?: string;
+  created_at: string; // Added for consistency
+  updated_at: string; // Added for consistency
 }
 
 export interface MealPlanBlock {
-  id: string;
+  id: number; // Changed from string to match database
   name: string;
   startDay: number; // 0 = Monday, 1 = Tuesday, etc.
   endDay: number;
   rotations: RecipeRotation[];
-  snacks?: string[]; // Array of snack recipe IDs
+  snacks?: number[]; // Changed from string[] to match database
+  created_at: string; // Added for consistency
+  updated_at: string; // Added for consistency
 }
 
 export interface WeeklyMealPlan {
-  id: string;
+  id: number; // Changed from string to match database
   weekStart: string; // YYYY-MM-DD
   blocks: MealPlanBlock[];
+  created_at: string; // Added for consistency
+  updated_at: string; // Added for consistency
 }
 
 // Database row type for meal_logs table
@@ -158,7 +173,7 @@ export interface DbMealLog {
 
 // Tag types
 export interface Tag {
-  id: string;
+  id: number; // Changed from string to match database
   name: string;
   color: string;
   description?: string;

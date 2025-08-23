@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FoodItem, DbItem } from '../types';
-import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/typeMappers';
+import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
 import { mockFoodItems } from '../data/mockData';
 
 export function useFoodInventory() {
@@ -81,23 +81,28 @@ export function useFoodInventory() {
 
   const categories = Array.from(new Set(items.map(item => item.category)));
 
-  const addItem = async (item: Omit<FoodItem, 'id' | 'last_edited'>) => {
+  const addItem = async (item: Omit<FoodItem, 'id' | 'last_edited' | 'created_at' | 'updated_at'>) => {
     try {
       // If using mock data, add to local state only
       if (usingMockData) {
         const newItem: FoodItem = {
           ...item,
-          id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: Date.now(), // Now using number ID
           last_edited: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         setItems(prev => [...prev, newItem]);
         return newItem;
       }
 
       // Otherwise, try to add to Supabase
+      const now = new Date().toISOString();
       const dbItem = foodItemToDbInsert({
         ...item,
-        last_edited: new Date().toISOString(),
+        last_edited: now,
+        created_at: now,
+        updated_at: now,
       });
 
       const { data, error } = await supabase
@@ -127,10 +132,13 @@ export function useFoodInventory() {
 
       // For other errors, fall back to local mock mode
       console.warn('Add item failed, falling back to local mock mode:', err);
+      const now = new Date().toISOString();
       const newItem: FoodItem = {
         ...item,
-        id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        last_edited: new Date().toISOString(),
+        id: Date.now(), // Now using number ID
+        last_edited: now,
+        created_at: now,
+        updated_at: now,
       };
       setItems(prev => [...prev, newItem]);
       setUsingMockData(true);
@@ -138,21 +146,22 @@ export function useFoodInventory() {
     }
   };
 
-  const updateItem = async (id: string, updates: Partial<FoodItem>) => {
+  const updateItem = async (id: number, updates: Partial<FoodItem>) => {
     try {
       // If using mock data, update local state only
       if (usingMockData) {
+        const now = new Date().toISOString();
         setItems(prev => prev.map(item => 
           item.id === id 
-            ? { ...item, ...updates, last_edited: new Date().toISOString() }
+            ? { ...item, ...updates, last_edited: now, updated_at: now }
             : item
         ));
         return;
       }
 
       // Otherwise, try to update in Supabase
-      const numericId = parseInt(id);
       // Build update object, only including fields that are actually being updated
+      const now = new Date().toISOString();
       const updateData: Record<string, unknown> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.brand !== undefined) updateData.brand = updates.brand || null;
@@ -180,18 +189,19 @@ export function useFoodInventory() {
         if (updates.nutrition.fat_per_serving !== undefined) updateData.fat_per_serving = updates.nutrition.fat_per_serving;
         if (updates.nutrition.protein_per_serving !== undefined) updateData.protein_per_serving = updates.nutrition.protein_per_serving;
       }
-      updateData.last_edited = new Date().toISOString();
+      // Triggers will handle updated_at, but we set last_edited for backward compatibility
+      updateData.last_edited = now;
       
       const { error } = await supabase
         .from('items')
         .update(updateData)
-        .eq('id', numericId);
+        .eq('id', id);
 
       if (error) throw error;
 
       setItems(prev => prev.map(item => 
         item.id === id 
-          ? { ...item, ...updates, last_edited: new Date().toISOString() }
+          ? { ...item, ...updates, last_edited: now, updated_at: now }
           : item
       ));
     } catch (err) {
@@ -200,7 +210,7 @@ export function useFoodInventory() {
     }
   };
 
-  const deleteItem = async (id: string) => {
+  const deleteItem = async (id: number) => {
     try {
       // If using mock data, delete from local state only
       if (usingMockData) {
@@ -209,11 +219,10 @@ export function useFoodInventory() {
       }
 
       // Otherwise, try to delete from Supabase
-      const numericId = parseInt(id);
       const { error } = await supabase
         .from('items')
         .delete()
-        .eq('id', numericId);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -224,7 +233,7 @@ export function useFoodInventory() {
     }
   };
 
-  const toggleStock = async (id: string) => {
+  const toggleStock = async (id: number) => {
     const item = items.find(item => item.id === id);
     if (item) {
       await updateItem(id, { in_stock: !item.in_stock });

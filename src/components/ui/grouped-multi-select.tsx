@@ -153,6 +153,24 @@ export const GroupedMultiSelect = React.forwardRef<
       }
     }
 
+    const toggleGroup = (groupName: string) => {
+      const groupOptions = optionGroups[groupName]
+      const groupValues = groupOptions.map(option => option.value)
+      const allGroupSelected = groupValues.every(value => selectedValues.includes(value))
+      
+      if (allGroupSelected) {
+        // Deselect all items in this group
+        const newSelectedValues = selectedValues.filter(value => !groupValues.includes(value))
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
+      } else {
+        // Select all items in this group
+        const newSelectedValues = [...new Set([...selectedValues, ...groupValues])]
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
+      }
+    }
+
     const TriggerButton = (
       <Button
         ref={ref}
@@ -257,8 +275,32 @@ export const GroupedMultiSelect = React.forwardRef<
           </CommandGroup>
           {Object.entries(optionGroups)
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([groupName, options]) => (
+            .map(([groupName, options]) => {
+              const groupValues = options.map(option => option.value)
+              const allGroupSelected = groupValues.every(value => selectedValues.includes(value))
+              const someGroupSelected = groupValues.some(value => selectedValues.includes(value))
+              
+              return (
             <CommandGroup key={groupName} heading={groupName}>
+              <CommandItem
+                key={`${groupName}-select-all`}
+                onSelect={() => toggleGroup(groupName)}
+                className="cursor-pointer py-2 text-xs font-medium text-muted-foreground hover:text-foreground touch-manipulation"
+              >
+                <div
+                  className={cn(
+                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                    allGroupSelected
+                      ? "bg-primary text-primary-foreground"
+                      : someGroupSelected
+                      ? "bg-primary/50 text-primary-foreground"
+                      : "opacity-50 [&_svg]:invisible"
+                  )}
+                >
+                  <X className="h-3 w-3" />
+                </div>
+                <span className="italic">Select all {groupName.toLowerCase()}</span>
+              </CommandItem>
               {options.map((option) => {
                 const isSelected = selectedValues.includes(option.value)
                 return (
@@ -285,7 +327,8 @@ export const GroupedMultiSelect = React.forwardRef<
                 )
               })}
             </CommandGroup>
-          ))}
+              )
+            })}
         </CommandList>
       </Command>
     )

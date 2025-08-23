@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover"
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/lib/search"
 
 const multiSelectVariants = cva(
   "min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -102,12 +103,43 @@ export const GroupedMultiSelect = React.forwardRef<
     )
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
     const [isAnimating, setIsAnimating] = React.useState(false)
+    const [searchQuery, setSearchQuery] = React.useState("")
+    const debouncedSearchQuery = useDebounce(searchQuery, 300)
     const isDesktop = useMediaQuery("(min-width: 768px)")
 
     // Flatten options for easier lookups
     const allOptions = React.useMemo(() => {
       return Object.values(optionGroups).flat()
     }, [optionGroups])
+
+    // Filter groups and options based on search query
+    const filteredGroups = React.useMemo(() => {
+      if (!debouncedSearchQuery.trim()) {
+        return optionGroups
+      }
+      
+      const query = debouncedSearchQuery.toLowerCase()
+      const filtered: OptionGroup = {}
+      
+      Object.entries(optionGroups).forEach(([groupName, options]) => {
+        const filteredOptions = options.filter(option =>
+          option.label.toLowerCase().includes(query) ||
+          String(option.value).toLowerCase().includes(query) ||
+          groupName.toLowerCase().includes(query)
+        )
+        
+        if (filteredOptions.length > 0) {
+          filtered[groupName] = filteredOptions
+        }
+      })
+      
+      return filtered
+    }, [optionGroups, debouncedSearchQuery])
+
+    // Get all filtered options for global operations
+    const allFilteredOptions = React.useMemo(() => {
+      return Object.values(filteredGroups).flat()
+    }, [filteredGroups])
 
     React.useEffect(() => {
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
@@ -118,12 +150,16 @@ export const GroupedMultiSelect = React.forwardRef<
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true)
-      } else if (event.key === "Backspace" && !event.currentTarget.value) {
+      } else if (event.key === "Backspace" && !event.currentTarget.getAttribute('value')) {
         const newSelectedValues = [...selectedValues]
         newSelectedValues.pop()
         setSelectedValues(newSelectedValues)
         onValueChange(newSelectedValues)
       }
+    }
+
+    const handleSearchChange = (search: string) => {
+      setSearchQuery(search)
     }
 
     const toggleOption = (option: GroupedOption) => {
@@ -144,17 +180,25 @@ export const GroupedMultiSelect = React.forwardRef<
     }
 
     const toggleAll = () => {
-      if (selectedValues.length === allOptions.length) {
-        handleClear()
+      const filteredValues = allFilteredOptions.map(option => option.value)
+      const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
+      
+      if (allFilteredSelected) {
+        // Deselect all filtered options
+        const newSelectedValues = selectedValues.filter(value => !filteredValues.includes(value))
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
       } else {
-        const allValues = allOptions.map((option) => option.value)
-        setSelectedValues(allValues)
-        onValueChange(allValues)
+        // Select all filtered options
+        const newSelectedValues = [...new Set([...selectedValues, ...filteredValues])]
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
       }
     }
 
     const toggleGroup = (groupName: string) => {
-      const groupOptions = optionGroups[groupName]
+      // Use filtered group options if we're in search mode
+      const groupOptions = filteredGroups[groupName] || []
       const groupValues = groupOptions.map(option => option.value)
       const allGroupSelected = groupValues.every(value => selectedValues.includes(value))
       
@@ -245,35 +289,47 @@ export const GroupedMultiSelect = React.forwardRef<
       </Button>
     )
 
+    const filteredValues = allFilteredOptions.map(option => option.value)
+    const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
+    const someFilteredSelected = filteredValues.some(value => selectedValues.includes(value))
+
     const CommandContent = (
-      <Command className="w-full">
+      <Command className="w-full" shouldFilter={false}>
         <CommandInput
-          placeholder="Search ingredients..."
+          placeholder="Enhanced ingredient search..."
+          onValueChange={handleSearchChange}
+          value={searchQuery}
           onKeyDown={handleInputKeyDown}
           className="h-12 md:h-9"
         />
         <CommandList className="max-h-[300px] md:max-h-[200px]">
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>No ingredients found.</CommandEmpty>
           <CommandGroup>
-            <CommandItem
-              key="all"
-              onSelect={toggleAll}
-              className="cursor-pointer py-3 md:py-2 touch-manipulation"
-            >
-              <div
-                className={cn(
-                  "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                  selectedValues.length === allOptions.length
-                    ? "bg-primary text-primary-foreground"
-                    : "opacity-50 [&_svg]:invisible"
-                )}
+            {allFilteredOptions.length > 1 && (
+              <CommandItem
+                key="all"
+                onSelect={toggleAll}
+                className="cursor-pointer py-3 md:py-2 touch-manipulation"
               >
-                <X className="h-4 w-4" />
-              </div>
-              <span className="text-sm md:text-sm">(Select All)</span>
-            </CommandItem>
+                <div
+                  className={cn(
+                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                    allFilteredSelected
+                      ? "bg-primary text-primary-foreground"
+                      : someFilteredSelected
+                      ? "bg-primary/50 text-primary-foreground"
+                      : "opacity-50 [&_svg]:invisible"
+                  )}
+                >
+                  <X className="h-4 w-4" />
+                </div>
+                <span className="text-sm md:text-sm">
+                  {searchQuery ? `(Select All ${allFilteredOptions.length} filtered)` : "(Select All)"}
+                </span>
+              </CommandItem>
+            )}
           </CommandGroup>
-          {Object.entries(optionGroups)
+          {Object.entries(filteredGroups)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([groupName, options]) => {
               const groupValues = options.map(option => option.value)
@@ -281,7 +337,7 @@ export const GroupedMultiSelect = React.forwardRef<
               const someGroupSelected = groupValues.some(value => selectedValues.includes(value))
               
               return (
-            <CommandGroup key={groupName} heading={groupName}>
+            <CommandGroup key={groupName} heading={`${groupName}${searchQuery ? ` (${options.length})` : ''}`}>
               <CommandItem
                 key={`${groupName}-select-all`}
                 onSelect={() => toggleGroup(groupName)}
@@ -299,7 +355,10 @@ export const GroupedMultiSelect = React.forwardRef<
                 >
                   <X className="h-3 w-3" />
                 </div>
-                <span className="italic">Select all {groupName.toLowerCase()}</span>
+                <span className="italic">
+                  Select all {groupName.toLowerCase()} 
+                  {searchQuery && ` (${options.length})`}
+                </span>
               </CommandItem>
               {options.map((option) => {
                 const isSelected = selectedValues.includes(option.value)

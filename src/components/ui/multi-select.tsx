@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover"
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/lib/search"
 
 const multiSelectVariants = cva(
   "min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -98,23 +99,41 @@ export const MultiSelect = React.forwardRef<
     )
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
     const [isAnimating, setIsAnimating] = React.useState(false)
+    const [searchQuery, setSearchQuery] = React.useState("")
+    const debouncedSearchQuery = useDebounce(searchQuery, 300)
     const isDesktop = useMediaQuery("(min-width: 768px)")
+
+    // Filter options based on search query
+    const filteredOptions = React.useMemo(() => {
+      if (!debouncedSearchQuery.trim()) {
+        return options
+      }
+      const query = debouncedSearchQuery.toLowerCase()
+      return options.filter(option => 
+        option.label.toLowerCase().includes(query) ||
+        String(option.value).toLowerCase().includes(query)
+      )
+    }, [options, debouncedSearchQuery])
 
     React.useEffect(() => {
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
         setSelectedValues(defaultValue || [])
       }
-    }, [defaultValue])
+    }, [defaultValue, selectedValues])
 
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true)
-      } else if (event.key === "Backspace" && !event.currentTarget.value) {
+      } else if (event.key === "Backspace" && !event.currentTarget.getAttribute('value')) {
         const newSelectedValues = [...selectedValues]
         newSelectedValues.pop()
         setSelectedValues(newSelectedValues)
         onValueChange(newSelectedValues)
       }
+    }
+
+    const handleSearchChange = (search: string) => {
+      setSearchQuery(search)
     }
 
     const toggleOption = (option: Option) => {
@@ -135,12 +154,19 @@ export const MultiSelect = React.forwardRef<
     }
 
     const toggleAll = () => {
-      if (selectedValues.length === options.length) {
-        handleClear()
+      const filteredValues = filteredOptions.map(option => option.value)
+      const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
+      
+      if (allFilteredSelected) {
+        // Deselect all filtered options
+        const newSelectedValues = selectedValues.filter(value => !filteredValues.includes(value))
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
       } else {
-        const allValues = options.map((option) => option.value)
-        setSelectedValues(allValues)
-        onValueChange(allValues)
+        // Select all filtered options
+        const newSelectedValues = [...new Set([...selectedValues, ...filteredValues])]
+        setSelectedValues(newSelectedValues)
+        onValueChange(newSelectedValues)
       }
     }
 
@@ -218,34 +244,46 @@ export const MultiSelect = React.forwardRef<
       </Button>
     )
 
+    const filteredValues = filteredOptions.map(option => option.value)
+    const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
+    const someFilteredSelected = filteredValues.some(value => selectedValues.includes(value))
+
     const CommandContent = (
-      <Command className="w-full">
+      <Command className="w-full" shouldFilter={false}>
         <CommandInput
-          placeholder="Search..."
+          placeholder="Enhanced search..."
+          onValueChange={handleSearchChange}
+          value={searchQuery}
           onKeyDown={handleInputKeyDown}
           className="h-12 md:h-9"
         />
         <CommandList className="max-h-[300px] md:max-h-[200px]">
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup>
-            <CommandItem
-              key="all"
-              onSelect={toggleAll}
-              className="cursor-pointer py-3 md:py-2 touch-manipulation"
-            >
-              <div
-                className={cn(
-                  "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                  selectedValues.length === options.length
-                    ? "bg-primary text-primary-foreground"
-                    : "opacity-50 [&_svg]:invisible"
-                )}
+            {filteredOptions.length > 1 && (
+              <CommandItem
+                key="all"
+                onSelect={toggleAll}
+                className="cursor-pointer py-3 md:py-2 touch-manipulation"
               >
-                <X className="h-4 w-4" />
-              </div>
-              <span className="text-sm md:text-sm">(Select All)</span>
-            </CommandItem>
-            {options.map((option) => {
+                <div
+                  className={cn(
+                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                    allFilteredSelected
+                      ? "bg-primary text-primary-foreground"
+                      : someFilteredSelected
+                      ? "bg-primary/50 text-primary-foreground"
+                      : "opacity-50 [&_svg]:invisible"
+                  )}
+                >
+                  <X className="h-4 w-4" />
+                </div>
+                <span className="text-sm md:text-sm">
+                  {searchQuery ? `(Select All ${filteredOptions.length} filtered)` : "(Select All)"}
+                </span>
+              </CommandItem>
+            )}
+            {filteredOptions.map((option) => {
               const isSelected = selectedValues.includes(option.value)
               return (
                 <CommandItem

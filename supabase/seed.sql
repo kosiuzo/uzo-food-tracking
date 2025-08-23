@@ -103,7 +103,7 @@ INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
 ('stir-fry', '#f97316', 'Stir-fry dishes', NOW(), NOW());
 
 -- Insert recipes from Recipes.md
-INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total_time, servings, instructions, notes, nutrition_per_serving, created_at, updated_at) VALUES
+INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total_time, servings, instructions, notes, nutrition_per_serving, is_favorite, created_at, updated_at) VALUES
 ('Tzatziki', 'Greek', 'easy', 15, 0, 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
 
 2. Combine ingredients: Return the drained cucumber to the food processor. Add the Greek yogurt, minced garlic, olive oil, lemon juice, dill, and a pinch of salt and black pepper.
@@ -112,12 +112,12 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 4. Taste and adjust: Taste the mixture and adjust seasoning as needed. Add more lemon juice, dill, or salt to suit your preferences.
 
-5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', NOW(), NOW()),
+5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', true, NOW(), NOW()),
 ('Coconut Aminos Sauce', 'Asian', 'easy', 5, 3, 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
 
 2. Heat and simmer: Bring the mixture to a simmer over medium heat. Let it simmer for 2-3 minutes, or until the flavors have combined and the sauce has thickened slightly.
 
-3. Cool and use: Remove from heat and let cool slightly before using.', 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', NOW(), NOW()),
+3. Cool and use: Remove from heat and let cool slightly before using.', 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', false, NOW(), NOW()),
 ('Paleo Pineapple Fried Rice with Chicken Breast', 'Asian', 'medium', 15, 20, 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
 
 2. Cook the chicken: Heat the remaining avocado oil in the same skillet over medium-high heat. Add the diced chicken and cook for 5-7 minutes, or until golden brown and cooked through. Remove the chicken from the pan and set aside.
@@ -130,7 +130,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Combine everything: Add the cooked cauliflower rice, chicken, coconut aminos, and cashews (if using) back to the pan. Stir-fry for 2-3 minutes, or until everything is heated through.
 
-7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', '{"calories": 285, "protein": 24, "carbs": 18, "fat": 12}', NOW(), NOW()),
+7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', '{"calories": 285, "protein": 24, "carbs": 18, "fat": 12}', true, NOW(), NOW()),
 ('Bacon Brussels Sprouts', 'American', 'easy', 10, 30, 40, 4, '1. Preheat oven to 400°F (200°C).
 
 2. Prepare sprouts: Trim the stem end of each Brussels sprout. Remove loose or yellow leaves. Cut each sprout in half lengthwise (through the stem). Quarter large ones.
@@ -139,7 +139,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 4. Roast: Spread on a parchment-lined baking sheet in a single layer, cut side down. Roast for 25–30 minutes, flipping halfway, until Brussels are golden and bacon is crisp.
 
-5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', '{"calories": 165, "protein": 8, "carbs": 12, "fat": 11}', NOW(), NOW()),
+5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', '{"calories": 165, "protein": 8, "carbs": 12, "fat": 11}', false, NOW(), NOW()),
 ('Paleo Banana Almond Flour Protein Waffles', 'American', 'medium', 15, 20, 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
 
 2. In a large bowl, mash the bananas or blend them until smooth.
@@ -152,7 +152,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Pour ~1/3–1/2 cup of batter per waffle and cook for 3–5 min or until golden brown.
 
-7. Serve hot or store for later!', 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', NOW(), NOW());
+7. Serve hot or store for later!', 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', true, NOW(), NOW());
 
 -- Insert recipe_tags relationships
 INSERT INTO recipe_tags (recipe_id, tag_id, created_at) VALUES
@@ -239,7 +239,8 @@ INSERT INTO meal_logs (recipe_ids, meal_name, cooked_at, notes, rating, macros, 
 (ARRAY[2], 'Coconut Aminos Sauce', '2024-01-14', 'Delicious sauce, perfect for stir-fries', 4.8, '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', 9.09, NOW()),
 (ARRAY[3], 'Paleo Pineapple Fried Rice with Chicken Breast', '2024-01-13', 'Amazing paleo fried rice! Love the pineapple addition.', 4.7, '{"calories": 320, "protein": 28, "carbs": 15, "fat": 18}', 34.71, NOW()),
 (ARRAY[4], 'Bacon Brussels Sprouts', '2024-01-12', 'Crispy Brussels sprouts with bacon - amazing!', 4.6, '{"calories": 180, "protein": 8, "carbs": 12, "fat": 12}', 8.74, NOW()),
-(ARRAY[5], 'Paleo Banana Almond Flour Protein Waffles', '2024-01-11', 'Perfect paleo waffles, great texture and flavor!', 4.8, '{"calories": 280, "protein": 12, "carbs": 18, "fat": 20}', 9.39, NOW());
+(ARRAY[5], 'Paleo Banana Almond Flour Protein Waffles', '2024-01-11', 'Perfect paleo waffles, great texture and flavor!', 4.8, '{"calories": 280, "protein": 12, "carbs": 18, "fat": 20}', 9.39, NOW()),
+(ARRAY[1], 'Tzatziki', '2025-08-22', 'Perfect creamy tzatziki! Great with grilled chicken.', 4.5, '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', 7.39, NOW());
 
 -- Insert sample weekly meal plan
 INSERT INTO weekly_meal_plans (week_start, created_at) VALUES

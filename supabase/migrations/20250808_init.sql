@@ -73,14 +73,13 @@ CREATE TABLE recipes (
     servings INT,
     instructions TEXT,
     nutrition_per_serving JSONB,
-    rating NUMERIC(2,1),
+    is_favorite BOOLEAN DEFAULT FALSE,
     source_link TEXT,
     cost_per_serving NUMERIC(10,2),
     total_cost NUMERIC(10,4),
     cost_last_calculated TIMESTAMP,
     notes TEXT,
     times_cooked INT DEFAULT 0,
-    average_rating NUMERIC(2,1),
     last_cooked TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -453,11 +452,6 @@ BEGIN
             SELECT COUNT(*) 
             FROM meal_logs 
             WHERE p_recipe_id = ANY(recipe_ids)
-        ),
-        average_rating = (
-            SELECT AVG(rating) 
-            FROM meal_logs 
-            WHERE p_recipe_id = ANY(recipe_ids) AND rating IS NOT NULL
         ),
         last_cooked = (
             SELECT MAX(cooked_at) 

@@ -179,7 +179,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe> & { selectedTag
           servings: updatesWithoutTags.servings,
           total_time: updatesWithoutTags.total_time_minutes,
           nutrition_per_serving: nutritionToSave,
-          rating: updatesWithoutTags.is_favorite ? 5 : null,
+          is_favorite: updatesWithoutTags.is_favorite || false,
           notes: updatesWithoutTags.notes || null,
         })
         .eq('id', numericId);

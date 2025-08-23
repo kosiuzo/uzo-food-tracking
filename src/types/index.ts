@@ -84,14 +84,13 @@ export interface DbRecipe {
   servings?: number | null;
   instructions?: string | null;
   nutrition_per_serving?: Record<string, unknown> | null;
-  rating?: number | null;
+  is_favorite?: boolean | null;
   source_link?: string | null;
   cost_per_serving?: number | null;
   total_cost?: number | null;
   cost_last_calculated?: string | null;
   notes?: string | null;
   times_cooked?: number | null;
-  average_rating?: number | null;
   last_cooked?: string | null;
   created_at?: string | null;
   updated_at?: string | null;

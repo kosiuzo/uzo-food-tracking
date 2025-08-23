@@ -1,4 +1,4 @@
-import { TrendingUp, DollarSign, Target, Calendar } from 'lucide-react';
+import { TrendingUp, Target, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,6 @@ export default function Analytics() {
   // Calculate averages
   const totalMeals = recentLogs.length;
   const avgCalories = totalMeals > 0 ? Math.round(recentLogs.reduce((sum, log) => sum + log.nutrition.calories, 0) / totalMeals) : 0;
-  const avgCost = totalMeals > 0 ? recentLogs.reduce((sum, log) => sum + (log.estimated_cost || 0), 0) / totalMeals : 0;
-  const totalCost = recentLogs.reduce((sum, log) => sum + (log.estimated_cost || 0), 0);
 
   // Nutrition totals for the week
   const weeklyNutrition = recentLogs.reduce(
@@ -139,24 +137,6 @@ export default function Analytics() {
           </Card>
         </div>
 
-        {/* Cost Analysis */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Cost Analysis
-          </h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">${totalCost.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Weekly Total</div>
-            </Card>
-            <Card className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600">${avgCost.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Avg per Meal</div>
-            </Card>
-          </div>
-        </div>
 
         {/* Inventory Insights */}
         <div className="space-y-4">

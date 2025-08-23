@@ -114,12 +114,6 @@ export default function Recipes() {
               <Bot className="h-4 w-4" />
               Generate Recipe with AI
             </Button>
-            <Link to="/meal-prep-generator">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Utensils className="h-4 w-4" />
-                Meal Prep
-              </Button>
-            </Link>
           </div>
         </div>
 

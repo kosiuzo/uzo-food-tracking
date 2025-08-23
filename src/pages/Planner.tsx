@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { useMealPlan } from '../hooks/useMealPlan';
 import { useRecipes } from '../hooks/useRecipes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ChefHat, RotateCcw } from 'lucide-react';
+import { Plus, ChefHat, RotateCcw, Utensils } from 'lucide-react';
 import { AddEditMealPlanBlockDialog } from '../components/AddEditMealPlanBlockDialog';
 import { MealPlanBlockCard } from '../components/MealPlanBlockCard';
 import { WeeklyMealPlanOverview } from '../components/WeeklyMealPlanOverview';
@@ -109,10 +110,18 @@ const Planner = () => {
               Plan your weekly meals with recipe rotations and day ranges
             </p>
           </div>
-          <Button onClick={() => setShowAddDialog(true)} className="flex items-center gap-2 w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
-            Add Meal Block
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={() => setShowAddDialog(true)} className="flex items-center gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              Add Meal Block
+            </Button>
+            <Link to="/meal-prep-generator">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                Generate Meal Prep
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {/* Mock Data Indicator */}

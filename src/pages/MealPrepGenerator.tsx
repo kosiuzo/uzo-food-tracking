@@ -689,8 +689,8 @@ Rules:
       setMeatRecipeOptions([]);
       setExpandedRecipes(new Set());
       
-      // Navigate back to recipes page
-      navigate('/recipes');
+      // Navigate back to planner page
+      navigate('/planner');
       
     } catch (error) {
       console.error('Error saving recipes:', error);

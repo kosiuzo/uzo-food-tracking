@@ -5,31 +5,31 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
   return {
     id: dbItem.id, // Now using number directly
     name: dbItem.name,
-    brand: dbItem.brand || undefined,
-    category: dbItem.category || 'Other',
+    brand: dbItem.brand ?? undefined,
+    category: dbItem.category ?? 'Other',
     in_stock: dbItem.in_stock ?? true,
     price: dbItem.price !== null ? Number(dbItem.price) : undefined,
-    serving_size: dbItem.serving_size_grams || 100,
-    serving_quantity: dbItem.serving_quantity || undefined,
-    serving_unit: dbItem.serving_unit || undefined,
-    serving_unit_type: dbItem.serving_unit_type || undefined,
-    image_url: dbItem.image_url || undefined,
-    ingredients: dbItem.ingredients || undefined,
+    serving_size: dbItem.serving_size_grams ?? 100,
+    serving_quantity: dbItem.serving_quantity ?? undefined,
+    serving_unit: dbItem.serving_unit ?? undefined,
+    serving_unit_type: dbItem.serving_unit_type ?? undefined,
+    image_url: dbItem.image_url ?? undefined,
+    ingredients: dbItem.ingredients ?? undefined,
     nutrition: {
-      calories_per_serving: dbItem.calories_per_serving || 
-        Math.round(((dbItem.protein_per_serving || 0) * 4 + 
-                   (dbItem.carbs_per_serving || 0) * 4 + 
-                   (dbItem.fat_per_serving || 0) * 9) * 10) / 10,
-      protein_per_serving: dbItem.protein_per_serving || 0,
-      carbs_per_serving: dbItem.carbs_per_serving || 0,
-      fat_per_serving: dbItem.fat_per_serving || 0,
+      calories_per_serving: dbItem.calories_per_serving ?? 
+        Math.round(((dbItem.protein_per_serving ?? 0) * 4 + 
+                   (dbItem.carbs_per_serving ?? 0) * 4 + 
+                   (dbItem.fat_per_serving ?? 0) * 9) * 10) / 10,
+      protein_per_serving: dbItem.protein_per_serving ?? 0,
+      carbs_per_serving: dbItem.carbs_per_serving ?? 0,
+      fat_per_serving: dbItem.fat_per_serving ?? 0,
       fiber_per_serving: 0, // Not in database schema
     },
-    last_purchased: dbItem.last_purchased || undefined,
-    rating: dbItem.rating || undefined,
-    last_edited: dbItem.last_edited || dbItem.updated_at, // Use updated_at as fallback
-    created_at: dbItem.created_at,
-    updated_at: dbItem.updated_at,
+    last_purchased: dbItem.last_purchased ?? undefined,
+    rating: dbItem.rating ?? undefined,
+    last_edited: dbItem.last_edited ?? dbItem.updated_at ?? undefined, // Use updated_at as fallback
+    created_at: dbItem.created_at ?? undefined,
+    updated_at: dbItem.updated_at ?? undefined,
   };
 }
 

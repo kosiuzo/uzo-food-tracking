@@ -1,0 +1,64 @@
+# Page snapshot
+
+```yaml
+- region "Notifications (F8)":
+  - list
+- region "Notifications alt+T"
+- banner:
+  - heading "Food Tracker" [level=1]
+  - button "Search... ⌘ K":
+    - img
+    - text: Search... ⌘ K
+- main:
+  - heading "Recipes" [level=1]
+  - paragraph: Manage your recipes and favorites
+  - button "Generate Recipe with AI":
+    - img
+    - text: Generate Recipe with AI
+  - text: 1 Total Recipes 0 Favorites
+  - img
+  - textbox "Search recipes by name, instructions, or ingredients..."
+  - text: "Filter by tags:"
+  - button "Select tags to filter...":
+    - text: Select tags to filter...
+    - img
+  - switch "Favorites only"
+  - text: Favorites only
+  - heading "Tzatziki" [level=3]
+  - img
+  - text: 8 servings
+  - img
+  - text: 15 min
+  - button "Toggle favorite":
+    - img
+  - button:
+    - img
+  - button:
+    - img
+  - button:
+    - img
+  - text: "0.0 cal P: 0.0g C: 0.0g F: 0.0g"
+  - paragraph: Ingredients (0)
+  - button:
+    - img
+- navigation:
+  - link "Inventory":
+    - /url: /
+    - img
+    - text: Inventory
+  - link "Recipes":
+    - /url: /recipes
+    - img
+    - text: Recipes
+  - link "Log":
+    - /url: /meals
+    - img
+    - text: Log
+  - link "Planner":
+    - /url: /planner
+    - img
+    - text: Planner
+  - button "More":
+    - img
+    - text: More
+```

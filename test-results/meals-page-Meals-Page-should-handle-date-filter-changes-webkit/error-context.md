@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- region "Notifications (F8)":
+  - list
+- region "Notifications alt+T"
+- banner:
+  - heading "Food Tracker" [level=1]
+  - button "Search... ⌘ K":
+    - img
+    - text: Search... ⌘ K
+- main:
+  - heading "Meal Log" [level=1]
+  - paragraph: Track your daily meals and nutrition
+  - img
+  - text: "Filter by Date:"
+  - textbox "Filter by Date:"
+  - button "Clear Filter"
+  - text: "Quick select:"
+  - button "Today"
+  - button "Yesterday"
+  - button "This Week"
+  - button "Last Week"
+  - text: 0 Meals 8/23/2025 - 8/29/2025 0.0 Calories 8/23/2025 - 8/29/2025
+  - heading "Meals 8/23/2025 - 8/29/2025" [level=2]
+  - img
+  - paragraph: No meals logged 8/23/2025 - 8/29/2025
+  - button:
+    - img
+- navigation:
+  - link "Inventory":
+    - /url: /
+    - img
+    - text: Inventory
+  - link "Recipes":
+    - /url: /recipes
+    - img
+    - text: Recipes
+  - link "Log":
+    - /url: /meals
+    - img
+    - text: Log
+  - link "Planner":
+    - /url: /planner
+    - img
+    - text: Planner
+  - button "More":
+    - img
+    - text: More
+```

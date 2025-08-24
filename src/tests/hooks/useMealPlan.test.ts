@@ -31,7 +31,7 @@ describe('useMealPlan', () => {
     });
     
     const newBlock = {
-      name: 'Test Block',
+      name: '', // Name will be auto-generated
       startDay: 0,
       endDay: 2,
       rotations: [
@@ -64,12 +64,13 @@ describe('useMealPlan', () => {
     expect(blockId).toBeDefined();
 
     await act(async () => {
-      await result.current.updateMealPlanBlock(blockId!, { name: 'Updated Block Name' });
+      await result.current.updateMealPlanBlock(blockId!, { startDay: 1, endDay: 3 });
     });
 
-    // With mock data, the block name should remain unchanged since database operations fail gracefully
+    // With mock data, the block should remain unchanged since database operations fail gracefully
     const updatedBlock = result.current.weeklyPlan?.blocks.find(b => b.id === blockId);
-    expect(updatedBlock?.name).toBe('Mon-Wed Block'); // Original mock name
+    expect(updatedBlock?.startDay).toBe(0); // Original mock start day
+    expect(updatedBlock?.endDay).toBe(2); // Original mock end day
   });
 
   it('should delete a meal plan block', async () => {
@@ -184,5 +185,18 @@ describe('useMealPlan', () => {
     expect(result.current.getDayRange(0, 2)).toBe('Monday - Wednesday');
     expect(result.current.getDayRange(3, 5)).toBe('Thursday - Saturday');
     expect(result.current.getDayRange(1, 1)).toBe('Tuesday');
+  });
+
+  it('should use auto-generated block names in mock data', async () => {
+    const { result } = renderHook(() => useMealPlan());
+    
+    // Wait for initial load to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    
+    expect(result.current.weeklyPlan?.blocks).toBeDefined();
+    expect(result.current.weeklyPlan?.blocks[0]?.name).toBe('block_1_2024-01-01');
+    expect(result.current.weeklyPlan?.blocks[1]?.name).toBe('block_2_2024-01-01');
   });
 });

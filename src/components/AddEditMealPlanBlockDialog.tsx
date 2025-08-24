@@ -45,7 +45,6 @@ export function AddEditMealPlanBlockDialog({
   allRecipes,
   isEdit = false,
 }: AddEditMealPlanBlockDialogProps) {
-  const [name, setName] = useState('');
   const [startDay, setStartDay] = useState(0);
   const [endDay, setEndDay] = useState(2);
   const [rotations, setRotations] = useState<Omit<RecipeRotation, 'id'>[]>([]);
@@ -53,14 +52,12 @@ export function AddEditMealPlanBlockDialog({
 
   useEffect(() => {
     if (block && isEdit) {
-      setName(block.name);
       setStartDay(block.startDay);
       setEndDay(block.endDay);
       setRotations(block.rotations.map(({ id, ...rotation }) => rotation));
       setSnacks(block.snacks || []);
     } else {
       // Reset form for new block
-      setName('');
       setStartDay(0);
       setEndDay(2);
       setRotations([
@@ -72,10 +69,8 @@ export function AddEditMealPlanBlockDialog({
   }, [block, isEdit, open]);
 
   const handleSave = () => {
-    if (!name.trim()) return;
-
     const blockData: Omit<MealPlanBlock, 'id'> = {
-      name: name.trim(),
+      name: '', // Name will be auto-generated
       startDay,
       endDay,
       rotations: rotations.filter(r => r.name.trim() && r.recipes.length > 0),
@@ -140,18 +135,21 @@ export function AddEditMealPlanBlockDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Show current block name when editing */}
+          {isEdit && block && (
             <div className="space-y-2">
-              <Label htmlFor="name">Block Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Mon-Wed Block"
-                className="h-11 sm:h-10"
-              />
+              <Label className="text-sm font-medium text-muted-foreground">Block Name</Label>
+              <div className="px-3 py-2 bg-muted rounded-md text-sm font-mono">
+                {block.name}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Block names are automatically generated and cannot be changed
+              </p>
             </div>
+          )}
+
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDay">Start Day</Label>
               <select
@@ -259,7 +257,7 @@ export function AddEditMealPlanBlockDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!name.trim()} className="w-full sm:w-auto">
+          <Button onClick={handleSave} className="w-full sm:w-auto">
             {isEdit ? 'Update Block' : 'Create Block'}
           </Button>
         </DialogFooter>

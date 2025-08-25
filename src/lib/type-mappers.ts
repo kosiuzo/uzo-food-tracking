@@ -70,7 +70,11 @@ export function foodItemToDbInsert(item: Partial<FoodItem>): Database['public'][
 /**
  * Convert database recipe row to application Recipe
  */
-export function dbRecipeToRecipe(dbRecipe: DbRecipeRow): Recipe {
+export function dbRecipeToRecipe(
+  dbRecipe: DbRecipeRow, 
+  ingredients: Array<{item_id: number, quantity: number, unit: string}> = [], 
+  tags: Tag[] = []
+): Recipe {
   const nutrition = (dbRecipe.nutrition_per_serving as Record<string, number>) || {};
   
   return {
@@ -79,19 +83,19 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipeRow): Recipe {
     instructions: dbRecipe.instructions || '',
     servings: dbRecipe.servings || 1,
     total_time_minutes: dbRecipe.total_time || undefined,
-    ingredients: [], // Note: ingredients need to be loaded separately from recipe_items
+    ingredients: ingredients,
     nutrition: {
-      calories_per_serving: nutrition.calories || 0,
-      protein_per_serving: nutrition.protein || 0,
-      carbs_per_serving: nutrition.carbs || 0,
-      fat_per_serving: nutrition.fat || 0,
+      calories_per_serving: nutrition.calories_per_serving || nutrition.calories || 0,
+      protein_per_serving: nutrition.protein_per_serving || nutrition.protein || 0,
+      carbs_per_serving: nutrition.carbs_per_serving || nutrition.carbs || 0,
+      fat_per_serving: nutrition.fat_per_serving || nutrition.fat || 0,
     },
     cost_per_serving: dbRecipe.cost_per_serving || undefined,
     total_cost: dbRecipe.total_cost || undefined,
     cost_last_calculated: dbRecipe.cost_last_calculated || undefined,
     is_favorite: dbRecipe.is_favorite || false,
     notes: dbRecipe.notes || undefined,
-    tags: [], // Note: tags need to be loaded separately from recipe_tags
+    tags: tags,
     created_at: dbRecipe.created_at || new Date().toISOString(),
     updated_at: dbRecipe.updated_at || new Date().toISOString(),
   };

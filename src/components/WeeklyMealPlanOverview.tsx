@@ -14,6 +14,17 @@ export function WeeklyMealPlanOverview({
   allRecipes,
   getDayName,
 }: WeeklyMealPlanOverviewProps) {
+  // Helper function to format week date for display
+  const formatWeekDisplay = (weekStart: string) => {
+    const date = new Date(weekStart);
+    const endDate = new Date(date);
+    endDate.setDate(date.getDate() + 6);
+    
+    const startFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endFormatted = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    return `${startFormatted} - ${endFormatted}`;
+  };
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const getRecipeName = (recipeId: string) => {
@@ -58,6 +69,9 @@ export function WeeklyMealPlanOverview({
           <ChefHat className="h-5 w-5 text-primary" />
           Weekly Meal Plan Overview
         </CardTitle>
+        <div className="text-sm text-muted-foreground">
+          {formatWeekDisplay(weeklyPlan.weekStart)}
+        </div>
       </CardHeader>
       <CardContent>
         {/* Mobile: Stacked layout */}

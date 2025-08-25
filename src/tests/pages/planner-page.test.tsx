@@ -17,18 +17,30 @@ describe('Planner Page', () => {
     // Set default mock return values
     vi.mocked(useMealPlanModule.useMealPlan).mockReturnValue({
       weeklyPlan: {
+        id: 1,
+        weekStart: '2024-01-15',
         blocks: [],
-        startDate: '2024-01-15',
-        endDate: '2024-01-21',
+        created_at: '2024-01-15',
+        updated_at: '2024-01-15',
       },
+      currentWeekStart: '2024-01-15',
+      availableWeeks: ['2024-01-15', '2024-01-08', '2024-01-22'],
       loading: false,
       error: null,
       usingMockData: false,
       createMealPlanBlock: vi.fn(),
       updateMealPlanBlock: vi.fn(),
       deleteMealPlanBlock: vi.fn(),
+      addRotationToBlock: vi.fn(),
+      updateRotation: vi.fn(),
+      deleteRotation: vi.fn(),
       getDayName: vi.fn(),
       getDayRange: vi.fn(),
+      refreshPlan: vi.fn(),
+      navigateToWeek: vi.fn(),
+      navigateToPreviousWeek: vi.fn(),
+      navigateToNextWeek: vi.fn(),
+      loadAvailableWeeks: vi.fn(),
     });
 
     vi.mocked(useRecipesModule.useRecipes).mockReturnValue({
@@ -66,14 +78,24 @@ describe('Planner Page', () => {
   it('handles loading state', () => {
     vi.mocked(useMealPlanModule.useMealPlan).mockReturnValue({
       weeklyPlan: null,
+      currentWeekStart: '',
+      availableWeeks: [],
       loading: true,
       error: null,
       usingMockData: false,
       createMealPlanBlock: vi.fn(),
       updateMealPlanBlock: vi.fn(),
       deleteMealPlanBlock: vi.fn(),
+      addRotationToBlock: vi.fn(),
+      updateRotation: vi.fn(),
+      deleteRotation: vi.fn(),
       getDayName: vi.fn(),
       getDayRange: vi.fn(),
+      refreshPlan: vi.fn(),
+      navigateToWeek: vi.fn(),
+      navigateToPreviousWeek: vi.fn(),
+      navigateToNextWeek: vi.fn(),
+      loadAvailableWeeks: vi.fn(),
     });
 
     renderWithProviders(<Planner />);
@@ -84,14 +106,24 @@ describe('Planner Page', () => {
   it('handles error state', () => {
     vi.mocked(useMealPlanModule.useMealPlan).mockReturnValue({
       weeklyPlan: null,
+      currentWeekStart: '',
+      availableWeeks: [],
       loading: false,
       error: 'Failed to load meal plan',
       usingMockData: false,
       createMealPlanBlock: vi.fn(),
       updateMealPlanBlock: vi.fn(),
       deleteMealPlanBlock: vi.fn(),
+      addRotationToBlock: vi.fn(),
+      updateRotation: vi.fn(),
+      deleteRotation: vi.fn(),
       getDayName: vi.fn(),
       getDayRange: vi.fn(),
+      refreshPlan: vi.fn(),
+      navigateToWeek: vi.fn(),
+      navigateToPreviousWeek: vi.fn(),
+      navigateToNextWeek: vi.fn(),
+      loadAvailableWeeks: vi.fn(),
     });
 
     renderWithProviders(<Planner />);
@@ -103,14 +135,24 @@ describe('Planner Page', () => {
   it('shows no meal plan message when weeklyPlan is null', () => {
     vi.mocked(useMealPlanModule.useMealPlan).mockReturnValue({
       weeklyPlan: null,
+      currentWeekStart: '',
+      availableWeeks: [],
       loading: false,
       error: null,
       usingMockData: false,
       createMealPlanBlock: vi.fn(),
       updateMealPlanBlock: vi.fn(),
       deleteMealPlanBlock: vi.fn(),
+      addRotationToBlock: vi.fn(),
+      updateRotation: vi.fn(),
+      deleteRotation: vi.fn(),
       getDayName: vi.fn(),
       getDayRange: vi.fn(),
+      refreshPlan: vi.fn(),
+      navigateToWeek: vi.fn(),
+      navigateToPreviousWeek: vi.fn(),
+      navigateToNextWeek: vi.fn(),
+      loadAvailableWeeks: vi.fn(),
     });
 
     renderWithProviders(<Planner />);

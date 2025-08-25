@@ -4,24 +4,48 @@ import { WeeklyMealPlan, MealPlanBlock, RecipeRotation } from '../types';
 
 export const useMealPlan = () => {
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyMealPlan | null>(null);
+  const [currentWeekStart, setCurrentWeekStart] = useState<string>('');
+  const [availableWeeks, setAvailableWeeks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
 
-  const loadCurrentWeekPlan = useCallback(async () => {
+  // Helper function to get week start string from date
+  const getWeekStartString = useCallback((date: Date): string => {
+    const weekStart = new Date(date);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+    weekStart.setDate(diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart.toISOString().split('T')[0];
+  }, []);
+
+  // Load available weeks from database
+  const loadAvailableWeeks = useCallback(async () => {
+    try {
+      const { data: weeksData, error: weeksError } = await supabase
+        .from('weekly_meal_plans')
+        .select('week_start')
+        .order('week_start', { ascending: false });
+
+      if (weeksError) {
+        console.error('Error loading available weeks:', weeksError);
+        return;
+      }
+
+      const weeks = weeksData?.map(w => w.week_start) || [];
+      setAvailableWeeks(weeks);
+    } catch (err) {
+      console.error('Error in loadAvailableWeeks:', err);
+    }
+  }, []);
+
+  // Load meal plan for specific week
+  const loadWeekPlan = useCallback(async (weekStartStr: string) => {
     try {
       setLoading(true);
       setError(null);
-
-      // Get the start of the current week (Monday)
-      const now = new Date();
-      const startOfWeek = new Date(now);
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
-      startOfWeek.setDate(diff);
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const weekStartStr = startOfWeek.toISOString().split('T')[0];
+      setCurrentWeekStart(weekStartStr);
 
       // Try to load from database first
       const { data: weeklyPlanData, error: weeklyError } = await supabase
@@ -126,6 +150,40 @@ export const useMealPlan = () => {
     }
   }, []);
 
+  // Load current week plan (uses current date)
+  const loadCurrentWeekPlan = useCallback(async () => {
+    const now = new Date();
+    const weekStartStr = getWeekStartString(now);
+    await loadWeekPlan(weekStartStr);
+    await loadAvailableWeeks();
+  }, [getWeekStartString, loadWeekPlan, loadAvailableWeeks]);
+
+  // Week navigation functions
+  const navigateToWeek = useCallback(async (weekStartStr: string) => {
+    await loadWeekPlan(weekStartStr);
+  }, [loadWeekPlan]);
+
+  const navigateToPreviousWeek = useCallback(async () => {
+    if (!currentWeekStart) return;
+    
+    const currentDate = new Date(currentWeekStart);
+    currentDate.setDate(currentDate.getDate() - 7);
+    const previousWeekStr = getWeekStartString(currentDate);
+    
+    await loadWeekPlan(previousWeekStr);
+    await loadAvailableWeeks();
+  }, [currentWeekStart, getWeekStartString, loadWeekPlan, loadAvailableWeeks]);
+
+  const navigateToNextWeek = useCallback(async () => {
+    if (!currentWeekStart) return;
+    
+    const currentDate = new Date(currentWeekStart);
+    currentDate.setDate(currentDate.getDate() + 7);
+    const nextWeekStr = getWeekStartString(currentDate);
+    
+    await loadWeekPlan(nextWeekStr);
+    await loadAvailableWeeks();
+  }, [currentWeekStart, getWeekStartString, loadWeekPlan, loadAvailableWeeks]);
 
   // Load the current week's meal plan
   useEffect(() => {
@@ -191,7 +249,7 @@ export const useMealPlan = () => {
       }
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return blockData.id;
     } catch (err) {
       console.error('Error creating meal plan block:', err);
@@ -218,7 +276,7 @@ export const useMealPlan = () => {
       }
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return true;
     } catch (err) {
       console.error('Error updating meal plan block:', err);
@@ -240,7 +298,7 @@ export const useMealPlan = () => {
       if (error) throw error;
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return true;
     } catch (err) {
       console.error('Error deleting meal plan block:', err);
@@ -277,7 +335,7 @@ export const useMealPlan = () => {
       }
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return rotationData.id;
     } catch (err) {
       console.error('Error adding rotation:', err);
@@ -323,7 +381,7 @@ export const useMealPlan = () => {
       }
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return true;
     } catch (err) {
       console.error('Error updating rotation:', err);
@@ -345,7 +403,7 @@ export const useMealPlan = () => {
       if (error) throw error;
 
       // Reload the plan
-      await loadCurrentWeekPlan();
+      await loadWeekPlan(currentWeekStart);
       return true;
     } catch (err) {
       console.error('Error deleting rotation:', err);
@@ -431,6 +489,8 @@ export const useMealPlan = () => {
 
   return {
     weeklyPlan,
+    currentWeekStart,
+    availableWeeks,
     loading,
     error,
     usingMockData,
@@ -442,6 +502,10 @@ export const useMealPlan = () => {
     deleteRotation,
     getDayName,
     getDayRange,
-    refreshPlan: loadCurrentWeekPlan
+    refreshPlan: loadCurrentWeekPlan,
+    navigateToWeek,
+    navigateToPreviousWeek,
+    navigateToNextWeek,
+    loadAvailableWeeks
   };
 };

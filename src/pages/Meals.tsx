@@ -328,94 +328,89 @@ export default function Meals() {
                   return (
                     <Card key={log.id} className="p-4">
                       <div className="space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
+                        <div className="space-y-3">
+                          {/* Header with all action buttons */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
                               <h3 className="font-medium">{log.meal_name}</h3>
-                              {isMealLoggedToday(log) && (
-                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                                  ✓ Today
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                              <Calendar className="h-4 w-4" />
-                              {formatDate(log.date)}
-                            </div>
-                            {recipes.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                <div className="text-xs text-muted-foreground">
-                                  Recipes ({recipes.length}):
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {recipes.map((recipe, index) => (
-                                    <Badge key={recipe.id} variant="outline" className="text-xs">
-                                      {recipe.name}
-                                    </Badge>
-                                  ))}
-                                </div>
+                              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                <Calendar className="h-4 w-4 flex-shrink-0" />
+                                {formatDate(log.date)}
                               </div>
-                            )}
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant={reLoggedMeals.has(log.id) ? "default" : "outline"}
+                                    onClick={() => handleReLogMeal(log)}
+                                    disabled={isMealLoggedToday(log)}
+                                    className={`${
+                                      reLoggedMeals.has(log.id)
+                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                        : isMealLoggedToday(log) 
+                                          ? 'text-muted-foreground border-muted-foreground/20 cursor-not-allowed' 
+                                          : 'text-primary hover:text-primary border-primary/20 hover:bg-primary/10'
+                                    }`}
+                                  >
+                                    {reLoggedMeals.has(log.id) ? (
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-sm">✓</span>
+                                        Logged
+                                      </span>
+                                    ) : (
+                                      <Clock className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {reLoggedMeals.has(log.id)
+                                      ? 'Successfully re-logged for today!'
+                                      : isMealLoggedToday(log) 
+                                        ? 'This meal is already logged for today' 
+                                        : 'Re-log this meal for today'
+                                    }
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingMealLog(log);
+                                  setIsLogDialogOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setDeleteConfirm({ open: true, mealLog: log })}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                                                         <Tooltip>
-                               <TooltipTrigger asChild>
-                                 <Button
-                                   size="sm"
-                                   variant={reLoggedMeals.has(log.id) ? "default" : "outline"}
-                                   onClick={() => handleReLogMeal(log)}
-                                   disabled={isMealLoggedToday(log)}
-                                   className={`${
-                                     reLoggedMeals.has(log.id)
-                                       ? 'bg-green-600 hover:bg-green-700 text-white'
-                                       : isMealLoggedToday(log) 
-                                         ? 'text-muted-foreground border-muted-foreground/20 cursor-not-allowed' 
-                                         : 'text-primary hover:text-primary border-primary/20 hover:bg-primary/10'
-                                   }`}
-                                 >
-                                   {reLoggedMeals.has(log.id) ? (
-                                     <span className="flex items-center gap-1">
-                                       <span className="text-sm">✓</span>
-                                       Logged
-                                     </span>
-                                   ) : (
-                                     <>
-                                       <Clock className="h-4 w-4 mr-1" />
-                                       {isMealLoggedToday(log) ? 'Already Today' : 'Re-log'}
-                                     </>
-                                   )}
-                                 </Button>
-                               </TooltipTrigger>
-                               <TooltipContent>
-                                 <p>
-                                   {reLoggedMeals.has(log.id)
-                                     ? 'Successfully re-logged for today!'
-                                     : isMealLoggedToday(log) 
-                                       ? 'This meal is already logged for today' 
-                                       : 'Re-log this meal for today'
-                                   }
-                                 </p>
-                               </TooltipContent>
-                             </Tooltip>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingMealLog(log);
-                                setIsLogDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setDeleteConfirm({ open: true, mealLog: log })}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          
+                          {/* Recipes */}
+                          {recipes.length > 0 && (
+                            <div className="space-y-1">
+                              <div className="text-xs text-muted-foreground">
+                                Recipes ({recipes.length}):
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {recipes.map((recipe, index) => (
+                                  <Badge key={recipe.id} variant="outline" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
+                                    {recipe.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Nutrition */}

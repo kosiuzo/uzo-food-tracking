@@ -36,16 +36,19 @@ export function useMealLogs() {
         return;
       }
       
+      // Successfully connected to Supabase
+      console.log('✅ Connected to Supabase successfully');
+      
       if (data && data.length > 0) {
         console.log('✅ Loaded data from Supabase:', data.length, 'meal logs');
         const mappedMealLogs = data.map(dbMealLogToMealLog);
         setMealLogs(mappedMealLogs);
         setUsingMockData(false);
       } else {
-        // Database is empty, use mock data
-        console.log('ℹ️ Database is empty, using mock data');
-        setMealLogs(mockMealLogs);
-        setUsingMockData(true);
+        // Database is connected but empty - this is a valid state
+        console.log('ℹ️ Database is connected but empty');
+        setMealLogs([]);
+        setUsingMockData(false);
       }
     } catch (err) {
       console.warn('⚠️ Error loading meal logs, falling back to mock data:', err);
@@ -58,14 +61,6 @@ export function useMealLogs() {
     }
   };
 
-  // Only fall back to mock data if there's an actual error AND no data
-  useEffect(() => {
-    if (!loading && mealLogs.length === 0 && !usingMockData && error) {
-      console.log('🔄 Fallback: Error occurred and no data loaded, using mock data');
-      setMealLogs(mockMealLogs);
-      setUsingMockData(true);
-    }
-  }, [loading, mealLogs.length, usingMockData, error]);
 
   const addMealLog = async (mealLog: Omit<MealLog, 'id'>) => {
     try {

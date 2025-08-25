@@ -155,14 +155,14 @@ export default function Meals() {
         {/* Content when not loading */}
         {!loading && (
           <>
-            {/* Mock Data Indicator */}
+            {/* Mock Data Indicator - Only show when actually using mock data due to connection issues */}
             {usingMockData && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500"></div>
                   <p className="text-sm text-amber-800">
-                    <strong>Demo Mode:</strong> Showing sample meal logs with realistic data. 
-                    Connect to Supabase to see your real meal history.
+                    <strong>Demo Mode:</strong> Cannot connect to database. Showing sample meal logs. 
+                    {error && <span className="block mt-1">Error: {error}</span>}
                   </p>
                 </div>
               </div>
@@ -311,15 +311,22 @@ export default function Meals() {
               
               {recentLogs.length === 0 ? (
                 <div className="text-center py-8">
-                  <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
-                    {selectedDate 
-                      ? `No meals logged on ${new Date(selectedDate).toLocaleDateString()}`
-                      : dateRange
-                      ? `No meals logged ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
-                      : 'No meals logged yet'
-                    }
-                  </p>
+                  <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground text-lg">
+                      {selectedDate 
+                        ? `No meals logged on ${new Date(selectedDate).toLocaleDateString()}`
+                        : dateRange
+                        ? `No meals logged ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                        : 'No meals logged yet'
+                      }
+                    </p>
+                    {!selectedDate && !dateRange && !usingMockData && (
+                      <p className="text-sm text-muted-foreground">
+                        Click the + button to log your first meal!
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : (
                 recentLogs.map(log => {

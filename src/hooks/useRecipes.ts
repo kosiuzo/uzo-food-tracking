@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Recipe, RecipeIngredient, DbRecipe } from '../types';
-import { dbRecipeToRecipe, recipeToDbInsert } from '../lib/typeMappers';
+import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
+import type { Database } from '../types/database';
+
+type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'] & {
+  recipe_items: { quantity: number | null; unit: string | null; item_id: number }[];
+  recipe_tags: { tag_id: number; tags: DbTag }[];
+};
+import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/type-mappers';
+import { searchRecipes } from '../lib/search';
 import { mockRecipes } from '../data/mockData';
 
 export function useRecipes() {
@@ -31,6 +38,10 @@ export function useRecipes() {
             quantity,
             unit,
             item_id
+          ),
+          recipe_tags (
+            tag_id,
+            tags (*)
           )
         `)
         .order('name');
@@ -46,14 +57,18 @@ export function useRecipes() {
       
       if (recipesData && recipesData.length > 0) {
         console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
-        const mappedRecipes = recipesData.map((dbRecipe: Record<string, unknown>) => {
-          const ingredients: RecipeIngredient[] = (dbRecipe.recipe_items as Record<string, unknown>[]).map((ri: Record<string, unknown>) => ({
-            item_id: ri.item_id.toString(),
-            quantity: ri.quantity,
-            unit: ri.unit,
-          }));
+        const mappedRecipes = recipesData.map((dbRecipe: DbRecipeWithRelations) => {
+          const ingredients: RecipeIngredient[] = dbRecipe.recipe_items?.map((ri) => ({
+            item_id: ri.item_id, // Now using number directly
+            quantity: Number(ri.quantity) || 0,
+            unit: ri.unit || '',
+          })) || [];
           
-          return dbRecipeToRecipe(dbRecipe, ingredients);
+          const tags: Tag[] = dbRecipe.recipe_tags?.map((rt) => 
+            dbTagToTag(rt.tags)
+          ) || [];
+          
+          return dbRecipeToRecipe(dbRecipe, ingredients, tags);
         });
         setRecipes(mappedRecipes);
         setUsingMockData(false);
@@ -76,15 +91,52 @@ export function useRecipes() {
     }
   };
 
-const filteredRecipes = recipes.filter(recipe =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+// Enhanced filtering with search capabilities
+  const filteredRecipes = recipes.filter(recipe => {
+    let matchesSearch = true;
+    
+    // If we have a search query, use it for filtering (fallback for mock data)
+    if (searchQuery && usingMockData) {
+      matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     recipe.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    
+    return matchesSearch;
+  });
 
   const favoriteRecipes = filteredRecipes.filter(r => r.is_favorite);
 
-const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
+  // Enhanced search function for real-time search
+  const performSearch = async (query: string, tagIds: number[] = []) => {
+    if (usingMockData) {
+      // For mock data, use the existing filter approach
+      setSearchQuery(query);
+      return;
+    }
+
     try {
-      const dbRecipe = recipeToDbInsert(recipe);
+      setLoading(true);
+      const searchOptions = {
+        tags: tagIds,
+        sortBy: 'relevance' as const,
+      };
+
+      const result = await searchRecipes(query, searchOptions);
+      setRecipes(result.items);
+      setSearchQuery(query);
+    } catch (err) {
+      console.error('Recipe search failed:', err);
+      setError('Recipe search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] }) => {
+    try {
+      const { selectedTagIds, ...recipeWithoutTags } = recipe;
+      const dbRecipe = recipeToDbInsert(recipeWithoutTags);
       
       const { data: recipeData, error: recipeError } = await supabase
         .from('recipes')
@@ -95,10 +147,10 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
       if (recipeError) throw recipeError;
       
       // Insert recipe ingredients
-      if (recipe.ingredients.length > 0) {
-        const recipeIngredients = recipe.ingredients.map(ingredient => ({
+      if (recipeWithoutTags.ingredients.length > 0) {
+        const recipeIngredients = recipeWithoutTags.ingredients.map(ingredient => ({
           recipe_id: recipeData.id,
-          item_id: parseInt(ingredient.item_id),
+          item_id: ingredient.item_id, // Already a number
           quantity: ingredient.quantity,
           unit: ingredient.unit,
         }));
@@ -110,13 +162,27 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
         if (ingredientsError) throw ingredientsError;
       }
       
+      // Insert recipe tags
+      if (selectedTagIds && selectedTagIds.length > 0) {
+        const recipeTags = selectedTagIds.map(tagId => ({
+          recipe_id: recipeData.id,
+          tag_id: typeof tagId === 'string' ? parseInt(tagId) : tagId, // Handle both string and number IDs during transition
+        }));
+        
+        const { error: tagsError } = await supabase
+          .from('recipe_tags')
+          .insert(recipeTags);
+        
+        if (tagsError) throw tagsError;
+      }
+      
       // Calculate recipe cost after ingredients are inserted
       try {
         await supabase.rpc('calculate_recipe_cost', { p_recipe_id: recipeData.id });
         // Refetch all recipes to get the updated cost values
         await loadRecipes();
         // Find and return the newly created recipe with correct costs
-        const updatedRecipe = recipes.find(r => r.id === recipeData.id.toString());
+        const updatedRecipe = recipes.find(r => r.id === recipeData.id);
         return updatedRecipe || dbRecipeToRecipe(recipeData, recipe.ingredients);
       } catch (costError) {
         console.warn('Failed to calculate recipe cost:', costError);
@@ -131,43 +197,67 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'>) => {
     }
   };
 
-const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTagIds?: string[] }) => {
     console.log('🎯 updateRecipe called for ID:', id, 'Updates:', updates);
-    console.log('📝 Updates includes ingredients?', !!updates.ingredients, 'Ingredient count:', updates.ingredients?.length);
     try {
-      const numericId = parseInt(id);
+      const { selectedTagIds, ...updatesWithoutTags } = updates;
+      console.log('📝 Updates includes ingredients?', !!updatesWithoutTags.ingredients, 'Ingredient count:', updatesWithoutTags.ingredients?.length);
       
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
-      const nutritionToSave = updates.nutrition;
+      const nutritionToSave = updatesWithoutTags.nutrition;
       
       // Update recipe
       const { error: recipeError } = await supabase
         .from('recipes')
         .update({
-          name: updates.name,
-          instructions: updates.instructions,
-          servings: updates.servings,
-          prep_time: updates.prep_time_minutes,
+          name: updatesWithoutTags.name,
+          instructions: updatesWithoutTags.instructions,
+          servings: updatesWithoutTags.servings,
+          total_time: updatesWithoutTags.total_time_minutes,
           nutrition_per_serving: nutritionToSave,
-          rating: updates.is_favorite ? 5 : null,
+          is_favorite: updatesWithoutTags.is_favorite || false,
+          notes: updatesWithoutTags.notes || null,
         })
-        .eq('id', numericId);
+        .eq('id', id);
       
       if (recipeError) throw recipeError;
       
+      // Update tags if provided
+      if (selectedTagIds !== undefined) {
+        // Delete existing tags
+        await supabase
+          .from('recipe_tags')
+          .delete()
+          .eq('recipe_id', id);
+        
+        // Insert new tags
+        if (selectedTagIds.length > 0) {
+          const recipeTags = selectedTagIds.map(tagId => ({
+            recipe_id: id,
+            tag_id: typeof tagId === 'string' ? parseInt(tagId) : tagId, // Handle both string and number IDs during transition
+          }));
+          
+          const { error: tagsError } = await supabase
+            .from('recipe_tags')
+            .insert(recipeTags);
+          
+          if (tagsError) throw tagsError;
+        }
+      }
+      
       // Update ingredients if provided
-      if (updates.ingredients) {
+      if (updatesWithoutTags.ingredients) {
         // Delete existing ingredients
         await supabase
           .from('recipe_items')
           .delete()
-          .eq('recipe_id', numericId);
+          .eq('recipe_id', id);
         
         // Insert new ingredients
-        if (updates.ingredients.length > 0) {
-          const recipeIngredients = updates.ingredients.map(ingredient => ({
-            recipe_id: numericId,
-            item_id: parseInt(ingredient.item_id),
+        if (updatesWithoutTags.ingredients.length > 0) {
+          const recipeIngredients = updatesWithoutTags.ingredients.map(ingredient => ({
+            recipe_id: id,
+            item_id: ingredient.item_id, // Already a number
             quantity: ingredient.quantity,
             unit: ingredient.unit,
           }));
@@ -181,11 +271,11 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
       }
       
       // Recalculate recipe cost if ingredients were updated
-      if (updates.ingredients) {
-        console.log('🔄 Updating recipe with ingredients, triggering cost calculation for recipe ID:', numericId);
+      if (updatesWithoutTags.ingredients) {
+        console.log('🔄 Updating recipe with ingredients, triggering cost calculation for recipe ID:', id);
         try {
           console.log('📞 Calling calculate_recipe_cost RPC function...');
-          const { data: rpcResult, error: rpcError } = await supabase.rpc('calculate_recipe_cost', { p_recipe_id: numericId });
+          const { data: rpcResult, error: rpcError } = await supabase.rpc('calculate_recipe_cost', { p_recipe_id: id });
           console.log('📊 RPC Result:', rpcResult, 'RPC Error:', rpcError);
           
           // Fetch just the updated cost values instead of refetching everything
@@ -193,34 +283,22 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
           const { data: updatedRecipe, error: fetchError } = await supabase
             .from('recipes')
             .select('cost_per_serving, total_cost, cost_last_calculated')
-            .eq('id', numericId)
+            .eq('id', id)
             .single();
             
           console.log('💰 Updated cost data:', updatedRecipe, 'Fetch Error:', fetchError);
           if (fetchError) throw fetchError;
           
-          // Update local state with the calculated nutrition and fetched costs
-          setRecipes(prev =>
-            prev.map(recipe => (recipe.id === id ? { 
-              ...recipe, 
-              ...updates,
-              cost_per_serving: updatedRecipe.cost_per_serving || 0,
-              total_cost: updatedRecipe.total_cost || 0,
-              cost_last_calculated: updatedRecipe.cost_last_calculated || undefined,
-            } : recipe))
-          );
+          // Reload recipes to get the updated data including tags and costs
+          await loadRecipes();
         } catch (costError) {
           console.warn('Failed to calculate recipe cost:', costError);
-          // Still update local state even if cost calculation fails
-          setRecipes(prev =>
-            prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
-          );
+          // Reload recipes to get the updated data including tags
+          await loadRecipes();
         }
       } else {
-        // Update local state for non-ingredient changes
-        setRecipes(prev =>
-          prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
-        );
+        // For non-ingredient changes, reload the recipe to get updated tags
+        await loadRecipes();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update recipe');
@@ -228,20 +306,19 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
     }
   };
 
-  const toggleFavorite = async (id: string) => {
+  const toggleFavorite = async (id: number) => {
     const recipe = recipes.find(r => r.id === id);
     if (recipe) {
       await updateRecipe(id, { is_favorite: !recipe.is_favorite });
     }
   };
 
-  const deleteRecipe = async (id: string) => {
+  const deleteRecipe = async (id: number) => {
     try {
-      const numericId = parseInt(id);
       const { error } = await supabase
         .from('recipes')
         .delete()
-        .eq('id', numericId);
+        .eq('id', id);
       
       if (error) throw error;
       
@@ -252,7 +329,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
     }
   };
 
-  const getRecipeById = (id: string) => {
+  const getRecipeById = (id: number) => {
     return recipes.find(recipe => recipe.id === id);
   };
 
@@ -265,6 +342,7 @@ const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
     usingMockData,
     searchQuery,
     setSearchQuery,
+    performSearch,
     addRecipe,
     updateRecipe,
     toggleFavorite,

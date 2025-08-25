@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FoodItem, DbItem } from '../types';
-import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/typeMappers';
+import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
+import { searchItems } from '../lib/search';
 import { mockFoodItems } from '../data/mockData';
 
 export function useFoodInventory() {
@@ -65,9 +66,18 @@ export function useFoodInventory() {
     }
   };
 
+  // Enhanced filtering with search capabilities
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+    let matchesSearch = true;
+    
+    // If we have a search query, use it for filtering (fallback for mock data)
+    if (searchQuery && usingMockData) {
+      matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                     item.ingredients?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesStock = stockFilter === 'all' || 
                         (stockFilter === 'in-stock' && item.in_stock) ||
@@ -79,13 +89,57 @@ export function useFoodInventory() {
     return matchesSearch && matchesCategory && matchesStock && matchesRating;
   });
 
+  // Enhanced search function for real-time search
+  const performSearch = async (query: string) => {
+    if (usingMockData) {
+      // For mock data, use the existing filter approach
+      setSearchQuery(query);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const searchOptions = {
+        includeInactive: stockFilter !== 'in-stock',
+        categories: categoryFilter !== 'all' ? [categoryFilter] : [],
+        sortBy: 'relevance' as const,
+      };
+
+      const result = await searchItems(query, searchOptions);
+      setItems(result.items);
+      setSearchQuery(query);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setError('Search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const categories = Array.from(new Set(items.map(item => item.category)));
 
-  const addItem = async (item: Omit<FoodItem, 'id' | 'last_edited'>) => {
+  const addItem = async (item: Omit<FoodItem, 'id' | 'last_edited' | 'created_at' | 'updated_at'>) => {
     try {
+      // If using mock data, add to local state only
+      if (usingMockData) {
+        const newItem: FoodItem = {
+          ...item,
+          id: Date.now(), // Now using number ID
+          last_edited: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setItems(prev => [...prev, newItem]);
+        return newItem;
+      }
+
+      // Otherwise, try to add to Supabase
+      const now = new Date().toISOString();
       const dbItem = foodItemToDbInsert({
         ...item,
-        last_edited: new Date().toISOString(),
+        last_edited: now,
+        created_at: now,
+        updated_at: now,
       });
 
       const { data, error } = await supabase
@@ -94,46 +148,97 @@ export function useFoodInventory() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate constraint error
+        if (error.code === '23505' && error.message.includes('ux_items_normalized_name')) {
+          const duplicateError = new Error(`An item with the name "${item.name}" already exists in your inventory.`);
+          duplicateError.name = 'DuplicateItemError';
+          throw duplicateError;
+        }
+        throw error;
+      }
 
       const newItem = dbItemToFoodItem(data as DbItem);
       setItems(prev => [...prev, newItem]);
       return newItem;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add item');
-      throw err;
+      // If it's a duplicate error, don't fall back to mock mode
+      if (err instanceof Error && err.name === 'DuplicateItemError') {
+        throw err;
+      }
+
+      // For other errors, fall back to local mock mode
+      console.warn('Add item failed, falling back to local mock mode:', err);
+      const now = new Date().toISOString();
+      const newItem: FoodItem = {
+        ...item,
+        id: Date.now(), // Now using number ID
+        last_edited: now,
+        created_at: now,
+        updated_at: now,
+      };
+      setItems(prev => [...prev, newItem]);
+      setUsingMockData(true);
+      return newItem;
     }
   };
 
-  const updateItem = async (id: string, updates: Partial<FoodItem>) => {
+  const updateItem = async (id: number, updates: Partial<FoodItem>) => {
     try {
-      const numericId = parseInt(id);
+      // If using mock data, update local state only
+      if (usingMockData) {
+        const now = new Date().toISOString();
+        setItems(prev => prev.map(item => 
+          item.id === id 
+            ? { ...item, ...updates, last_edited: now, updated_at: now }
+            : item
+        ));
+        return;
+      }
+
+      // Otherwise, try to update in Supabase
       // Build update object, only including fields that are actually being updated
+      const now = new Date().toISOString();
       const updateData: Record<string, unknown> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.brand !== undefined) updateData.brand = updates.brand || null;
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.in_stock !== undefined) updateData.in_stock = updates.in_stock;
       if (updates.price !== undefined) updateData.price = updates.price;
-      if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
-      if (updates.rating !== undefined) updateData.rating = updates.rating;
-      if (updates.nutrition) {
-        updateData.carbs_per_serving = updates.nutrition.carbs_per_100g / 100;
-        updateData.fat_per_serving = updates.nutrition.fat_per_100g / 100;
-        updateData.protein_per_serving = updates.nutrition.protein_per_100g / 100;
+      if (updates.image_url !== undefined) {
+        console.log('🖼️ Updating image_url:', { 
+          from: items.find(item => item.id === id)?.image_url, 
+          to: updates.image_url,
+          final: updates.image_url || null 
+        });
+        updateData.image_url = updates.image_url || null;
       }
-      updateData.last_edited = new Date().toISOString();
+      if (updates.rating !== undefined) updateData.rating = updates.rating;
+      if (updates.serving_size !== undefined) updateData.serving_size_grams = updates.serving_size;
+      if (updates.serving_quantity !== undefined) updateData.serving_quantity = updates.serving_quantity;
+      if (updates.serving_unit !== undefined) updateData.serving_unit = updates.serving_unit || null;
+      if (updates.serving_unit_type !== undefined) updateData.serving_unit_type = updates.serving_unit_type || null;
+      if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
+      if (updates.nutrition) {
+        // Store nutrition values directly as per-serving
+        if (updates.nutrition.calories_per_serving !== undefined) updateData.calories_per_serving = updates.nutrition.calories_per_serving;
+        if (updates.nutrition.carbs_per_serving !== undefined) updateData.carbs_per_serving = updates.nutrition.carbs_per_serving;
+        if (updates.nutrition.fat_per_serving !== undefined) updateData.fat_per_serving = updates.nutrition.fat_per_serving;
+        if (updates.nutrition.protein_per_serving !== undefined) updateData.protein_per_serving = updates.nutrition.protein_per_serving;
+      }
+      // Triggers will handle updated_at, but we set last_edited for backward compatibility
+      updateData.last_edited = now;
       
       const { error } = await supabase
         .from('items')
         .update(updateData)
-        .eq('id', numericId);
+        .eq('id', id);
 
       if (error) throw error;
 
       setItems(prev => prev.map(item => 
         item.id === id 
-          ? { ...item, ...updates, last_edited: new Date().toISOString() }
+          ? { ...item, ...updates, last_edited: now, updated_at: now }
           : item
       ));
     } catch (err) {
@@ -142,13 +247,19 @@ export function useFoodInventory() {
     }
   };
 
-  const deleteItem = async (id: string) => {
+  const deleteItem = async (id: number) => {
     try {
-      const numericId = parseInt(id);
+      // If using mock data, delete from local state only
+      if (usingMockData) {
+        setItems(prev => prev.filter(item => item.id !== id));
+        return;
+      }
+
+      // Otherwise, try to delete from Supabase
       const { error } = await supabase
         .from('items')
         .delete()
-        .eq('id', numericId);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -159,7 +270,7 @@ export function useFoodInventory() {
     }
   };
 
-  const toggleStock = async (id: string) => {
+  const toggleStock = async (id: number) => {
     const item = items.find(item => item.id === id);
     if (item) {
       await updateItem(id, { in_stock: !item.in_stock });
@@ -176,6 +287,7 @@ export function useFoodInventory() {
     usingMockData,
     searchQuery,
     setSearchQuery,
+    performSearch,
     categoryFilter,
     setCategoryFilter,
     stockFilter,

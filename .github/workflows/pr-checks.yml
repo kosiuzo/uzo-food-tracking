@@ -1,10 +1,13 @@
-name: Comprehensive PR Checks
+name: PR Checks
 
 on:
   pull_request:
     branches: [ main, develop ]
   push:
     branches: [ main, develop ]
+
+env:
+  NODE_ENV: test
 
 jobs:
   test:
@@ -39,6 +42,14 @@ jobs:
     - name: Build project
       run: npm run build
     
+    - name: Check for debugger statements  
+      run: |
+        if grep -r "debugger" src/ --include="*.ts" --include="*.tsx" --exclude-dir=node_modules; then
+          echo "❌ Debugger statements found in source code"
+          exit 1
+        fi
+        echo "✅ No debugger statements found"
+    
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
@@ -69,6 +80,14 @@ jobs:
     
     - name: Check for known vulnerabilities
       run: npx audit-ci --moderate
+    
+    - name: Check for hardcoded secrets
+      run: |
+        if grep -ri "password\|secret\|apikey\|api_key" src/ --include="*.ts" --include="*.tsx" | grep -v "PASSWORD\|SECRET\|KEY\|TOKEN" | grep -E "(=|:)\s*['\"][a-zA-Z0-9]{20,}['\"]"; then
+          echo "❌ Potential hardcoded secrets found"
+          exit 1
+        fi
+        echo "✅ No hardcoded secrets detected"
 
   # dependency-review job removed - requires GitHub Advanced Security features
   # that are not available on this repository
@@ -98,6 +117,15 @@ jobs:
         npm run build > /dev/null 2>&1 || (echo "Build script failed" && exit 1)
         npm run test:run > /dev/null 2>&1 || (echo "Test script failed" && exit 1)
         npm run lint > /dev/null 2>&1 || (echo "Lint script failed" && exit 1)
+    
+    - name: Check TypeScript configuration
+      run: |
+        if [ -f "tsconfig.json" ]; then
+          echo "✅ TypeScript configuration found"
+        else
+          echo "❌ TypeScript configuration missing"
+          exit 1
+        fi
     
     - name: Check file structure
       run: |
@@ -135,6 +163,16 @@ jobs:
         [ -d "dist" ] || (echo "dist directory missing" && exit 1)
         [ -f "dist/index.html" ] || (echo "dist/index.html missing" && exit 1)
         echo "Build verification passed ✓"
+    
+    - name: Check build size
+      run: |
+        echo "Build size analysis:"
+        du -sh dist/
+        if [ $(du -s dist/ | cut -f1) -gt 50000 ]; then
+          echo "⚠️ Build size is large (>50MB). Consider optimization."
+        else
+          echo "✅ Build size is reasonable"
+        fi
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4

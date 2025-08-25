@@ -12,7 +12,12 @@ export interface Database {
           carbs_per_serving: number | null
           fat_per_serving: number | null
           protein_per_serving: number | null
+          calories_per_serving: number | null
           servings_per_container: number | null
+          serving_size_grams: number | null
+          serving_quantity: number | null
+          serving_unit: string | null
+          serving_unit_type: 'volume' | 'weight' | 'package' | null
           image_url: string | null
           nutrition_source: string | null
           barcode: string | null
@@ -22,6 +27,8 @@ export interface Database {
           last_edited: string | null
           normalized_name: string | null
           ingredients: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: never
@@ -33,7 +40,12 @@ export interface Database {
           carbs_per_serving?: number | null
           fat_per_serving?: number | null
           protein_per_serving?: number | null
+          calories_per_serving?: number | null
           servings_per_container?: number | null
+          serving_size_grams?: number | null
+          serving_quantity?: number | null
+          serving_unit?: string | null
+          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
@@ -43,6 +55,8 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: never
@@ -54,7 +68,12 @@ export interface Database {
           carbs_per_serving?: number | null
           fat_per_serving?: number | null
           protein_per_serving?: number | null
+          calories_per_serving?: number | null
           servings_per_container?: number | null
+          serving_size_grams?: number | null
+          serving_quantity?: number | null
+          serving_unit?: string | null
+          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
           nutrition_source?: string | null
           barcode?: string | null
@@ -64,6 +83,8 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       recipes: {
@@ -71,7 +92,6 @@ export interface Database {
           id: number
           name: string
           cuisine_type: string | null
-          meal_type: string[] | null
           difficulty: string | null
           prep_time: number | null
           cook_time: number | null
@@ -79,15 +99,13 @@ export interface Database {
           servings: number | null
           instructions: string | null
           nutrition_per_serving: Record<string, unknown> | null
-          tags: string[] | null
-          rating: number | null
+          is_favorite: boolean | null
           source_link: string | null
           cost_per_serving: number | null
           total_cost: number | null
           cost_last_calculated: string | null
           notes: string | null
           times_cooked: number | null
-          average_rating: number | null
           last_cooked: string | null
           created_at: string | null
           updated_at: string | null
@@ -96,7 +114,6 @@ export interface Database {
           id?: never
           name: string
           cuisine_type?: string | null
-          meal_type?: string[] | null
           difficulty?: string | null
           prep_time?: number | null
           cook_time?: number | null
@@ -104,15 +121,13 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
-          tags?: string[] | null
-          rating?: number | null
+          is_favorite?: boolean | null
           source_link?: string | null
           cost_per_serving?: number | null
           total_cost?: number | null
           cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
-          average_rating?: number | null
           last_cooked?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -121,7 +136,6 @@ export interface Database {
           id?: never
           name?: string
           cuisine_type?: string | null
-          meal_type?: string[] | null
           difficulty?: string | null
           prep_time?: number | null
           cook_time?: number | null
@@ -129,15 +143,13 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
-          tags?: string[] | null
-          rating?: number | null
+          is_favorite?: boolean | null
           source_link?: string | null
           cost_per_serving?: number | null
           total_cost?: number | null
           cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
-          average_rating?: number | null
           last_cooked?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -152,6 +164,8 @@ export interface Database {
           cost_per_unit: number | null
           total_cost: number | null
           cost_calculated_at: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           recipe_id: number
@@ -161,6 +175,8 @@ export interface Database {
           cost_per_unit?: number | null
           total_cost?: number | null
           cost_calculated_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           recipe_id?: number
@@ -170,12 +186,15 @@ export interface Database {
           cost_per_unit?: number | null
           total_cost?: number | null
           cost_calculated_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       meal_logs: {
         Row: {
           id: number
-          recipe_id: number | null
+          recipe_ids: number[]
+          meal_name: string | null
           cooked_at: string | null
           notes: string | null
           rating: number | null
@@ -185,7 +204,8 @@ export interface Database {
         }
         Insert: {
           id?: never
-          recipe_id?: number | null
+          recipe_ids: number[]
+          meal_name?: string | null
           cooked_at?: string | null
           notes?: string | null
           rating?: number | null
@@ -195,7 +215,8 @@ export interface Database {
         }
         Update: {
           id?: never
-          recipe_id?: number | null
+          recipe_ids?: number[]
+          meal_name?: string | null
           cooked_at?: string | null
           notes?: string | null
           rating?: number | null
@@ -204,26 +225,155 @@ export interface Database {
           created_at?: string | null
         }
       }
-      meal_plans: {
+      weekly_meal_plans: {
         Row: {
           id: number
-          date: string
-          meal_type: string
-          recipe_id: number | null
+          week_start: string
           created_at: string | null
+          updated_at: string | null
         }
         Insert: {
           id?: never
-          date: string
-          meal_type: string
-          recipe_id?: number | null
+          week_start: string
           created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: never
-          date?: string
-          meal_type?: string
-          recipe_id?: number | null
+          week_start?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      meal_plan_blocks: {
+        Row: {
+          id: number
+          weekly_plan_id: number
+          name: string
+          start_day: number
+          end_day: number
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          weekly_plan_id: number
+          name: string
+          start_day: number
+          end_day: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          weekly_plan_id?: number
+          name?: string
+          start_day?: number
+          end_day?: number
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      recipe_rotations: {
+        Row: {
+          id: number
+          block_id: number
+          name: string
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          block_id: number
+          name: string
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          block_id?: number
+          name?: string
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      rotation_recipes: {
+        Row: {
+          rotation_id: number
+          recipe_id: number
+          created_at: string | null
+        }
+        Insert: {
+          rotation_id: number
+          recipe_id: number
+          created_at?: string | null
+        }
+        Update: {
+          rotation_id?: number
+          recipe_id?: number
+          created_at?: string | null
+        }
+      }
+      block_snacks: {
+        Row: {
+          block_id: number
+          recipe_id: number
+          created_at: string | null
+        }
+        Insert: {
+          block_id: number
+          recipe_id: number
+          created_at?: string | null
+        }
+        Update: {
+          block_id?: number
+          recipe_id?: number
+          created_at?: string | null
+        }
+      }
+      tags: {
+        Row: {
+          id: number
+          name: string
+          color: string | null
+          description: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: never
+          name: string
+          color?: string | null
+          description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: never
+          name?: string
+          color?: string | null
+          description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      recipe_tags: {
+        Row: {
+          recipe_id: number
+          tag_id: number
+          created_at: string | null
+        }
+        Insert: {
+          recipe_id: number
+          tag_id: number
+          created_at?: string | null
+        }
+        Update: {
+          recipe_id?: number
+          tag_id?: number
           created_at?: string | null
         }
       }

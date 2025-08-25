@@ -1,79 +1,127 @@
 import { describe, it, expect } from 'vitest';
-import {
-  dbItemToFoodItem,
-  foodItemToDbInsert,
-  dbRecipeToRecipe,
-  recipeToDbInsert,
-} from '../../lib/typeMappers';
-import { DbItem, FoodItem, DbRecipe, Recipe } from '../../types';
+import { dbItemToFoodItem, foodItemToDbInsert, dbRecipeToRecipe, recipeToDbInsert, dbMealLogToMealLog, mealLogToDbInsert, dbTagToTag, tagToDbInsert } from '../../lib/typeMappers';
+import { FoodItem, Recipe, MealLog, Tag } from '../../types';
 
 describe('typeMappers', () => {
   describe('dbItemToFoodItem', () => {
     it('should convert database item to FoodItem format', () => {
-      const dbItem: DbItem = {
+      const dbItem = {
         id: 1,
         name: 'Apple',
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
+        calories_per_serving: 95,
         carbs_per_serving: 25,
         fat_per_serving: 0.3,
         protein_per_serving: 0.5,
         servings_per_container: 1,
+        serving_size_grams: 100,
+        serving_quantity: null,
+        serving_unit: null,
+        serving_unit_type: null,
         image_url: 'https://example.com/apple.jpg',
+        ingredients: null,
         nutrition_source: 'manual',
         barcode: null,
+        last_purchased: null,
+        purchase_count: null,
+        rating: null,
         last_edited: '2025-01-01T00:00:00Z',
-        normalized_name: 'apple',
+        normalized_name: null,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       };
 
       const result = dbItemToFoodItem(dbItem);
 
       expect(result).toEqual({
-        id: '1',
+        id: 1,
         name: 'Apple',
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
+        serving_size: 100,
+        serving_quantity: undefined,
+        serving_unit: undefined,
+        serving_unit_type: undefined,
         image_url: 'https://example.com/apple.jpg',
+        ingredients: undefined,
         nutrition: {
-          calories_per_100g: 10470, // Calculated: (0.5*4 + 25*4 + 0.3*9) * 100 / 1
-          protein_per_100g: 50, // 0.5 * 100 / 1
-          carbs_per_100g: 2500, // 25 * 100 / 1
-          fat_per_100g: 30, // 0.3 * 100 / 1
-          fiber_per_100g: 0,
+          calories_per_serving: 95,
+          protein_per_serving: 0.5,
+          carbs_per_serving: 25,
+          fat_per_serving: 0.3,
+          fiber_per_serving: 0,
         },
+        last_purchased: undefined,
+        rating: undefined,
         last_edited: '2025-01-01T00:00:00Z',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       });
     });
 
-    it('should handle null/undefined values', () => {
-      const dbItem: DbItem = {
+    it('should handle null database values gracefully', () => {
+      const dbItem = {
         id: 2,
-        name: 'Banana',
+        name: 'Test Item',
         brand: null,
         category: null,
         in_stock: null,
         price: null,
+        calories_per_serving: null,
         carbs_per_serving: null,
         fat_per_serving: null,
         protein_per_serving: null,
         servings_per_container: null,
+        serving_size_grams: null,
+        serving_quantity: null,
+        serving_unit: null,
+        serving_unit_type: null,
         image_url: null,
+        ingredients: null,
         nutrition_source: null,
         barcode: null,
+        last_purchased: null,
+        purchase_count: null,
+        rating: null,
         last_edited: null,
         normalized_name: null,
+        created_at: null,
+        updated_at: null,
       };
 
       const result = dbItemToFoodItem(dbItem);
 
-      expect(result.brand).toBeUndefined();
-      expect(result.category).toBe('Other');
-      expect(result.in_stock).toBe(true);
-      expect(result.price).toBeUndefined();
+      expect(result).toEqual({
+        id: 2,
+        name: 'Test Item',
+        brand: undefined,
+        category: 'Other',
+        in_stock: true,
+        price: undefined,
+        serving_size: 100,
+        serving_quantity: undefined,
+        serving_unit: undefined,
+        serving_unit_type: undefined,
+        image_url: undefined,
+        ingredients: undefined,
+        nutrition: {
+          calories_per_serving: 0,
+          protein_per_serving: 0,
+          carbs_per_serving: 0,
+          fat_per_serving: 0,
+          fiber_per_serving: 0,
+        },
+        last_purchased: undefined,
+        rating: undefined,
+        last_edited: undefined,
+        created_at: undefined,
+        updated_at: undefined,
+      });
     });
   });
 
@@ -85,15 +133,18 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
+        serving_size: 100,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
-          calories_per_100g: 52,
-          protein_per_100g: 0.3,
-          carbs_per_100g: 14,
-          fat_per_100g: 0.2,
-          fiber_per_100g: 2.4,
+          calories_per_serving: 95,
+          protein_per_serving: 0.5,
+          carbs_per_serving: 25,
+          fat_per_serving: 0.3,
+          fiber_per_serving: 0,
         },
         last_edited: '2025-01-01T00:00:00Z',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       };
 
       const result = foodItemToDbInsert(foodItem);
@@ -104,52 +155,36 @@ describe('typeMappers', () => {
         category: 'Fruit',
         in_stock: true,
         price: 2.99,
-        carbs_per_serving: 0.14,
-        fat_per_serving: 0.002,
-        protein_per_serving: 0.003,
+        calories_per_serving: 95,
+        carbs_per_serving: 25,
+        fat_per_serving: 0.3,
+        protein_per_serving: 0.5,
         servings_per_container: 1,
+        serving_size_grams: 100,
+        serving_quantity: null,
+        serving_unit: null,
+        serving_unit_type: null,
         image_url: 'https://example.com/apple.jpg',
         ingredients: null,
         nutrition_source: 'manual',
         barcode: null,
         rating: null,
         last_edited: '2025-01-01T00:00:00Z',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       });
-    });
-
-    it('should handle undefined optional fields', () => {
-      const foodItem: Omit<FoodItem, 'id'> = {
-        name: 'Banana',
-        category: 'Fruit',
-        in_stock: true,
-        nutrition: {
-          calories_per_100g: 89,
-          protein_per_100g: 1.1,
-          carbs_per_100g: 23,
-          fat_per_100g: 0.3,
-          fiber_per_100g: 2.6,
-        },
-        last_edited: '2025-01-01T00:00:00Z',
-      };
-
-      const result = foodItemToDbInsert(foodItem);
-
-      expect(result.brand).toBe(null);
-      expect(result.price).toBe(null);
-      expect(result.image_url).toBe(null);
     });
   });
 
   describe('dbRecipeToRecipe', () => {
     it('should convert database recipe to Recipe format', () => {
-      const dbRecipe: DbRecipe = {
+      const dbRecipe = {
         id: 1,
         name: 'Apple Pie',
-        cuisine_type: 'American',
-        meal_type: ['dessert'],
-        difficulty: 'medium',
-        prep_time: 30,
-        cook_time: 45,
+        cuisine_type: null,
+        difficulty: null,
+        prep_time: null,
+        cook_time: null,
         total_time: 75,
         servings: 8,
         instructions: 'Mix ingredients and bake',
@@ -159,31 +194,31 @@ describe('typeMappers', () => {
           carbs: 35,
           fat: 12,
         },
-        tags: ['dessert', 'fruit'],
-        rating: 4.5,
-        source_link: 'https://example.com/recipe',
-        cost_per_serving: 2.50,
+        is_favorite: false,
+        source_link: null,
+        cost_per_serving: 2.5,
+        total_cost: null,
+        cost_last_calculated: null,
         notes: 'Great for holidays',
-        times_cooked: 5,
-        average_rating: 4.2,
-        last_cooked: '2025-01-01',
+        times_cooked: null,
+        last_cooked: null,
         created_at: '2024-12-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
       };
 
       const ingredients = [
-        { item_id: '1', quantity: 6, unit: 'pieces' },
-        { item_id: '2', quantity: 2, unit: 'cups' },
+        { item_id: 1, quantity: 6, unit: 'pieces', cost_per_unit: 0.5, total_cost: 3, cost_calculated_at: '2025-01-01T00:00:00Z', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+        { item_id: 2, quantity: 2, unit: 'cups', cost_per_unit: 1, total_cost: 2, cost_calculated_at: '2025-01-01T00:00:00Z', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
       ];
 
       const result = dbRecipeToRecipe(dbRecipe, ingredients);
 
       expect(result).toEqual({
-        id: '1',
+        id: 1,
         name: 'Apple Pie',
         instructions: 'Mix ingredients and bake',
         servings: 8,
-        prep_time_minutes: 30,
+        total_time_minutes: 75,
         ingredients,
         nutrition: {
           calories_per_serving: 250,
@@ -191,49 +226,14 @@ describe('typeMappers', () => {
           carbs_per_serving: 35,
           fat_per_serving: 12,
         },
-        is_favorite: true, // average_rating >= 4
-        cost_per_serving: 2.50,
+        cost_per_serving: 2.5,
         total_cost: undefined,
         cost_last_calculated: undefined,
-      });
-    });
-
-    it('should handle null/undefined values', () => {
-      const dbRecipe: DbRecipe = {
-        id: 2,
-        name: 'Simple Recipe',
-        cuisine_type: null,
-        meal_type: null,
-        difficulty: null,
-        prep_time: null,
-        cook_time: null,
-        total_time: null,
-        servings: null,
-        instructions: null,
-        nutrition_per_serving: null,
-        tags: null,
-        rating: null,
-        source_link: null,
-        cost_per_serving: null,
-        notes: null,
-        times_cooked: null,
-        average_rating: null,
-        last_cooked: null,
-        created_at: null,
-        updated_at: null,
-      };
-
-      const result = dbRecipeToRecipe(dbRecipe);
-
-      expect(result.instructions).toBe('');
-      expect(result.servings).toBe(1);
-      expect(result.prep_time_minutes).toBeUndefined();
-      expect(result.is_favorite).toBe(false);
-      expect(result.nutrition).toEqual({
-        calories_per_serving: 0,
-        protein_per_serving: 0,
-        carbs_per_serving: 0,
-        fat_per_serving: 0,
+        is_favorite: false,
+        notes: 'Great for holidays',
+        tags: [],
+        created_at: '2024-12-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       });
     });
   });
@@ -244,17 +244,22 @@ describe('typeMappers', () => {
         name: 'Apple Pie',
         instructions: 'Mix ingredients and bake',
         servings: 8,
-        prep_time_minutes: 30,
-        ingredients: [
-          { item_id: '1', quantity: 6, unit: 'pieces' },
-        ],
+        total_time_minutes: 30,
+        ingredients: [],
         nutrition: {
           calories_per_serving: 250,
           protein_per_serving: 3,
           carbs_per_serving: 35,
           fat_per_serving: 12,
         },
+        cost_per_serving: undefined,
+        total_cost: undefined,
+        cost_last_calculated: undefined,
         is_favorite: true,
+        notes: undefined,
+        tags: [],
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       };
 
       const result = recipeToDbInsert(recipe);
@@ -262,21 +267,19 @@ describe('typeMappers', () => {
       expect(result).toEqual({
         name: 'Apple Pie',
         cuisine_type: null,
-        meal_type: null,
         difficulty: null,
-        prep_time: 30,
+        prep_time: null,
         cook_time: null,
         total_time: 30,
         servings: 8,
         instructions: 'Mix ingredients and bake',
         nutrition_per_serving: {
-          calories_per_serving: 250,
-          protein_per_serving: 3,
-          carbs_per_serving: 35,
-          fat_per_serving: 12,
+          calories: 250,
+          protein: 3,
+          carbs: 35,
+          fat: 12,
         },
-        tags: null,
-        rating: 5, // is_favorite = true
+        is_favorite: true,
         source_link: null,
         cost_per_serving: null,
         notes: null,
@@ -286,23 +289,185 @@ describe('typeMappers', () => {
     it('should handle non-favorite recipes', () => {
       const recipe: Omit<Recipe, 'id'> = {
         name: 'Simple Recipe',
-        instructions: 'Just cook it',
-        servings: 2,
+        instructions: 'Basic instructions',
+        servings: 4,
+        total_time_minutes: undefined,
         ingredients: [],
         nutrition: {
           calories_per_serving: 100,
           protein_per_serving: 5,
           carbs_per_serving: 15,
-          fat_per_serving: 3,
+          fat_per_serving: 2,
         },
+        cost_per_serving: undefined,
+        total_cost: undefined,
+        cost_last_calculated: undefined,
         is_favorite: false,
+        notes: undefined,
+        tags: [],
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       };
 
       const result = recipeToDbInsert(recipe);
 
-      expect(result.rating).toBe(null);
-      expect(result.prep_time).toBe(null);
+      expect(result.is_favorite).toBe(false);
       expect(result.total_time).toBe(null);
+    });
+  });
+
+  describe('dbMealLogToMealLog', () => {
+    it('should convert database meal log to MealLog format', () => {
+      const dbMealLog = {
+        id: 1,
+        recipe_ids: [1, 2],
+        meal_name: 'Lunch',
+        cooked_at: '2025-01-15',
+        notes: 'Delicious meal',
+        rating: 5,
+        macros: {
+          calories: 500,
+          protein: 25,
+          carbs: 60,
+          fat: 20,
+        },
+        cost: 12.50,
+        created_at: '2025-01-15T12:00:00Z',
+      };
+
+      const result = dbMealLogToMealLog(dbMealLog);
+
+      expect(result).toEqual({
+        id: 1,
+        recipe_ids: [1, 2],
+        date: '2025-01-15',
+        meal_name: 'Lunch',
+        notes: 'Delicious meal',
+        nutrition: {
+          calories: 500,
+          protein: 25,
+          carbs: 60,
+          fat: 20,
+        },
+        estimated_cost: 12.50,
+        created_at: '2025-01-15T12:00:00Z',
+      });
+    });
+  });
+
+  describe('mealLogToDbInsert', () => {
+    it('should convert MealLog to database insert format', () => {
+      const mealLog: Omit<MealLog, 'id'> = {
+        recipe_ids: [1, 2],
+        date: '2025-01-15',
+        meal_name: 'Lunch',
+        notes: 'Delicious meal',
+        nutrition: {
+          calories: 500,
+          protein: 25,
+          carbs: 60,
+          fat: 20,
+        },
+        estimated_cost: 12.50,
+        created_at: '2025-01-15T12:00:00Z',
+      };
+
+      const result = mealLogToDbInsert(mealLog);
+
+      expect(result).toEqual({
+        recipe_ids: [1, 2],
+        meal_name: 'Lunch',
+        cooked_at: '2025-01-15',
+        notes: 'Delicious meal',
+        rating: null,
+        macros: {
+          calories: 500,
+          protein: 25,
+          carbs: 60,
+          fat: 20,
+        },
+        cost: 12.50,
+      });
+    });
+  });
+
+  describe('dbTagToTag', () => {
+    it('should convert database tag to Tag format', () => {
+      const dbTag = {
+        id: 1,
+        name: 'Vegetarian',
+        color: '#4ade80',
+        description: 'Vegetarian-friendly recipes',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+      };
+
+      const result = dbTagToTag(dbTag);
+
+      expect(result).toEqual({
+        id: 1,
+        name: 'Vegetarian',
+        color: '#4ade80',
+        description: 'Vegetarian-friendly recipes',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+      });
+    });
+
+    it('should handle null values gracefully', () => {
+      const dbTag = {
+        id: 2,
+        name: 'Quick',
+        color: null,
+        description: null,
+        created_at: null,
+        updated_at: null,
+      };
+
+      const result = dbTagToTag(dbTag);
+
+      expect(result).toEqual({
+        id: 2,
+        name: 'Quick',
+        color: '#3b82f6',
+        description: undefined,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      });
+    });
+  });
+
+  describe('tagToDbInsert', () => {
+    it('should convert Tag to database insert format', () => {
+      const tag: Omit<Tag, 'id' | 'created_at' | 'updated_at'> = {
+        name: 'Vegetarian',
+        color: '#4ade80',
+        description: 'Vegetarian-friendly recipes',
+      };
+
+      const result = tagToDbInsert(tag);
+
+      expect(result).toEqual({
+        name: 'Vegetarian',
+        color: '#4ade80',
+        description: 'Vegetarian-friendly recipes',
+      });
+    });
+
+    it('should handle undefined description', () => {
+      const tag: Omit<Tag, 'id' | 'created_at' | 'updated_at'> = {
+        name: 'Quick',
+        color: '#3b82f6',
+        description: undefined,
+      };
+
+      const result = tagToDbInsert(tag);
+
+      expect(result).toEqual({
+        name: 'Quick',
+        color: '#3b82f6',
+        description: null,
+      });
     });
   });
 });

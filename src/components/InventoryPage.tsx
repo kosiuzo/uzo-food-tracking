@@ -13,6 +13,7 @@ export function InventoryPage() {
     items,
     searchQuery,
     setSearchQuery,
+    performSearch,
     categoryFilter,
     setCategoryFilter,
     stockFilter,
@@ -73,16 +74,30 @@ export function InventoryPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search items..."
+            placeholder="Search items by name, brand, category, or ingredients..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchQuery(value);
+              // Use enhanced search if available, otherwise fall back to basic filtering
+              if (performSearch) {
+                performSearch(value);
+              }
+            }}
             className="pl-10"
           />
+          {!usingMockData && searchQuery && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Badge variant="secondary" className="text-xs">
+                Full-text search
+              </Badge>
+            </div>
+          )}
         </div>
         
-        <div className="flex gap-2">
+        <div className="space-y-3">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -94,7 +109,7 @@ export function InventoryPage() {
           </Select>
           
           <Select value={stockFilter} onValueChange={setStockFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Stock" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +120,7 @@ export function InventoryPage() {
           </Select>
           
           <Select value={ratingFilter} onValueChange={setRatingFilter}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Rating" />
             </SelectTrigger>
             <SelectContent>
@@ -159,11 +174,11 @@ export function InventoryPage() {
           }
         }}
         item={editingItem ? items.find(item => item.id === editingItem) : undefined}
-        onSave={(itemData) => {
+        onSave={async (itemData) => {
           if (editingItem) {
-            updateItem(editingItem, itemData);
+            await updateItem(editingItem, itemData);
           } else {
-            addItem(itemData);
+            await addItem(itemData);
           }
           setIsAddDialogOpen(false);
           setEditingItem(null);

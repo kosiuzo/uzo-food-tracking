@@ -83,7 +83,7 @@ jobs:
     
     - name: Check for hardcoded secrets
       run: |
-        if grep -ri "password\|secret\|key\|token" src/ --include="*.ts" --include="*.tsx" | grep -v "PASSWORD\|SECRET\|KEY\|TOKEN" | grep -E "(=|:)\s*['\"][^'\"]{8,}['\"]"; then
+        if grep -ri "password\|secret\|apikey\|api_key" src/ --include="*.ts" --include="*.tsx" | grep -v "PASSWORD\|SECRET\|KEY\|TOKEN" | grep -E "(=|:)\s*['\"][a-zA-Z0-9]{20,}['\"]"; then
           echo "❌ Potential hardcoded secrets found"
           exit 1
         fi

@@ -7,7 +7,12 @@ import * as inventoryHook from '../../hooks/useFoodInventory';
 
 vi.mock('../../hooks/useFoodInventory');
 vi.mock('../../components/FoodItemCard', () => ({
-  FoodItemCard: ({ item, onToggleStock, onEdit, onDelete }: any) => (
+  FoodItemCard: ({ item, onToggleStock, onEdit, onDelete }: {
+    item: { name: string };
+    onToggleStock: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+  }) => (
     <div>
       <span>{item.name}</span>
       <button onClick={onToggleStock}>toggle</button>
@@ -17,7 +22,9 @@ vi.mock('../../components/FoodItemCard', () => ({
   ),
 }));
 vi.mock('../../components/AddEditItemDialog', () => ({
-  AddEditItemDialog: ({ onSave }: any) => (
+  AddEditItemDialog: ({ onSave }: {
+    onSave: (item: Record<string, unknown>) => void;
+  }) => (
     <button
       onClick={() =>
         onSave({ id: '2', name: 'Banana', category: 'Fruit', in_stock: true, rating: 0 })
@@ -30,10 +37,10 @@ vi.mock('../../components/AddEditItemDialog', () => ({
 
 
 describe('Inventory Page', () => {
-  let addItem: any;
-  let updateItem: any;
-  let deleteItem: any;
-  let toggleStock: any;
+  let addItem: ReturnType<typeof vi.fn>;
+  let updateItem: ReturnType<typeof vi.fn>;
+  let deleteItem: ReturnType<typeof vi.fn>;
+  let toggleStock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     addItem = vi.fn();
@@ -59,7 +66,7 @@ describe('Inventory Page', () => {
       toggleStock,
       usingMockData: false,
       error: null,
-    } as any);
+    } as ReturnType<typeof inventoryHook.useFoodInventory>);
   });
 
   it('creates an item', async () => {

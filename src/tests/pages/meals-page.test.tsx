@@ -9,7 +9,7 @@ vi.mock('../../hooks/useMealLogs');
 vi.mock('../../hooks/useRecipes');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/Layout', () => ({
-  Layout: ({ children }: any) => <div>{children}</div>,
+  Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../hooks/use-mobile', () => ({
   useIsMobile: () => false,
@@ -17,9 +17,9 @@ vi.mock('../../hooks/use-mobile', () => ({
 vi.mock('../../components/LogMealDialog', () => ({ LogMealDialog: () => null }));
 vi.mock('../../components/ConfirmDialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('@/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: any) => <div>{children}</div>,
-  TooltipTrigger: ({ children }: any) => <div>{children}</div>,
-  TooltipContent: ({ children }: any) => <div>{children}</div>,
+  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TooltipContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 describe('Meals Page', () => {
@@ -44,11 +44,11 @@ describe('Meals Page', () => {
       getMealLogsByDateRange: vi.fn(),
       getRecentMealLogs: vi.fn(),
       refetch: vi.fn(),
-    } as any);
+    } as ReturnType<typeof mealLogsHook.useMealLogs>);
 
     vi.mocked(recipesHook.useRecipes).mockReturnValue({
       getRecipeById: vi.fn(),
-    } as any);
+    } as ReturnType<typeof recipesHook.useRecipes>);
 
     renderWithProviders(<Meals />);
     expect(screen.getByText('Meal Log')).toBeInTheDocument();

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Basic Navigation Tests', () => {
   test('should load the main page with correct title', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle('uzo-food-tracking');
+    await expect(page).toHaveTitle('Uzo Food Tracking');
     await expect(page.getByText('In Stock').first()).toBeVisible();
     await expect(page.getByText('Out of Stock').first()).toBeVisible();
   });

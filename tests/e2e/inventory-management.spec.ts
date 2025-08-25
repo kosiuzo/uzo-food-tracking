@@ -6,8 +6,8 @@ test.describe('Inventory Management Tests', () => {
   });
 
   test('should display inventory page elements', async ({ page }) => {
-    await expect(page.getByText('In Stock')).toBeVisible();
-    await expect(page.getByText('Out of Stock')).toBeVisible();
+    await expect(page.getByText('In Stock').first()).toBeVisible();
+    await expect(page.getByText('Out of Stock').first()).toBeVisible();
   });
 
   test('should have search functionality', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('Inventory Management Tests', () => {
     } catch {
       // If no "No items found" text, there should be inventory content
       const hasItems = await inventoryItems.count() > 0;
-      const hasStockCounts = await page.getByText('In Stock').isVisible();
+      const hasStockCounts = await page.getByText('In Stock').first().isVisible();
       expect(hasItems || hasStockCounts).toBeTruthy();
     }
   });

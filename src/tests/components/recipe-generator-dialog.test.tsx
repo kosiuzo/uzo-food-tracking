@@ -7,7 +7,7 @@ vi.mock('../../hooks/useFoodInventory');
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/ui/grouped-multi-select', () => ({
-  GroupedMultiSelect: ({ onValueChange }: any) => (
+  GroupedMultiSelect: ({ onValueChange }: { onValueChange: (value: string[]) => void }) => (
     <button onClick={() => onValueChange(['item1'])}>Select Ingredient</button>
   ),
 }));
@@ -28,10 +28,10 @@ describe('RecipeGeneratorDialog', () => {
     vi.clearAllMocks();
     vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({
       allItems: [{ id: 'item1', name: 'Tomato', in_stock: true }],
-    } as any);
+    } as ReturnType<typeof inventoryHook.useFoodInventory>);
     vi.mocked(tagsHook.useTags).mockReturnValue({
       allTags: [{ id: 'tag1', name: 'Vegan' }],
-    } as any);
+    } as ReturnType<typeof tagsHook.useTags>);
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -53,7 +53,7 @@ describe('RecipeGeneratorDialog', () => {
           },
         ],
       }),
-    } as any);
+    } as Response);
   });
 
   it('generates a recipe and calls onRecipeGenerated when accepted', async () => {

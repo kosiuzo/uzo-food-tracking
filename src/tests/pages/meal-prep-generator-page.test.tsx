@@ -11,16 +11,16 @@ vi.mock('../../hooks/useRecipes');
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/Layout', () => ({
-  Layout: ({ children }: any) => <div>{children}</div>,
+  Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../hooks/use-mobile', () => ({
   useIsMobile: () => false,
 }));
 vi.mock('@/components/ui/multi-select', () => ({
-  MultiSelect: ({ children }: any) => <div>{children}</div>,
+  MultiSelect: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('@/components/ui/grouped-multi-select', () => ({
-  GroupedMultiSelect: ({ children }: any) => <div>{children}</div>,
+  GroupedMultiSelect: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('react-router-dom', async (orig) => {
   const actual = await orig();
@@ -32,9 +32,9 @@ vi.mock('react-router-dom', async (orig) => {
 
 describe('MealPrepGenerator Page', () => {
   it('renders heading', () => {
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({ allItems: [] } as any);
-    vi.mocked(recipesHook.useRecipes).mockReturnValue({ addRecipe: vi.fn() } as any);
-    vi.mocked(tagsHook.useTags).mockReturnValue({ allTags: [] } as any);
+    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({ allItems: [] } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    vi.mocked(recipesHook.useRecipes).mockReturnValue({ addRecipe: vi.fn() } as ReturnType<typeof recipesHook.useRecipes>);
+    vi.mocked(tagsHook.useTags).mockReturnValue({ allTags: [] } as ReturnType<typeof tagsHook.useTags>);
 
     renderWithProviders(<MealPrepGenerator />);
     expect(screen.getByText('Meal Prep Generator')).toBeInTheDocument();

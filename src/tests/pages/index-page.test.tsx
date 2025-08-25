@@ -6,13 +6,13 @@ import * as inventoryHook from '../../hooks/useFoodInventory';
 
 vi.mock('../../hooks/useFoodInventory');
 vi.mock('../../components/Layout', () => ({
-  Layout: ({ children }: any) => <div>{children}</div>,
+  Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../hooks/use-mobile', () => ({
   useIsMobile: () => false,
 }));
 vi.mock('../../components/FoodItemCard', () => ({
-  FoodItemCard: ({ item }: any) => <div>{item.name}</div>,
+  FoodItemCard: ({ item }: { item: { name: string } }) => <div>{item.name}</div>,
 }));
 
 describe('Index Page', () => {
@@ -35,7 +35,7 @@ describe('Index Page', () => {
       toggleStock: vi.fn(),
       usingMockData: true,
       error: null,
-    } as any);
+    } as ReturnType<typeof inventoryHook.useFoodInventory>);
   });
 
   it('renders inventory item', () => {

@@ -7,7 +7,7 @@ import * as tagsHook from '../../hooks/useTags';
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/Layout', () => ({
-  Layout: ({ children }: any) => <div>{children}</div>,
+  Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../hooks/use-mobile', () => ({
   useIsMobile: () => false,
@@ -25,7 +25,7 @@ describe('Tags Page', () => {
       usingMockData: true,
       error: null,
       isDeleting: false,
-    } as any);
+    } as ReturnType<typeof tagsHook.useTags>);
 
     renderWithProviders(<Tags />);
     expect(screen.getByText('Tags')).toBeInTheDocument();

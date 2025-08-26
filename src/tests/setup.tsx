@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { render } from '@testing-library/react';
 import React from 'react';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Create a custom render function that includes providers
 export function renderWithProviders(ui: React.ReactElement) {
@@ -16,17 +17,32 @@ export function renderWithProviders(ui: React.ReactElement) {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {ui}
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          {ui}
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 
 // Mock Supabase client for tests
 vi.mock('../lib/supabase', () => ({
   supabase: {
+    auth: {
+      getSession: vi.fn(() => Promise.resolve({
+        data: { session: null },
+        error: null
+      })),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } }
+      })),
+      signUp: vi.fn(() => Promise.resolve({ error: null })),
+      signInWithPassword: vi.fn(() => Promise.resolve({ error: null })),
+      signOut: vi.fn(() => Promise.resolve({ error: null })),
+      resetPasswordForEmail: vi.fn(() => Promise.resolve({ error: null })),
+    },
     from: vi.fn((tableName) => {
       // Mock different table behaviors
       if (tableName === 'weekly_meal_plans') {

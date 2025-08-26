@@ -1,10 +1,20 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Package, ChefHat, BookOpen, CalendarDays, MoreHorizontal, Tag, Settings, TrendingUp, Search } from 'lucide-react';
+import { Package, ChefHat, BookOpen, CalendarDays, MoreHorizontal, Tag, Settings, TrendingUp, Search, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { GlobalSearch } from './GlobalSearch';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,6 +37,24 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: 'Error signing out',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Signed out successfully',
+        description: 'You have been signed out of your account.',
+      });
+    }
+  };
 
   // Check if current path is in more items
   const isMoreActive = moreNavItems.some(item => item.path === location.pathname);
@@ -56,31 +84,52 @@ export function Layout({ children }: LayoutProps) {
         <div className="container flex h-14 items-center justify-between px-4">
           <h1 className="text-lg font-semibold">Food Tracker</h1>
           
-          {/* Search Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSearchOpen(true)}
-            className="hidden sm:flex items-center justify-between w-64 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <span className="flex items-center">
-              <Search className="mr-2 h-4 w-4" />
-              Search...
-            </span>
-            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">⌘</span>K
-            </kbd>
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Search Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden sm:flex items-center justify-between w-64 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <span className="flex items-center">
+                <Search className="mr-2 h-4 w-4" />
+                Search...
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
 
-          {/* Mobile Search Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsSearchOpen(true)}
-            className="sm:hidden p-2"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
+            {/* Mobile Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSearchOpen(true)}
+              className="sm:hidden p-2"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  {user?.email || 'My Account'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 

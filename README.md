@@ -24,7 +24,7 @@ A mobile-first PWA for tracking food inventory, planning meals, and logging cons
 2. Provide Supabase credentials in a `.env` file:
    ```env
    VITE_SUPABASE_URL=your-url
-   VITE_SUPABASE_ANON_KEY=your-anon-key
+   VITE_SUPABASE_ANON_KEY=your-anon-key or publishable key
    ```
 3. Start the development server
    ```sh

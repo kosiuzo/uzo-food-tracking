@@ -4,8 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-**Development server:** `npm run dev` (runs on port 8080)
-**Build:** `npm run build` (production) or `npm run build:dev` (development mode)
+**Development server:** `npm run dev` (development mode, port 8080) or `npm run dev:prod` (production config, port 8080)
+**Build:** `npm run build` (production mode) or `npm run build:dev` (development mode)
+**Preview:** `npm run preview` (default), `npm run preview:dev` (development mode), or `npm run preview:prod` (production mode)
 **Testing:** `npm test` (watch mode), `npm run test:run` (single run), `npm run test:ui` (Vitest UI)
 **E2E testing:** `npm run test:e2e`, `npm run test:e2e:ui` (Playwright)
 **Linting:** `npm run lint`

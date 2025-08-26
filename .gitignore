@@ -18,6 +18,8 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.production
 
 # Editor directories and files
 .vscode/*
@@ -36,3 +38,4 @@ playwright-report/
 trace/
 *.trace
 *.zip
+

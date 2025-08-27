@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GroupedMultiSelect, OptionGroup, GroupedOption } from '@/components/ui/grouped-multi-select';
@@ -28,6 +29,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const [servings, setServings] = useState(4);
   const [cuisineStyle, setCuisineStyle] = useState('none');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
+  const [additionalNotes, setAdditionalNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<Omit<Recipe, 'id' | 'is_favorite'> | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -93,6 +95,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
 Target: serves ${servings}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
+${additionalNotes ? `\nAdditional requirements: ${additionalNotes}` : ''}
 
 Available tags to choose from: ${availableTagsList}
 
@@ -286,6 +289,7 @@ Use only the provided ingredients. Make reasonable portions for the serving size
     setServings(4);
     setCuisineStyle('none');
     setDietaryRestrictions('paleo');
+    setAdditionalNotes('');
     setGeneratedRecipe(null);
     setShowPreview(false);
   };
@@ -391,6 +395,19 @@ Use only the provided ingredients. Make reasonable portions for the serving size
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Additional Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Additional Notes (optional)</Label>
+            <Textarea
+              id="notes"
+              placeholder="Add any special preferences, cooking methods, or requirements (e.g., 'make it spicy', 'one-pot meal', 'kid-friendly')..."
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              disabled={isGenerating}
+              rows={3}
+            />
           </div>
 
           {/* Action Buttons */}

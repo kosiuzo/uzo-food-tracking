@@ -13,6 +13,7 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
 
 export default function Meals() {
   const { mealLogs, addMealLog, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
@@ -51,16 +52,16 @@ export default function Meals() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const todayLocal = getTodayLocalDate();
+    const yesterdayLocal = getYesterdayLocalDate();
 
-    if (date.toDateString() === today.toDateString()) {
+    if (dateString === todayLocal) {
       return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (dateString === yesterdayLocal) {
       return 'Yesterday';
     } else {
+      // Format the date string for display
+      const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
       return date.toLocaleDateString();
     }
   };
@@ -111,7 +112,7 @@ export default function Meals() {
 
   // Check if a meal is already logged for today
   const isMealLoggedToday = (mealLog: MealLog) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalDate();
     return safeMealLogs.some(log => 
       log.date === today && 
       log.recipe_ids.length === mealLog.recipe_ids.length &&
@@ -203,7 +204,7 @@ export default function Meals() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  onClick={() => setSelectedDate(getTodayLocalDate())}
                   className="h-7 px-2 text-xs"
                 >
                   Today
@@ -211,11 +212,7 @@ export default function Meals() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    setSelectedDate(yesterday.toISOString().split('T')[0]);
-                  }}
+                  onClick={() => setSelectedDate(getYesterdayLocalDate())}
                   className="h-7 px-2 text-xs"
                 >
                   Yesterday
@@ -224,17 +221,8 @@ export default function Meals() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    const today = new Date();
-                    const startOfWeek = new Date(today);
-                    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
-                    const endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of current week (Saturday)
-                    
                     setSelectedDate('');
-                    setDateRange({
-                      start: startOfWeek.toISOString().split('T')[0],
-                      end: endOfWeek.toISOString().split('T')[0]
-                    });
+                    setDateRange(getCurrentWeekRange());
                   }}
                   className="h-7 px-2 text-xs"
                 >
@@ -244,17 +232,8 @@ export default function Meals() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    const today = new Date();
-                    const startOfLastWeek = new Date(today);
-                    startOfLastWeek.setDate(today.getDate() - today.getDay() - 7); // Start of last week (Sunday)
-                    const endOfLastWeek = new Date(startOfLastWeek);
-                    endOfLastWeek.setDate(startOfLastWeek.getDate() + 6); // End of last week (Saturday)
-                    
                     setSelectedDate('');
-                    setDateRange({
-                      start: startOfLastWeek.toISOString().split('T')[0],
-                      end: endOfLastWeek.toISOString().split('T')[0]
-                    });
+                    setDateRange(getLastWeekRange());
                   }}
                   className="h-7 px-2 text-xs"
                 >
@@ -264,14 +243,14 @@ export default function Meals() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
                 <div className="text-sm text-muted-foreground">
                   {selectedDate 
-                    ? 'Meals on ' + new Date(selectedDate).toLocaleDateString()
+                    ? 'Meals on ' + formatDateStringForDisplay(selectedDate)
                     : dateRange
-                    ? `Meals ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    ? `Meals ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
                     : 'Total Meals'
                   }
                 </div>
@@ -282,12 +261,44 @@ export default function Meals() {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {selectedDate 
-                    ? 'Calories on ' + new Date(selectedDate).toLocaleDateString()
+                    ? 'Calories on ' + formatDateStringForDisplay(selectedDate)
                     : dateRange
-                    ? `Calories ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    ? `Calories ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
                     : 'Total Calories'
                   }
                 </div>
+              </Card>
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.protein, 0).toFixed(1)}g
+                </div>
+                <div className="text-sm text-muted-foreground">Protein</div>
+              </Card>
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.carbs, 0).toFixed(1)}g
+                </div>
+                <div className="text-sm text-muted-foreground">Carbs</div>
+              </Card>
+            </div>
+            
+            {/* Fat for mobile */}
+            <div className="grid grid-cols-1 gap-4 sm:hidden">
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
+                </div>
+                <div className="text-sm text-muted-foreground">Fat</div>
+              </Card>
+            </div>
+            
+            {/* Fat for larger screens */}
+            <div className="hidden sm:grid grid-cols-1 gap-4">
+              <Card className="p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
+                </div>
+                <div className="text-sm text-muted-foreground">Fat</div>
               </Card>
             </div>
 
@@ -296,9 +307,9 @@ export default function Meals() {
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   {selectedDate 
-                    ? `Meals on ${new Date(selectedDate).toLocaleDateString()}`
+                    ? `Meals on ${formatDateStringForDisplay(selectedDate)}`
                     : dateRange
-                    ? `Meals ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                    ? `Meals ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
                     : 'Recent Meals'
                   }
                 </h2>
@@ -315,9 +326,9 @@ export default function Meals() {
                   <div className="space-y-2">
                     <p className="text-muted-foreground text-lg">
                       {selectedDate 
-                        ? `No meals logged on ${new Date(selectedDate).toLocaleDateString()}`
+                        ? `No meals logged on ${formatDateStringForDisplay(selectedDate)}`
                         : dateRange
-                        ? `No meals logged ${new Date(dateRange.start).toLocaleDateString()} - ${new Date(dateRange.end).toLocaleDateString()}`
+                        ? `No meals logged ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
                         : 'No meals logged yet'
                       }
                     </p>

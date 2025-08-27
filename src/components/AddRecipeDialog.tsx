@@ -208,7 +208,13 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                 id="prep-time"
                 type="number"
                 value={formData.total_time_minutes}
-                onChange={(e) => setFormData(prev => ({ ...prev, total_time_minutes: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    total_time_minutes: value === '' ? '' : parseInt(value) || 0 
+                  }));
+                }}
                 min="0"
               />
             </div>
@@ -290,7 +296,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                           <Input
                             type="number"
                             value={ingredient.quantity}
-                            onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              updateIngredient(index, { 
+                                quantity: value === '' ? '' : parseFloat(value) || 0 
+                              });
+                            }}
                             min="0"
                             step="0.01"
                           />

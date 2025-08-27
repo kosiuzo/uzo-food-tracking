@@ -3,10 +3,10 @@ import { screen } from '@testing-library/react';
 import Analytics from '../../pages/Analytics';
 import { renderWithProviders } from '../setup';
 import * as mealLogsHook from '../../hooks/useMealLogs';
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 
 vi.mock('../../hooks/useMealLogs');
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../components/Layout', () => ({
   Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -30,12 +30,12 @@ describe('Analytics Page', () => {
       refetch: vi.fn(),
     } as ReturnType<typeof mealLogsHook.useMealLogs>);
 
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       allItems: [],
       usingMockData: false,
       loading: false,
       error: null,
-    } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    } as ReturnType<typeof inventoryHook.useInventorySearch>);
 
     renderWithProviders(<Analytics />);
 

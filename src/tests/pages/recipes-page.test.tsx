@@ -3,11 +3,11 @@ import { screen } from '@testing-library/react';
 import Recipes from '../../pages/Recipes';
 import { renderWithProviders } from '../setup';
 import * as recipesHook from '../../hooks/useRecipes';
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 import * as tagsHook from '../../hooks/useTags';
 
 vi.mock('../../hooks/useRecipes');
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/Layout', () => ({
@@ -38,7 +38,7 @@ describe('Recipes Page', () => {
       error: null,
     } as ReturnType<typeof recipesHook.useRecipes>);
 
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({ allItems: [] } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({ allItems: [] } as ReturnType<typeof inventoryHook.useInventorySearch>);
     vi.mocked(tagsHook.useTags).mockReturnValue({ allTags: [] } as ReturnType<typeof tagsHook.useTags>);
   });
 

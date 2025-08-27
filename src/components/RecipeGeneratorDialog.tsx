@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GroupedMultiSelect, OptionGroup, GroupedOption } from '@/components/ui/grouped-multi-select';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe, FoodItem, RecipeIngredient } from '../types';
-import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
 import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
@@ -34,7 +34,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   const [generatedRecipe, setGeneratedRecipe] = useState<Omit<Recipe, 'id' | 'is_favorite'> | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
-  const { allItems } = useFoodInventory();
+  const { allItems } = useInventorySearch();
   const { allTags } = useTags();
 
   // Group items by category for the GroupedMultiSelect (in-stock items only)

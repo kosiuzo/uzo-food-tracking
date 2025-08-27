@@ -89,32 +89,6 @@ export function useFoodInventory() {
     return matchesSearch && matchesCategory && matchesStock && matchesRating;
   });
 
-  // Enhanced search function for real-time search
-  const performSearch = async (query: string) => {
-    if (usingMockData) {
-      // For mock data, use the existing filter approach
-      setSearchQuery(query);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const searchOptions = {
-        includeInactive: stockFilter !== 'in-stock',
-        categories: categoryFilter !== 'all' ? [categoryFilter] : [],
-        sortBy: 'relevance' as const,
-      };
-
-      const result = await searchItems(query, searchOptions);
-      setItems(result.items);
-      setSearchQuery(query);
-    } catch (err) {
-      console.error('Search failed:', err);
-      setError('Search failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const categories = Array.from(new Set(items.map(item => item.category)));
 
@@ -287,7 +261,6 @@ export function useFoodInventory() {
     usingMockData,
     searchQuery,
     setSearchQuery,
-    performSearch,
     categoryFilter,
     setCategoryFilter,
     stockFilter,

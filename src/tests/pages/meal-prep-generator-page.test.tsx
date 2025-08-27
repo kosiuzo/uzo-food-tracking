@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import MealPrepGenerator from '../../pages/MealPrepGenerator';
 import { renderWithProviders } from '../setup';
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 import * as recipesHook from '../../hooks/useRecipes';
 import * as tagsHook from '../../hooks/useTags';
 
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../hooks/useRecipes');
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
@@ -32,7 +32,7 @@ vi.mock('react-router-dom', async (orig) => {
 
 describe('MealPrepGenerator Page', () => {
   it('renders heading', () => {
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({ allItems: [] } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({ allItems: [] } as ReturnType<typeof inventoryHook.useInventorySearch>);
     vi.mocked(recipesHook.useRecipes).mockReturnValue({ addRecipe: vi.fn() } as ReturnType<typeof recipesHook.useRecipes>);
     vi.mocked(tagsHook.useTags).mockReturnValue({ allTags: [] } as ReturnType<typeof tagsHook.useTags>);
 

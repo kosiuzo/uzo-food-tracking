@@ -6,14 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { FoodItemCard } from './FoodItemCard';
 import { AddEditItemDialog } from './AddEditItemDialog';
-import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 
 export function InventoryPage() {
   const {
     items,
     searchQuery,
     setSearchQuery,
-    performSearch,
     categoryFilter,
     setCategoryFilter,
     stockFilter,
@@ -27,7 +26,8 @@ export function InventoryPage() {
     toggleStock,
     usingMockData,
     error,
-  } = useFoodInventory();
+    loading,
+  } = useInventorySearch();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
@@ -76,14 +76,7 @@ export function InventoryPage() {
           <Input
             placeholder="Search items by name, brand, category, or ingredients..."
             value={searchQuery}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSearchQuery(value);
-              // Use enhanced search if available, otherwise fall back to basic filtering
-              if (performSearch) {
-                performSearch(value);
-              }
-            }}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
           {!usingMockData && searchQuery && (
@@ -138,7 +131,11 @@ export function InventoryPage() {
 
       {/* Items List */}
       <div className="space-y-3">
-        {items.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        ) : items.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No items found</p>
           </div>

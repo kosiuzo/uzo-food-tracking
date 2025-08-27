@@ -9,7 +9,7 @@ import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { Card } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags, useRecipeTagManagement } from '../hooks/useTags';
 import { Recipe, RecipeIngredient, Tag } from '../types';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
@@ -34,7 +34,7 @@ interface AddRecipeDialogProps {
 
 export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: AddRecipeDialogProps) {
   const { toast } = useToast();
-  const { allItems } = useFoodInventory();
+  const { allItems } = useInventorySearch();
   const { allTags } = useTags();
   
   const [formData, setFormData] = useState<RecipeFormData>({

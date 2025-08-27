@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layout } from '../components/Layout';
 import { useMealLogs } from '../hooks/useMealLogs';
-import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 
 export default function Analytics() {
   const { mealLogs, getRecentMealLogs, usingMockData: mealLogsUsingMock, loading: mealLogsLoading, error: mealLogsError } = useMealLogs();
-  const { allItems, usingMockData: inventoryUsingMock, loading: inventoryLoading, error: inventoryError } = useFoodInventory();
+  const { allItems, usingMockData: inventoryUsingMock, loading: inventoryLoading, error: inventoryError } = useInventorySearch();
 
   const recentLogs = getRecentMealLogs(7);
   const loading = mealLogsLoading || inventoryLoading;

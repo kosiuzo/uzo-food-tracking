@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import Index from '../../pages/Index';
 import { renderWithProviders } from '../setup';
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../components/Layout', () => ({
   Layout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -17,11 +17,10 @@ vi.mock('../../components/FoodItemCard', () => ({
 
 describe('Index Page', () => {
   beforeEach(() => {
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       items: [{ id: '1', name: 'Apple', category: 'Fruit', in_stock: true, rating: 0 }],
       searchQuery: '',
       setSearchQuery: vi.fn(),
-      performSearch: vi.fn(),
       categoryFilter: 'all',
       setCategoryFilter: vi.fn(),
       stockFilter: 'all',
@@ -35,7 +34,7 @@ describe('Index Page', () => {
       toggleStock: vi.fn(),
       usingMockData: true,
       error: null,
-    } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    } as ReturnType<typeof inventoryHook.useInventorySearch>);
   });
 
   it('renders inventory item', () => {

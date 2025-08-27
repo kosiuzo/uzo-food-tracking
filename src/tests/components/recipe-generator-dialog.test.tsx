@@ -3,7 +3,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeGeneratorDialog } from '../../components/RecipeGeneratorDialog';
 import { renderWithProviders } from '../setup';
 
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../hooks/useTags');
 vi.mock('../../hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('../../components/ui/grouped-multi-select', () => ({
@@ -20,13 +20,13 @@ vi.mock('../../lib/servingUnitUtils', () => ({
   })),
 }));
 
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 import * as tagsHook from '../../hooks/useTags';
 
 describe('RecipeGeneratorDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       allItems: [{ id: 'item1', name: 'Tomato', in_stock: true }],
     } as ReturnType<typeof inventoryHook.useFoodInventory>);
     vi.mocked(tagsHook.useTags).mockReturnValue({

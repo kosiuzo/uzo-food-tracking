@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../setup';
 import { InventoryPage } from '../../components/InventoryPage';
-import * as inventoryHook from '../../hooks/useFoodInventory';
+import * as inventoryHook from '../../hooks/useInventorySearch';
 
-vi.mock('../../hooks/useFoodInventory');
+vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../components/FoodItemCard', () => ({
   FoodItemCard: ({ item, onToggleStock, onEdit, onDelete }: {
     item: { name: string };
@@ -48,11 +48,10 @@ describe('Inventory Page', () => {
     deleteItem = vi.fn();
     toggleStock = vi.fn();
 
-    vi.mocked(inventoryHook.useFoodInventory).mockReturnValue({
+    vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       items: [{ id: '1', name: 'Apple', category: 'Fruit', in_stock: true, rating: 0 }],
       searchQuery: '',
       setSearchQuery: vi.fn(),
-      performSearch: vi.fn(),
       categoryFilter: 'all',
       setCategoryFilter: vi.fn(),
       stockFilter: 'all',
@@ -66,7 +65,7 @@ describe('Inventory Page', () => {
       toggleStock,
       usingMockData: false,
       error: null,
-    } as ReturnType<typeof inventoryHook.useFoodInventory>);
+    } as ReturnType<typeof inventoryHook.useInventorySearch>);
   });
 
   it('creates an item', async () => {

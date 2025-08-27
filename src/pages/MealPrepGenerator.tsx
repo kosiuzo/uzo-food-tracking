@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { ChefHat, Clock, Users, Loader2, X, Check, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
-import { useFoodInventory } from '@/hooks/useFoodInventory';
+import { useInventorySearch } from '@/hooks/useInventorySearch';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useTags } from '@/hooks/useTags';
 import { FoodItem, Recipe, RecipeIngredient } from '@/types';
@@ -93,7 +93,7 @@ interface ParsedRecipeResponse {
 
 const MealPrepGenerator = () => {
   const navigate = useNavigate();
-  const { allItems } = useFoodInventory();
+  const { allItems } = useInventorySearch();
   const { addRecipe } = useRecipes();
   const { allTags } = useTags();
   const { toast: toastHook } = useToast();

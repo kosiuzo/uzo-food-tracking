@@ -14,14 +14,14 @@ import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useRecipes } from '../hooks/useRecipes';
-import { useFoodInventory } from '../hooks/useFoodInventory';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useRecipeTagManagement, useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe } from '../types';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
-  const { allItems } = useFoodInventory();
+  const { allItems } = useInventorySearch();
   const { allTags } = useTags();
   const { toast } = useToast();
 

@@ -11,6 +11,29 @@ import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { getServingUnitType, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
+// Form-specific type that allows string values during editing
+interface FoodItemFormData {
+  name: string;
+  brand: string;
+  category: string;
+  in_stock: boolean;
+  price: string;
+  serving_size: string;
+  serving_quantity: string;
+  serving_unit: string;
+  serving_unit_type: 'volume' | 'weight' | 'package' | '';
+  image_url: string;
+  ingredients: string;
+  rating: number;
+  nutrition: {
+    calories_per_serving: string;
+    protein_per_serving: string;
+    carbs_per_serving: string;
+    fat_per_serving: string;
+    fiber_per_serving: string;
+  };
+}
+
 interface AddEditItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,25 +47,25 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FoodItemFormData>({
     name: '',
     brand: '',
     category: '',
     in_stock: true,
-    price: 0,
-    serving_size: 100,
-    serving_quantity: 0,
+    price: '',
+    serving_size: '100',
+    serving_quantity: '',
     serving_unit: '',
-    serving_unit_type: '' as 'volume' | 'weight' | 'package' | '',
+    serving_unit_type: '',
     image_url: '',
     ingredients: '',
     rating: 0,
     nutrition: {
-      calories_per_serving: 0,
-      protein_per_serving: 0,
-      carbs_per_serving: 0,
-      fat_per_serving: 0,
-      fiber_per_serving: 0,
+      calories_per_serving: '',
+      protein_per_serving: '',
+      carbs_per_serving: '',
+      fat_per_serving: '',
+      fiber_per_serving: '',
     },
   });
 
@@ -53,15 +76,21 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         brand: item.brand || '',
         category: item.category,
         in_stock: item.in_stock,
-        price: item.price || 0,
-        serving_size: item.serving_size || 100,
-        serving_quantity: item.serving_quantity || 0,
+        price: item.price ? item.price.toString() : '',
+        serving_size: item.serving_size ? item.serving_size.toString() : '100',
+        serving_quantity: item.serving_quantity ? item.serving_quantity.toString() : '',
         serving_unit: item.serving_unit || '',
         serving_unit_type: item.serving_unit_type || '',
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
         rating: item.rating || 0,
-        nutrition: { ...item.nutrition },
+        nutrition: {
+          calories_per_serving: item.nutrition.calories_per_serving ? item.nutrition.calories_per_serving.toString() : '',
+          protein_per_serving: item.nutrition.protein_per_serving ? item.nutrition.protein_per_serving.toString() : '',
+          carbs_per_serving: item.nutrition.carbs_per_serving ? item.nutrition.carbs_per_serving.toString() : '',
+          fat_per_serving: item.nutrition.fat_per_serving ? item.nutrition.fat_per_serving.toString() : '',
+          fiber_per_serving: item.nutrition.fiber_per_serving ? item.nutrition.fiber_per_serving.toString() : '',
+        },
       });
     } else {
       setFormData({
@@ -69,20 +98,20 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         brand: '',
         category: '',
         in_stock: true,
-        price: 0,
-        serving_size: 100,
-        serving_quantity: 0,
+        price: '',
+        serving_size: '100',
+        serving_quantity: '',
         serving_unit: '',
         serving_unit_type: '',
         image_url: '',
         ingredients: '',
         rating: 0,
         nutrition: {
-          calories_per_serving: 0,
-          protein_per_serving: 0,
-          carbs_per_serving: 0,
-          fat_per_serving: 0,
-          fiber_per_serving: 0,
+          calories_per_serving: '',
+          protein_per_serving: '',
+          carbs_per_serving: '',
+          fat_per_serving: '',
+          fiber_per_serving: '',
         },
       });
     }
@@ -150,12 +179,22 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     try {
       setLoading(true);
       
-      // Prepare the data to save, converting empty strings to null for optional fields
+      // Prepare the data to save, converting strings to numbers and empty strings to null for optional fields
       const dataToSave = {
         ...formData,
+        price: formData.price ? parseFloat(formData.price) || 0 : 0,
+        serving_size: formData.serving_size ? parseFloat(formData.serving_size) || 100 : 100,
+        serving_quantity: formData.serving_quantity ? parseFloat(formData.serving_quantity) || 0 : 0,
         image_url: formData.image_url.trim() || null,
         brand: formData.brand.trim() || null,
         ingredients: formData.ingredients.trim() || null,
+        nutrition: {
+          calories_per_serving: formData.nutrition.calories_per_serving ? parseFloat(formData.nutrition.calories_per_serving) || 0 : 0,
+          protein_per_serving: formData.nutrition.protein_per_serving ? parseFloat(formData.nutrition.protein_per_serving) || 0 : 0,
+          carbs_per_serving: formData.nutrition.carbs_per_serving ? parseFloat(formData.nutrition.carbs_per_serving) || 0 : 0,
+          fat_per_serving: formData.nutrition.fat_per_serving ? parseFloat(formData.nutrition.fat_per_serving) || 0 : 0,
+          fiber_per_serving: formData.nutrition.fiber_per_serving ? parseFloat(formData.nutrition.fiber_per_serving) || 0 : 0,
+        },
       };
 
       await onSave(dataToSave);
@@ -252,7 +291,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 id="price"
                 type="number"
                 value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 min="0"
                 step="0.01"
               />
@@ -271,15 +310,15 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
           {/* Serving Size */}
           <div className="space-y-2">
             <Label htmlFor="serving_size">Serving Size (grams)</Label>
-            <Input
-              id="serving_size"
-              type="number"
-              value={formData.serving_size || 100}
-              onChange={(e) => setFormData(prev => ({ ...prev, serving_size: parseFloat(e.target.value) || 100 }))}
-              min="1"
-              step="1"
-              placeholder="100"
-            />
+                          <Input
+                id="serving_size"
+                type="number"
+                value={formData.serving_size}
+                onChange={(e) => setFormData(prev => ({ ...prev, serving_size: e.target.value }))}
+                min="1"
+                step="1"
+                placeholder="100"
+              />
             <p className="text-xs text-muted-foreground">
               The weight of one serving in grams. Used for accurate macro calculations.
             </p>
@@ -298,8 +337,8 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="serving_quantity"
                   type="number"
-                  value={formData.serving_quantity || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, serving_quantity: parseFloat(e.target.value) || 0 }))}
+                  value={formData.serving_quantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serving_quantity: e.target.value }))}
                   min="0"
                   step="0.25"
                   placeholder="e.g., 0.25"
@@ -423,10 +462,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="calories"
                   type="number"
-                  value={formData.nutrition.calories_per_serving ?? ''}
+                  value={formData.nutrition.calories_per_serving}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    nutrition: { ...prev.nutrition, calories_per_serving: parseFloat(e.target.value) || 0 }
+                    nutrition: { 
+                      ...prev.nutrition, 
+                      calories_per_serving: e.target.value 
+                    }
                   }))}
                   min="0"
                   step="0.1"
@@ -437,10 +479,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="protein"
                   type="number"
-                  value={formData.nutrition.protein_per_serving ?? ''}
+                  value={formData.nutrition.protein_per_serving}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    nutrition: { ...prev.nutrition, protein_per_serving: parseFloat(e.target.value) || 0 }
+                    nutrition: { 
+                      ...prev.nutrition, 
+                      protein_per_serving: e.target.value 
+                    }
                   }))}
                   min="0"
                   step="0.1"
@@ -451,10 +496,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="carbs"
                   type="number"
-                  value={formData.nutrition.carbs_per_serving ?? ''}
+                  value={formData.nutrition.carbs_per_serving}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    nutrition: { ...prev.nutrition, carbs_per_serving: parseFloat(e.target.value) || 0 }
+                    nutrition: { 
+                      ...prev.nutrition, 
+                      carbs_per_serving: e.target.value 
+                    }
                   }))}
                   min="0"
                   step="0.1"
@@ -465,10 +513,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
                 <Input
                   id="fat"
                   type="number"
-                  value={formData.nutrition.fat_per_serving ?? ''}
+                  value={formData.nutrition.fat_per_serving}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    nutrition: { ...prev.nutrition, fat_per_serving: parseFloat(e.target.value) || 0 }
+                    nutrition: { 
+                      ...prev.nutrition, 
+                      fat_per_serving: e.target.value 
+                    }
                   }))}
                   min="0"
                   step="0.1"

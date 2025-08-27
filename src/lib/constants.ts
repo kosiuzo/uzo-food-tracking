@@ -13,7 +13,8 @@ export const CUISINE_STYLES = [
   'Greek',
   'Spanish',
   'Middle Eastern',
-  'Fusion'
+  'Fusion',
+  'Smoothie'
 ];
 
 export const DIETARY_RESTRICTIONS = [

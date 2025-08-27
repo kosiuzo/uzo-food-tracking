@@ -14,6 +14,17 @@ import { useTags, useRecipeTagManagement } from '../hooks/useTags';
 import { Recipe, RecipeIngredient, Tag } from '../types';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
+// Form-specific type that allows string quantities during editing
+interface RecipeFormData {
+  name: string;
+  instructions: string;
+  servings: string;
+  total_time_minutes: string;
+  ingredients: Array<Omit<RecipeIngredient, 'quantity'> & { quantity: string }>;
+  notes: string;
+  selectedTagIds: string[];
+}
+
 interface AddRecipeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,14 +37,14 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   const { allItems } = useFoodInventory();
   const { allTags } = useTags();
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RecipeFormData>({
     name: '',
     instructions: '',
-    servings: 1,
-    total_time_minutes: 0,
-    ingredients: [] as RecipeIngredient[],
+    servings: '1',
+    total_time_minutes: '',
+    ingredients: [],
     notes: '',
-    selectedTagIds: [] as string[],
+    selectedTagIds: [],
   });
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
@@ -44,8 +55,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       setFormData({
         name: editingRecipe.name,
         instructions: editingRecipe.instructions,
-        servings: editingRecipe.servings,
-        total_time_minutes: editingRecipe.total_time_minutes,
+        servings: editingRecipe.servings.toString(),
+        total_time_minutes: editingRecipe.total_time_minutes.toString(),
         ingredients: editingRecipe.ingredients,
         notes: editingRecipe.notes || '',
         selectedTagIds: editingRecipe.tags?.map(tag => tag.id) || [],
@@ -56,8 +67,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       setFormData({
         name: '',
         instructions: '',
-        servings: 1,
-        total_time_minutes: 0,
+        servings: '1',
+        total_time_minutes: '',
         ingredients: [],
         notes: '',
         selectedTagIds: [],
@@ -68,7 +79,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
   // Calculate nutrition based on ingredients using the reusable utility
   const calculateNutrition = () => {
-    return calculateRecipeNutrition(formData.ingredients, formData.servings, allItems);
+    // Convert string quantities to numbers for the calculation
+    const ingredientsWithNumbers = formData.ingredients.map(ing => ({
+      ...ing,
+      quantity: parseFloat(ing.quantity) || 0
+    }));
+    return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
   };
 
   // Convert allItems to options for MultiSelect (in-stock items only)
@@ -87,7 +103,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     const newIngredients: RecipeIngredient[] = selectedIds.map(itemId => {
       // Check if this ingredient already exists
       const existingIngredient = formData.ingredients.find(ing => ing.item_id === itemId);
-      return existingIngredient || { item_id: itemId, quantity: 1, unit: 'cup' };
+      return existingIngredient || { item_id: itemId, quantity: '1', unit: 'cup' };
     });
     
     setFormData(prev => ({
@@ -99,7 +115,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   const addIngredient = () => {
     setFormData(prev => ({
       ...prev,
-      ingredients: [...prev.ingredients, { item_id: '', quantity: 1, unit: 'cup' }]
+      ingredients: [...prev.ingredients, { item_id: '', quantity: '1', unit: 'cup' }]
     }));
   };
 
@@ -145,6 +161,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
     const recipeData = {
       ...formData,
+      servings: parseInt(formData.servings) || 1,
+      total_time_minutes: parseInt(formData.total_time_minutes) || 0,
+      ingredients: formData.ingredients.map(ing => ({
+        ...ing,
+        quantity: parseFloat(ing.quantity) || 0
+      })),
       nutrition: calculateNutrition(),
       // Pass selected tag IDs for the parent to handle
       selectedTagIds: formData.selectedTagIds,
@@ -156,8 +178,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     setFormData({
       name: '',
       instructions: '',
-      servings: 1,
-      total_time_minutes: 0,
+      servings: '1',
+      total_time_minutes: '',
       ingredients: [],
       notes: '',
       selectedTagIds: [],
@@ -198,7 +220,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                 id="servings"
                 type="number"
                 value={formData.servings}
-                onChange={(e) => setFormData(prev => ({ ...prev, servings: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, servings: e.target.value }))}
                 min="1"
               />
             </div>
@@ -208,7 +230,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                 id="prep-time"
                 type="number"
                 value={formData.total_time_minutes}
-                onChange={(e) => setFormData(prev => ({ ...prev, total_time_minutes: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, total_time_minutes: e.target.value }))}
                 min="0"
               />
             </div>
@@ -290,7 +312,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
                           <Input
                             type="number"
                             value={ingredient.quantity}
-                            onChange={(e) => updateIngredient(index, { quantity: parseFloat(e.target.value) || 0 })}
+                            onChange={(e) => updateIngredient(index, { quantity: e.target.value })}
                             min="0"
                             step="0.01"
                           />

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { MealLog, DbMealLog } from '../types';
 import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
+import { getTodayLocalDate } from '../lib/utils';
 
 export function useMealLogs() {
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
@@ -134,7 +135,7 @@ export function useMealLogs() {
   const reLogMeal = async (mealLog: MealLog) => {
     try {
       // Create a copy of the meal log with today's date
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocalDate();
       const newMealLog: Omit<MealLog, 'id'> = {
         recipe_ids: mealLog.recipe_ids,
         meal_name: mealLog.meal_name,

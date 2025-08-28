@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -541,3 +540,4 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     </Dialog>
   );
 }
+import { Search } from 'lucide-react';

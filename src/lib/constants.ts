@@ -1,20 +1,14 @@
 export const CUISINE_STYLES = [
+  'Smoothie',
   'Italian',
   'Chinese',
-  'Mexican',
   'Indian',
   'Japanese',
-  'French',
   'Thai',
   'Mediterranean',
   'American',
   'Korean',
-  'Vietnamese',
-  'Greek',
-  'Spanish',
-  'Middle Eastern',
-  'Fusion',
-  'Smoothie'
+  'Middle Eastern'
 ];
 
 export const DIETARY_RESTRICTIONS = [

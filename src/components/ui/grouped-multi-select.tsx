@@ -143,9 +143,9 @@ export const GroupedMultiSelect = React.forwardRef<
 
     React.useEffect(() => {
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
-        setSelectedValues(selectedValues)
+        setSelectedValues(defaultValue)
       }
-    }, [defaultValue, selectedValues])
+    }, [defaultValue])
 
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {
@@ -308,7 +308,10 @@ export const GroupedMultiSelect = React.forwardRef<
             {allFilteredOptions.length > 1 && (
               <CommandItem
                 key="all"
-                onSelect={toggleAll}
+                onSelect={(value) => {
+                  // Prevent the default command behavior and use our toggle
+                  toggleAll()
+                }}
                 className="cursor-pointer py-3 md:py-2 touch-manipulation"
               >
                 <div
@@ -340,7 +343,10 @@ export const GroupedMultiSelect = React.forwardRef<
             <CommandGroup key={groupName} heading={`${groupName}${searchQuery ? ` (${options.length})` : ''}`}>
               <CommandItem
                 key={`${groupName}-select-all`}
-                onSelect={() => toggleGroup(groupName)}
+                onSelect={(value) => {
+                  // Prevent the default command behavior and use our toggle
+                  toggleGroup(groupName)
+                }}
                 className="cursor-pointer py-2 text-xs font-medium text-muted-foreground hover:text-foreground touch-manipulation"
               >
                 <div
@@ -365,7 +371,10 @@ export const GroupedMultiSelect = React.forwardRef<
                 return (
                   <CommandItem
                     key={option.value}
-                    onSelect={() => toggleOption(option)}
+                    onSelect={(value) => {
+                      // Prevent the default command behavior and use our toggle
+                      toggleOption(option)
+                    }}
                     className="cursor-pointer py-3 md:py-2 touch-manipulation"
                   >
                     <div

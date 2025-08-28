@@ -1,52 +1,112 @@
 # Uzo Food Tracking
 
-A mobile-first PWA for tracking food inventory, planning meals, and logging consumption. The app uses Supabase for data storage and includes AI-assisted recipe generation.
+A mobile-first PWA for tracking food inventory, recipes, weekly planning, and meal logging. Data is stored in Supabase, with optional AI-assisted recipe and meal-prep generation via OpenRouter.
 
 ## Features
-- Maintain a pantry inventory with nutrition facts, prices, and stock status
-- Autofill item details from Open Food Facts or receipt OCR
+- Manage pantry inventory with nutrition facts, prices, stock, and ratings
+- Full-text search, rich filters, and tag management
 - Create recipes with automatic cost and macro calculations
-- Plan weekly meals and log what you cook
-- Generate new meal ideas using Hugging Face models
+- Plan weekly meals (blocks, rotations) and log meals
+- Log by recipe and/or individual items (with costs and macros)
+- AI-assisted recipe and meal prep ideas via OpenRouter
+- Installable PWA with offline caching for assets
 
 ## Tech Stack
 - **Frontend:** React 18, TypeScript, Vite
 - **UI:** shadcn/ui (Radix UI) + Tailwind CSS
-- **State:** TanStack React Query
-- **Backend:** Supabase (PostgreSQL)
-- **Testing:** Vitest, Playwright
+- **Data/State:** TanStack Query
+- **Backend:** Supabase (PostgreSQL, SQL migrations, RPC)
+- **AI:** OpenRouter (e.g., microsoft/mai-ds-r1:free)
+- **PWA:** vite-plugin-pwa
+- **Testing:** Vitest + Testing Library; Playwright for E2E
 
 ## Getting Started
-1. Install dependencies
+1. Create a `.env` in the project root:
+   ```env
+   VITE_SUPABASE_URL=your-supabase-url
+   VITE_SUPABASE_ANON_KEY=your-supabase-anon-or-publishable-key
+   # Optional: required for AI features (OpenRouter)
+   VITE_OPEN_ROUTER_API_KEY=your-openrouter-api-key
+   # Optional: restrict sign-in to a specific email (defaults to owner)
+   VITE_ALLOWED_EMAIL=you@example.com
+   ```
+2. Install dependencies
    ```sh
    npm install
    ```
-2. Provide Supabase credentials in a `.env` file:
-   ```env
-   VITE_SUPABASE_URL=your-url
-   VITE_SUPABASE_ANON_KEY=your-anon-key or publishable key
-   ```
-3. Start the development server
+3. Start the dev server
    ```sh
    npm run dev
    ```
-   The app runs at [http://localhost:8080](http://localhost:8080).
+   Dev runs at `http://localhost:8080` (HMR on 8081). See `vite.config.ts`.
+
+## Database Setup (Supabase)
+- Run SQL files in `supabase/migrations/*.sql` using the Supabase SQL editor.
+- Optionally seed data via `supabase/seed.sql`.
 
 ## Testing
-- Unit tests: `npm test`
-- E2E tests: `npm run test:e2e`
+- Unit tests: `npm test` (watch) or `npm run test:run`
+- Test UI: `npm run test:ui`
+- E2E tests: `npm run test:e2e` (Playwright)
+- E2E UI: `npm run test:e2e:ui`
 - Lint: `npm run lint`
 
 ## Project Structure
 ```
-├─ src/              # React source (components, pages, hooks, lib, types)
-├─ supabase/         # SQL migrations and seed data
-├─ public/           # Static assets
-└─ product-requirements/  # Design and architecture docs
+├─ src/
+│  ├─ pages/         # Inventory, Recipes, Meals, Planner, Tags, Analytics, MealPrepGenerator
+│  ├─ components/    # UI and domain components
+│  ├─ hooks/         # Data hooks (inventory, recipes, meal logs, tags)
+│  ├─ lib/           # supabase client, utils, constants, search
+│  └─ types/         # App and DB types
+├─ src/tests/        # Unit/component tests (Vitest)
+├─ tests/e2e/        # Playwright tests
+├─ supabase/         # SQL migrations and seed
+├─ product-requirements/  # Design and architecture docs
+└─ public/           # Static assets (PWA icons, images)
 ```
+
+- Path alias: use `@` for `./src` (see `vite.config.ts`).
 
 ## Deployment
 Build a production bundle:
 ```sh
 npm run build
 ```
+Preview locally:
+```sh
+npm run preview
+```
+
+PWA service worker registers in production builds (via `vite-plugin-pwa`).
+
+## AI Setup
+- Enable AI features by setting `VITE_OPEN_ROUTER_API_KEY` in `.env` (or `.env.local`).
+- The app uses OpenRouter with the `microsoft/mai-ds-r1:free` route by default.
+- See example prompts and parsing behavior in `sample_prompt_example.md`.
+- Relevant entry points:
+  - `src/components/RecipeGeneratorDialog.tsx` (single recipe generator)
+  - `src/pages/MealPrepGenerator.tsx` (three‑recipe meal prep generator)
+
+If you don’t set the API key, AI actions will show a friendly error and no requests are made.
+
+## Screenshots
+
+Inventory
+![Inventory](public/screenshots/inventory.png)
+
+Recipes
+![Recipes](public/screenshots/recipes.png)
+
+Meal Log
+![Meal Log](public/screenshots/meals.png)
+
+Planner
+![Planner](public/screenshots/planner.png)
+
+Meal Prep Generator
+![Meal Prep Generator](public/screenshots/meal-prep-generator.png)
+
+PWA Icons: `public/pwa-192x192.png`, `public/pwa-512x512.png`
+
+ 

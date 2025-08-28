@@ -182,12 +182,12 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
       // Prepare the data to save, converting strings to numbers and empty strings to null for optional fields
       const dataToSave = {
         ...formData,
-        price: formData.price ? parseFloat(formData.price) || 0 : 0,
+        price: formData.price ? parseFloat(formData.price) || undefined : undefined,
         serving_size: formData.serving_size ? parseFloat(formData.serving_size) || 100 : 100,
-        serving_quantity: formData.serving_quantity ? parseFloat(formData.serving_quantity) || 0 : 0,
-        image_url: formData.image_url.trim() || null,
-        brand: formData.brand.trim() || null,
-        ingredients: formData.ingredients.trim() || null,
+        serving_quantity: formData.serving_quantity ? parseFloat(formData.serving_quantity) || undefined : undefined,
+        image_url: formData.image_url.trim() || undefined,
+        brand: formData.brand.trim() || undefined,
+        ingredients: formData.ingredients.trim() || undefined,
         nutrition: {
           calories_per_serving: formData.nutrition.calories_per_serving ? parseFloat(formData.nutrition.calories_per_serving) || 0 : 0,
           protein_per_serving: formData.nutrition.protein_per_serving ? parseFloat(formData.nutrition.protein_per_serving) || 0 : 0,

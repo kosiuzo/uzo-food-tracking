@@ -2,7 +2,7 @@
 // This ensures consistent data transformations and handles the ID type differences
 
 import type { Database } from '@/types/database';
-import type { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, Tag, DbTag } from '@/types';
+import type { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, Tag, DbTag, MealItemEntry } from '@/types';
 
 // Database types from Supabase
 type DbItemRow = Database['public']['Tables']['items']['Row'];
@@ -130,6 +130,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
   return {
     id: dbMealLog.id,
     recipe_ids: dbMealLog.recipe_ids,
+    item_entries: (dbMealLog.item_entries as unknown as MealItemEntry[]) || undefined,
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
     meal_name: dbMealLog.meal_name || '',
     notes: dbMealLog.notes || undefined,
@@ -149,7 +150,8 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
  */
 export function mealLogToDbInsert(mealLog: Partial<MealLog>): Database['public']['Tables']['meal_logs']['Insert'] {
   return {
-    recipe_ids: mealLog.recipe_ids!,
+    recipe_ids: mealLog.recipe_ids || [],
+    item_entries: (mealLog.item_entries as unknown as Record<string, unknown>[]) || null,
     meal_name: mealLog.meal_name || null,
     cooked_at: mealLog.date || null,
     notes: mealLog.notes || null,

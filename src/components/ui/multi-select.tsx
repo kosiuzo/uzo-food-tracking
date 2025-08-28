@@ -119,7 +119,7 @@ export const MultiSelect = React.forwardRef<
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
         setSelectedValues(defaultValue || [])
       }
-    }, [defaultValue, selectedValues])
+    }, [defaultValue]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {
@@ -263,7 +263,10 @@ export const MultiSelect = React.forwardRef<
             {filteredOptions.length > 1 && (
               <CommandItem
                 key="all"
-                onSelect={toggleAll}
+                onSelect={(value) => {
+                  // Prevent the default command behavior and use our toggle
+                  toggleAll()
+                }}
                 className="cursor-pointer py-3 md:py-2 touch-manipulation"
               >
                 <div
@@ -288,7 +291,10 @@ export const MultiSelect = React.forwardRef<
               return (
                 <CommandItem
                   key={option.value}
-                  onSelect={() => toggleOption(option)}
+                  onSelect={(value) => {
+                    // Prevent the default command behavior and use our toggle
+                    toggleOption(option)
+                  }}
                   className="cursor-pointer py-3 md:py-2 touch-manipulation"
                 >
                   <div

@@ -8,7 +8,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Recipes from "./pages/Recipes";
 import Meals from "./pages/Meals";
-import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import Planner from "./pages/Planner";
 import MealPrepGenerator from "./pages/MealPrepGenerator";
@@ -33,7 +32,6 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/recipes" element={<Recipes />} />
               <Route path="/meals" element={<Meals />} />
-              <Route path="/analytics" element={<Analytics />} />
               <Route path="/planner" element={<Planner />} />
               <Route path="/tags" element={<Tags />} />
               <Route path="/meal-prep-generator" element={<MealPrepGenerator />} />

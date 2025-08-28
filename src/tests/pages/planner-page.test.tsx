@@ -52,8 +52,8 @@ describe('Planner Page', () => {
   it('should render the planner page with title and description', () => {
     renderWithProviders(<Planner />);
     
-    expect(screen.getByText('Meal Planner')).toBeInTheDocument();
-    expect(screen.getByText(/Plan your weekly meals with recipe rotations and day ranges/)).toBeInTheDocument();
+    expect(screen.getByText('Add Meal Block')).toBeInTheDocument();
+    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
   });
 
   it('should display the add meal block button', () => {

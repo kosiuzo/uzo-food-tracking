@@ -4,7 +4,6 @@ export interface FoodItem {
   brand?: string;
   category: string;
   in_stock: boolean;
-  price?: number;
   serving_size?: number;
   serving_quantity?: number;
   serving_unit?: string;
@@ -32,12 +31,10 @@ export interface DbItem {
   brand?: string | null;
   category?: string | null;
   in_stock?: boolean | null;
-  price?: number | null;
   calories_per_serving?: number | null;
   carbs_per_serving?: number | null;
   fat_per_serving?: number | null;
   protein_per_serving?: number | null;
-  servings_per_container?: number | null;
   serving_size_grams?: number | null;
   serving_quantity?: number | null;
   serving_unit?: string | null;
@@ -68,9 +65,6 @@ export interface Recipe {
     carbs_per_serving: number;
     fat_per_serving: number;
   };
-  cost_per_serving?: number;
-  total_cost?: number;
-  cost_last_calculated?: string;
   is_favorite?: boolean;
   notes?: string;
   tags?: Tag[]; // Normalized tags
@@ -92,9 +86,6 @@ export interface DbRecipe {
   nutrition_per_serving?: Record<string, unknown> | null;
   is_favorite?: boolean | null;
   source_link?: string | null;
-  cost_per_serving?: number | null;
-  total_cost?: number | null;
-  cost_last_calculated?: string | null;
   notes?: string | null;
   times_cooked?: number | null;
   last_cooked?: string | null;
@@ -106,16 +97,28 @@ export interface RecipeIngredient {
   item_id: number; // Changed from string to match database
   quantity: number;
   unit: string;
-  cost_per_unit?: number;
-  total_cost?: number;
-  cost_calculated_at?: string;
   created_at?: string; // Added for consistency
   updated_at?: string; // Added for consistency
+}
+
+// Individual item entry in meal log
+export interface MealItemEntry {
+  item_id: number;
+  quantity: number;
+  unit: string;
+  nutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  cost?: number;
 }
 
 export interface MealLog {
   id: number; // Changed from string to match database
   recipe_ids: number[]; // Changed from string[] to match database
+  item_entries?: MealItemEntry[]; // New: individual items
   date: string;
   meal_name: string;
   notes?: string;
@@ -125,7 +128,7 @@ export interface MealLog {
     carbs: number;
     fat: number;
   };
-  estimated_cost: number; // Now mandatory, derived from recipes
+  estimated_cost?: number; // Added for cost tracking
   created_at: string; // Added for consistency
 }
 
@@ -162,6 +165,7 @@ export interface WeeklyMealPlan {
 export interface DbMealLog {
   id: number;
   recipe_ids: number[];
+  item_entries?: MealItemEntry[] | null; // New: individual items array
   meal_name?: string | null;
   cooked_at?: string | null;
   notes?: string | null;

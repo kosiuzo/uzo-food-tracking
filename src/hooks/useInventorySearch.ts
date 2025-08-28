@@ -264,20 +264,20 @@ export function useInventorySearch(): UseInventorySearchResult {
       if (updates.brand !== undefined) updateData.brand = updates.brand || null;
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.in_stock !== undefined) updateData.in_stock = updates.in_stock;
-      if (updates.price !== undefined) updateData.price = updates.price;
+      if (updates.price !== undefined) updateData.price = updates.price || null;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
-      if (updates.rating !== undefined) updateData.rating = updates.rating;
-      if (updates.serving_size !== undefined) updateData.serving_size_grams = updates.serving_size;
-      if (updates.serving_quantity !== undefined) updateData.serving_quantity = updates.serving_quantity;
+      if (updates.rating !== undefined) updateData.rating = updates.rating || null;
+      if (updates.serving_size !== undefined) updateData.serving_size_grams = updates.serving_size || null;
+      if (updates.serving_quantity !== undefined) updateData.serving_quantity = updates.serving_quantity || null;
       if (updates.serving_unit !== undefined) updateData.serving_unit = updates.serving_unit || null;
       if (updates.serving_unit_type !== undefined) updateData.serving_unit_type = updates.serving_unit_type || null;
       if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
       
       if (updates.nutrition) {
-        if (updates.nutrition.calories_per_serving !== undefined) updateData.calories_per_serving = updates.nutrition.calories_per_serving;
-        if (updates.nutrition.carbs_per_serving !== undefined) updateData.carbs_per_serving = updates.nutrition.carbs_per_serving;
-        if (updates.nutrition.fat_per_serving !== undefined) updateData.fat_per_serving = updates.nutrition.fat_per_serving;
-        if (updates.nutrition.protein_per_serving !== undefined) updateData.protein_per_serving = updates.nutrition.protein_per_serving;
+        if (updates.nutrition.calories_per_serving !== undefined) updateData.calories_per_serving = updates.nutrition.calories_per_serving || null;
+        if (updates.nutrition.carbs_per_serving !== undefined) updateData.carbs_per_serving = updates.nutrition.carbs_per_serving || null;
+        if (updates.nutrition.fat_per_serving !== undefined) updateData.fat_per_serving = updates.nutrition.fat_per_serving || null;
+        if (updates.nutrition.protein_per_serving !== undefined) updateData.protein_per_serving = updates.nutrition.protein_per_serving || null;
       }
       
       updateData.last_edited = now;

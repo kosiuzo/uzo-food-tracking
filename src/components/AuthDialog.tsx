@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 
@@ -19,16 +18,28 @@ interface AuthDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+const ALLOWED_EMAIL = 'kosiuzodinma@gmail.com'
+
 export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
   const [loading, setLoading] = useState(false)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(ALLOWED_EMAIL)
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const { signIn, signUp, resetPassword } = useAuth()
+  const { signIn, resetPassword } = useAuth()
   const { toast } = useToast()
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate email (case insensitive)
+    if (email.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
+      toast({
+        title: 'Access Denied',
+        description: 'This application is restricted to authorized users only.',
+        variant: 'destructive',
+      })
+      return
+    }
+    
     setLoading(true)
 
     const { error } = await signIn(email, password)
@@ -49,35 +60,6 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
     setLoading(false)
   }
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setLoading(true)
-    const { error } = await signUp(email, password)
-    if (error) {
-      toast({
-        title: 'Error signing up',
-        description: error.message,
-        variant: 'destructive',
-      })
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Check your email to confirm your account!',
-      })
-      onOpenChange(false)
-      resetForm()
-    }
-    setLoading(false)
-  }
 
   const handleResetPassword = async () => {
     if (!email) {
@@ -107,116 +89,62 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
   }
 
   const resetForm = () => {
-    setEmail('')
+    setEmail(ALLOWED_EMAIL)
     setPassword('')
-    setConfirmPassword('')
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle>Welcome to Food Tracker</DialogTitle>
+          <DialogTitle>Access Required</DialogTitle>
           <DialogDescription>
-            Sign in to your account or create a new one to get started.
+            This application is restricted to authorized users. Please sign in to continue.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="signin" className="space-y-4">
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={handleResetPassword}
-                disabled={loading}
-              >
-                Forgot Password?
-              </Button>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={6}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={6}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign Up
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+        <form onSubmit={handleSignIn} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="signin-email">Email</Label>
+            <Input
+              id="signin-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={true}
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">
+              Access is restricted to authorized users only.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signin-password">Password</Label>
+            <Input
+              id="signin-password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign In
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full"
+            onClick={handleResetPassword}
+            disabled={loading}
+          >
+            Forgot Password?
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   )

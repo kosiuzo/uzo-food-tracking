@@ -51,7 +51,7 @@ describe('Meals Page', () => {
     } as ReturnType<typeof recipesHook.useRecipes>);
 
     renderWithProviders(<Meals />);
-    expect(screen.getByText('Meal Log')).toBeInTheDocument();
+    expect(screen.getByText('Total Meals')).toBeInTheDocument();
     expect(screen.getByText('Pasta')).toBeInTheDocument();
   });
 });

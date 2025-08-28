@@ -141,33 +141,25 @@ const Planner = () => {
       <section className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
         <header className="space-y-4">
           {/* Main Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-primary">Meal Planner</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Plan your weekly meals with recipe rotations and day ranges
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button onClick={() => setShowAddDialog(true)} className="flex items-center gap-2 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                Add Meal Block
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={() => setShowAddDialog(true)} className="flex items-center gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              Add Meal Block
+            </Button>
+            <Button 
+              onClick={() => setShowReuseDialog(true)} 
+              variant="outline" 
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <Copy className="h-4 w-4" />
+              Reuse Block
+            </Button>
+            <Link to="/meal-prep-generator">
+              <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                <Utensils className="h-4 w-4" />
+                Generate Meal Prep
               </Button>
-              <Button 
-                onClick={() => setShowReuseDialog(true)} 
-                variant="outline" 
-                className="flex items-center gap-2 w-full sm:w-auto"
-              >
-                <Copy className="h-4 w-4" />
-                Reuse Block
-              </Button>
-              <Link to="/meal-prep-generator">
-                <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
-                  <Utensils className="h-4 w-4" />
-                  Generate Meal Prep
-                </Button>
-              </Link>
-            </div>
+            </Link>
           </div>
 
           {/* Week Navigation */}

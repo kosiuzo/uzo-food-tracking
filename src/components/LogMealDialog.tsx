@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '../hooks/useRecipes';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { MealLog, Recipe, FoodItem, MealItemEntry } from '../types';
+import { scaleNutrition, getServingUnitType, convertVolumeToGrams } from '../lib/servingUnitUtils';
 
 interface LogMealDialogProps {
   open: boolean;
@@ -108,15 +109,74 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     };
   };
 
-  // Calculate nutrition for individual item entry
-  const calculateItemNutrition = (item: FoodItem, quantity: number) => {
-    const multiplier = quantity; // Assuming quantity is in serving units
-    return {
-      calories: item.nutrition.calories_per_serving * multiplier,
-      protein: item.nutrition.protein_per_serving * multiplier,
-      carbs: item.nutrition.carbs_per_serving * multiplier,
-      fat: item.nutrition.fat_per_serving * multiplier,
-    };
+  // Calculate nutrition for individual item entry with proper unit conversion
+  const calculateItemNutrition = (item: FoodItem, quantity: number, unit: string) => {
+    try {
+      const unitType = getServingUnitType(unit);
+      let quantityInGrams = quantity;
+      
+      // Handle different unit types
+      if (unitType === 'volume' && item.serving_unit_type === 'volume' && item.serving_quantity && item.serving_unit) {
+        // Use volume conversion for volume-based ingredients
+        quantityInGrams = convertVolumeToGrams(
+          quantity,
+          unit,
+          item.serving_quantity,
+          item.serving_unit,
+          item.serving_size || 100
+        );
+      } else if (unitType === 'weight') {
+        // Convert weight units to grams
+        switch (unit) {
+          case 'kg':
+            quantityInGrams *= 1000;
+            break;
+          case 'oz':
+            quantityInGrams *= 28.35; // 1 oz = 28.35g
+            break;
+          case 'lb':
+            quantityInGrams *= 453.592; // 1 lb = 453.592g
+            break;
+          case 'g':
+          default:
+            // already in grams
+            break;
+        }
+      } else if (unitType === 'package') {
+        // For package units, multiply by serving size
+        quantityInGrams = quantity * (item.serving_size || 100);
+      } else if (unit === item.serving_unit || unit === 'serving' || unit === 'servings') {
+        // If unit matches item's serving unit or is generic serving, use direct multiplier
+        return {
+          calories: item.nutrition.calories_per_serving * quantity,
+          protein: item.nutrition.protein_per_serving * quantity,
+          carbs: item.nutrition.carbs_per_serving * quantity,
+          fat: item.nutrition.fat_per_serving * quantity,
+        };
+      }
+      
+      // Scale nutrition based on actual grams vs item's serving size
+      return scaleNutrition(
+        {
+          calories: item.nutrition.calories_per_serving,
+          protein: item.nutrition.protein_per_serving,
+          carbs: item.nutrition.carbs_per_serving,
+          fat: item.nutrition.fat_per_serving,
+        },
+        quantityInGrams,
+        item.serving_size || 100 // item's actual serving size
+      );
+      
+    } catch (error) {
+      console.warn(`Error calculating nutrition for ${item.name}:`, error);
+      // Fallback to simple multiplier for backwards compatibility
+      return {
+        calories: item.nutrition.calories_per_serving * quantity,
+        protein: item.nutrition.protein_per_serving * quantity,
+        carbs: item.nutrition.carbs_per_serving * quantity,
+        fat: item.nutrition.fat_per_serving * quantity,
+      };
+    }
   };
 
   // Convert allRecipes to options for MultiSelect
@@ -154,7 +214,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       if (!item) return;
       
       const quantities = itemQuantities[itemId] || { quantity: 1, unit: item.serving_unit || 'serving' };
-      const nutrition = calculateItemNutrition(item, quantities.quantity);
+      const nutrition = calculateItemNutrition(item, quantities.quantity, quantities.unit);
       
       newItemEntries.push({
         item_id: itemId,
@@ -199,7 +259,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         const item = allItems.find(i => i.id === itemId);
         if (!item) return entry;
         
-        const nutrition = calculateItemNutrition(item, quantity);
+        const nutrition = calculateItemNutrition(item, quantity, unit);
         return { ...entry, quantity, unit, nutrition };
       }
       return entry;

@@ -18,7 +18,7 @@ interface AuthDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-const ALLOWED_EMAIL = 'kosiuzodinma@gmail.com'
+const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL || 'kosiuzodinma@gmail.com'
 
 export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
   const [loading, setLoading] = useState(false)

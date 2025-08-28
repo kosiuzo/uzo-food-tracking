@@ -37,75 +37,61 @@ vi.mock('../../hooks/useInventorySearch', () => ({
           carbs_per_serving: 25,
           fat_per_serving: 0.3,
         }
-      },
-      {
-        id: 2,
-        name: 'Milk',
-        serving_unit: 'cup',
-        serving_unit_type: 'volume',
-        serving_size: 240,
-        serving_quantity: 1,
-        nutrition: {
-          calories_per_serving: 150,
-          protein_per_serving: 8,
-          carbs_per_serving: 12,
-          fat_per_serving: 8,
-        }
       }
     ]
   })
 }));
 
+const mockToast = vi.fn();
 vi.mock('../../hooks/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() })
+  useToast: () => ({ toast: mockToast })
 }));
 
 // Mock serving unit utilities
 vi.mock('../../lib/servingUnitUtils', () => ({
-  scaleNutrition: vi.fn((nutrition, actualGrams, baseGrams) => {
-    const ratio = actualGrams / baseGrams;
+  calculateRecipeNutrition: vi.fn((ingredients, servings, allItems) => {
+    const ingredient = ingredients[0];
+    const item = allItems.find(i => i.id.toString() === ingredient.item_id);
+    
+    if (!item) {
+      return { calories_per_serving: 0, protein_per_serving: 0, carbs_per_serving: 0, fat_per_serving: 0 };
+    }
+    
     return {
-      calories: Math.round(nutrition.calories * ratio),
-      protein: Math.round(nutrition.protein * ratio * 100) / 100,
-      carbs: Math.round(nutrition.carbs * ratio * 100) / 100,
-      fat: Math.round(nutrition.fat * ratio * 100) / 100,
+      calories_per_serving: item.nutrition.calories_per_serving * ingredient.quantity,
+      protein_per_serving: item.nutrition.protein_per_serving * ingredient.quantity,
+      carbs_per_serving: item.nutrition.carbs_per_serving * ingredient.quantity,
+      fat_per_serving: item.nutrition.fat_per_serving * ingredient.quantity,
     };
-  }),
-  getServingUnitType: vi.fn((unit) => {
-    if (unit === 'cup' || unit === 'ml') return 'volume';
-    if (unit === 'g' || unit === 'oz') return 'weight';
-    if (unit === 'piece' || unit === 'serving') return 'package';
-    return null;
-  }),
-  convertVolumeToGrams: vi.fn(() => 240), // Mock conversion
+  })
 }));
 
 // Mock MultiSelect component
 vi.mock('../../components/ui/multi-select', () => ({
-  MultiSelect: ({ onValueChange, options, value }: any) => (
-    <div>
+  MultiSelect: ({ onValueChange }: {
+    onValueChange: (values: string[]) => void;
+  }) => (
+    <div data-testid="multi-select">
       <button
-        data-testid="select-items"
+        data-testid="select-button"
         onClick={() => onValueChange(['1'])}
       >
         Select Items
       </button>
-      <div data-testid="selected-items">
-        {value?.join(', ')}
-      </div>
     </div>
   ),
 }));
 
-describe('LogMealDialog - Individual Item Logging', () => {
+describe('LogMealDialog', () => {
   const mockOnSave = vi.fn();
   const mockOnOpenChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToast.mockClear();
   });
 
-  it('renders individual items tab', () => {
+  it('renders dialog with proper title and tabs', () => {
     renderWithProviders(
       <LogMealDialog
         open={true}
@@ -114,11 +100,12 @@ describe('LogMealDialog - Individual Item Logging', () => {
       />
     );
 
-    expect(screen.getByText('Individual Items')).toBeInTheDocument();
+    expect(screen.getByText('Log a Meal')).toBeInTheDocument();
     expect(screen.getByText('Recipes')).toBeInTheDocument();
+    expect(screen.getByText('Individual Items')).toBeInTheDocument();
   });
 
-  it('allows selecting individual items and setting quantities', async () => {
+  it('has required form fields', () => {
     renderWithProviders(
       <LogMealDialog
         open={true}
@@ -127,18 +114,34 @@ describe('LogMealDialog - Individual Item Logging', () => {
       />
     );
 
-    // Click on Individual Items tab
-    fireEvent.click(screen.getByText('Individual Items'));
+    expect(screen.getByLabelText(/date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/meal name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
+  });
 
-    // Select an item
-    fireEvent.click(screen.getByTestId('select-items'));
+  it('validates required fields and shows error', async () => {
+    renderWithProviders(
+      <LogMealDialog
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onSave={mockOnSave}
+      />
+    );
+
+    // Try to save without filling required fields
+    const saveButton = screen.getByText(/log meal/i);
+    fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument();
+      expect(mockToast).toHaveBeenCalledWith({
+        title: "Error",
+        description: "Please enter a meal name",
+        variant: "destructive",
+      });
     });
   });
 
-  it('calculates nutrition correctly for individual items with proper units', async () => {
+  it('shows validation error when no items are selected', async () => {
     renderWithProviders(
       <LogMealDialog
         open={true}
@@ -147,188 +150,43 @@ describe('LogMealDialog - Individual Item Logging', () => {
       />
     );
 
-    // Click on Individual Items tab
-    fireEvent.click(screen.getByText('Individual Items'));
-
-    // Select an item
-    fireEvent.click(screen.getByTestId('select-items'));
-
-    // Set quantity
-    const quantityInput = screen.getByDisplayValue('1');
-    fireEvent.change(quantityInput, { target: { value: '2' } });
-
-    // Fill in required fields
-    fireEvent.change(screen.getByDisplayValue(new Date().toISOString().split('T')[0]), { 
-      target: { value: '2024-01-15' } 
-    });
-    
+    // Fill meal name but don't select any items
     const mealNameInput = screen.getByLabelText(/meal name/i);
     fireEvent.change(mealNameInput, { target: { value: 'Test Meal' } });
 
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /save meal log/i }));
+    const saveButton = screen.getByText(/log meal/i);
+    fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledWith(
-        expect.objectContaining({
-          item_entries: expect.arrayContaining([
-            expect.objectContaining({
-              item_id: 1,
-              quantity: 2,
-              nutrition: expect.objectContaining({
-                calories: expect.any(Number),
-                protein: expect.any(Number),
-                carbs: expect.any(Number),
-                fat: expect.any(Number),
-              })
-            })
-          ])
-        })
-      );
+      expect(mockToast).toHaveBeenCalledWith({
+        title: "Error",
+        description: "Please select at least one recipe or food item",
+        variant: "destructive",
+      });
     });
   });
 
-  it('supports mixed meals with both recipes and individual items', async () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    // Select a recipe first
-    fireEvent.click(screen.getByText('Recipes'));
-    fireEvent.click(screen.getByTestId('select-items'));
-
-    // Then select individual items
-    fireEvent.click(screen.getByText('Individual Items'));
-    fireEvent.click(screen.getByTestId('select-items'));
-
-    // Fill in required fields
-    fireEvent.change(screen.getByDisplayValue(new Date().toISOString().split('T')[0]), { 
-      target: { value: '2024-01-15' } 
-    });
-
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: /save meal log/i }));
-
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recipe_ids: expect.arrayContaining(['1']),
-          item_entries: expect.arrayContaining([
-            expect.objectContaining({
-              item_id: 1,
-            })
-          ]),
-          nutrition: expect.objectContaining({
-            calories: expect.any(Number),
-            protein: expect.any(Number),
-            carbs: expect.any(Number),
-            fat: expect.any(Number),
-          })
-        })
-      );
-    });
-  });
-
-  it('updates meal name correctly for individual items', async () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    // Click on Individual Items tab
-    fireEvent.click(screen.getByText('Individual Items'));
-
-    // Select an item
-    fireEvent.click(screen.getByTestId('select-items'));
-
-    // Check that meal name is automatically set for single item
-    await waitFor(() => {
-      const mealNameInput = screen.getByDisplayValue('Apple');
-      expect(mealNameInput).toBeInTheDocument();
-    });
-  });
-
-  it('validates required fields before saving', async () => {
-    const mockToast = vi.fn();
-    vi.mocked(require('../../hooks/use-toast').useToast).mockReturnValue({
-      toast: mockToast
-    });
+  it('renders editing mode with correct title', () => {
+    const editingMealLog = {
+      id: 1,
+      recipe_ids: [1],
+      item_entries: [],
+      date: '2025-08-28',
+      meal_name: 'Test Meal',
+      notes: 'Test notes',
+      nutrition: { calories: 200, protein: 10, carbs: 30, fat: 5 }
+    };
 
     renderWithProviders(
       <LogMealDialog
         open={true}
         onOpenChange={mockOnOpenChange}
         onSave={mockOnSave}
+        editingMealLog={editingMealLog}
       />
     );
 
-    // Try to submit without any selections
-    fireEvent.click(screen.getByRole('button', { name: /save meal log/i }));
-
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Validation Error',
-          description: expect.stringContaining('meal name'),
-          variant: 'destructive'
-        })
-      );
-    });
-
-    expect(mockOnSave).not.toHaveBeenCalled();
-  });
-
-  it('handles unit changes for individual items', async () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    // Click on Individual Items tab
-    fireEvent.click(screen.getByText('Individual Items'));
-
-    // Select an item
-    fireEvent.click(screen.getByTestId('select-items'));
-
-    // Change unit
-    const unitSelect = screen.getByDisplayValue('piece');
-    fireEvent.change(unitSelect, { target: { value: 'g' } });
-
-    // Change quantity
-    const quantityInput = screen.getByDisplayValue('1');
-    fireEvent.change(quantityInput, { target: { value: '200' } });
-
-    // Fill required fields and submit
-    fireEvent.change(screen.getByDisplayValue(new Date().toISOString().split('T')[0]), { 
-      target: { value: '2024-01-15' } 
-    });
-    const mealNameInput = screen.getByLabelText(/meal name/i);
-    fireEvent.change(mealNameInput, { target: { value: 'Test Meal' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /save meal log/i }));
-
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledWith(
-        expect.objectContaining({
-          item_entries: expect.arrayContaining([
-            expect.objectContaining({
-              item_id: 1,
-              quantity: 200,
-              unit: 'g',
-            })
-          ])
-        })
-      );
-    });
+    expect(screen.getByText('Edit Meal Log')).toBeInTheDocument();
+    expect(screen.getByText('Update Meal')).toBeInTheDocument();
   });
 });

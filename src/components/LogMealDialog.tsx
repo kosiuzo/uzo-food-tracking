@@ -7,13 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus, Utensils, Apple } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '../hooks/useRecipes';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { MealLog, Recipe, FoodItem, MealItemEntry } from '../types';
-import { scaleNutrition, getServingUnitType, convertVolumeToGrams } from '../lib/servingUnitUtils';
+import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
 
 interface LogMealDialogProps {
   open: boolean;
@@ -109,74 +110,30 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     };
   };
 
-  // Calculate nutrition for individual item entry with proper unit conversion
+  // Calculate nutrition for individual item entry using centralized utility
   const calculateItemNutrition = (item: FoodItem, quantity: number, unit: string) => {
-    try {
-      const unitType = getServingUnitType(unit);
-      let quantityInGrams = quantity;
-      
-      // Handle different unit types
-      if (unitType === 'volume' && item.serving_unit_type === 'volume' && item.serving_quantity && item.serving_unit) {
-        // Use volume conversion for volume-based ingredients
-        quantityInGrams = convertVolumeToGrams(
-          quantity,
-          unit,
-          item.serving_quantity,
-          item.serving_unit,
-          item.serving_size || 100
-        );
-      } else if (unitType === 'weight') {
-        // Convert weight units to grams
-        switch (unit) {
-          case 'kg':
-            quantityInGrams *= 1000;
-            break;
-          case 'oz':
-            quantityInGrams *= 28.35; // 1 oz = 28.35g
-            break;
-          case 'lb':
-            quantityInGrams *= 453.592; // 1 lb = 453.592g
-            break;
-          case 'g':
-          default:
-            // already in grams
-            break;
-        }
-      } else if (unitType === 'package') {
-        // For package units, multiply by serving size
-        quantityInGrams = quantity * (item.serving_size || 100);
-      } else if (unit === item.serving_unit || unit === 'serving' || unit === 'servings') {
-        // If unit matches item's serving unit or is generic serving, use direct multiplier
-        return {
-          calories: item.nutrition.calories_per_serving * quantity,
-          protein: item.nutrition.protein_per_serving * quantity,
-          carbs: item.nutrition.carbs_per_serving * quantity,
-          fat: item.nutrition.fat_per_serving * quantity,
-        };
-      }
-      
-      // Scale nutrition based on actual grams vs item's serving size
-      return scaleNutrition(
-        {
-          calories: item.nutrition.calories_per_serving,
-          protein: item.nutrition.protein_per_serving,
-          carbs: item.nutrition.carbs_per_serving,
-          fat: item.nutrition.fat_per_serving,
-        },
-        quantityInGrams,
-        item.serving_size || 100 // item's actual serving size
-      );
-      
-    } catch (error) {
-      console.warn(`Error calculating nutrition for ${item.name}:`, error);
-      // Fallback to simple multiplier for backwards compatibility
-      return {
-        calories: item.nutrition.calories_per_serving * quantity,
-        protein: item.nutrition.protein_per_serving * quantity,
-        carbs: item.nutrition.carbs_per_serving * quantity,
-        fat: item.nutrition.fat_per_serving * quantity,
-      };
-    }
+    // Use the centralized calculateRecipeNutrition function for a single ingredient
+    const ingredients = [{ item_id: item.id.toString(), quantity, unit }];
+    
+    // Convert FoodItem to the expected format for calculateRecipeNutrition
+    const adaptedItem = {
+      id: item.id.toString(),
+      name: item.name,
+      nutrition: item.nutrition,
+      serving_size: item.serving_size,
+      serving_quantity: item.serving_quantity,
+      serving_unit: item.serving_unit,
+      serving_unit_type: item.serving_unit_type,
+    };
+    
+    const nutrition = calculateRecipeNutrition(ingredients, 1, [adaptedItem]);
+    
+    return {
+      calories: nutrition.calories_per_serving,
+      protein: nutrition.protein_per_serving,
+      carbs: nutrition.carbs_per_serving,
+      fat: nutrition.fat_per_serving,
+    };
   };
 
   // Convert allRecipes to options for MultiSelect
@@ -419,17 +376,40 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                     )}
                                     className="w-20 h-8"
                                   />
-                                  <Input
-                                    type="text"
+                                  <Select
                                     value={entry.unit}
-                                    onChange={(e) => handleItemQuantityChange(
+                                    onValueChange={(value) => handleItemQuantityChange(
                                       entry.item_id, 
                                       entry.quantity, 
-                                      e.target.value
+                                      value
                                     )}
-                                    placeholder="serving"
-                                    className="w-24 h-8"
-                                  />
+                                  >
+                                    <SelectTrigger className="w-28 h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Volume</div>
+                                      <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
+                                      <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
+                                      <SelectItem value="cup">cups</SelectItem>
+                                      <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
+                                      <SelectItem value="ml">milliliters (ml)</SelectItem>
+                                      <SelectItem value="l">liters (l)</SelectItem>
+                                      
+                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Weight</div>
+                                      <SelectItem value="g">grams (g)</SelectItem>
+                                      <SelectItem value="kg">kilograms (kg)</SelectItem>
+                                      <SelectItem value="oz">ounces (oz)</SelectItem>
+                                      <SelectItem value="lb">pounds (lb)</SelectItem>
+                                      
+                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Count</div>
+                                      <SelectItem value="piece">pieces</SelectItem>
+                                      <SelectItem value="slice">slices</SelectItem>
+                                      <SelectItem value="can">cans</SelectItem>
+                                      <SelectItem value="bottle">bottles</SelectItem>
+                                      <SelectItem value="serving">servings</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
                             </div>

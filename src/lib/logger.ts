@@ -1,4 +1,4 @@
-export type LogArgs = any[]
+export type LogArgs = unknown[]
 
 const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV
 
@@ -16,4 +16,3 @@ export const logger = {
     console.error(...args)
   },
 }
-

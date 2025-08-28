@@ -265,7 +265,10 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle>{editingMealLog ? 'Edit Meal Log' : 'Log a Meal'}</DialogTitle>
           <DialogDescription>

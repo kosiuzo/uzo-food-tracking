@@ -1,4 +1,5 @@
 import { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, RecipeIngredient, Tag, DbTag } from '../types';
+import { logger } from '@/lib/logger';
 
 // Convert database item to FoodItem format
 export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
@@ -127,7 +128,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
     created_at: dbMealLog.created_at || new Date().toISOString(),
   };
   
-  console.log('Mapped meal log:', mealLog);
+  logger.debug('Mapped meal log:', mealLog);
   return mealLog;
 }
 
@@ -165,4 +166,3 @@ export function tagToDbInsert(tag: Omit<Tag, 'id' | 'created_at' | 'updated_at'>
     description: tag.description || null,
   };
 }
-

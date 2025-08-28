@@ -115,6 +115,10 @@ export const MultiSelect = React.forwardRef<
       )
     }, [options, debouncedSearchQuery])
 
+    // Intentionally only react to external defaultValue changes.
+    // We avoid adding selectedValues or onValueChange as deps to prevent a
+    // feedback loop where internal state updates retrigger this effect.
+    // Using JSON.stringify for shallow-equality across string arrays is sufficient here.
     React.useEffect(() => {
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
         setSelectedValues(defaultValue || [])

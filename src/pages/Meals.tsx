@@ -13,6 +13,7 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
+import { logger } from '@/lib/logger';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
 
@@ -28,8 +29,8 @@ export default function Meals() {
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [reLoggedMeals, setReLoggedMeals] = useState<Set<string>>(new Set());
 
-  // Debug logging
-  console.log('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
+  // Debug logging (no-op in production)
+  logger.debug('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
 
   // Ensure mealLogs is always an array
   const safeMealLogs = Array.isArray(mealLogs) ? mealLogs : [];

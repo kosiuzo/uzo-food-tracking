@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       fat: 0,
     },
   });
+
+  // Cache per-item nutrition calculations to avoid recomputation churn
+  const nutritionCacheRef = useRef<Map<string, { calories: number; protein: number; carbs: number; fat: number }>>(new Map());
 
   // Update form data when editingMealLog changes
   useEffect(() => {
@@ -112,6 +115,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
   // Calculate nutrition for individual item entry using centralized utility
   const calculateItemNutrition = (item: FoodItem, quantity: number, unit: string) => {
+    const cacheKey = `${item.id}|${quantity}|${unit}`;
+    const cached = nutritionCacheRef.current.get(cacheKey);
+    if (cached) return cached;
     // Use the centralized calculateRecipeNutrition function for a single ingredient
     const ingredients = [{ item_id: item.id.toString(), quantity, unit }];
     
@@ -127,13 +133,14 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     };
     
     const nutrition = calculateRecipeNutrition(ingredients, 1, [adaptedItem]);
-    
-    return {
+    const result = {
       calories: nutrition.calories_per_serving,
       protein: nutrition.protein_per_serving,
       carbs: nutrition.carbs_per_serving,
       fat: nutrition.fat_per_serving,
     };
+    nutritionCacheRef.current.set(cacheKey, result);
+    return result;
   };
 
   // Convert allRecipes to options for MultiSelect
@@ -164,15 +171,25 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   // Handle item selection from MultiSelect
   const handleItemSelectionChange = (selectedIds: string[]) => {
     const newItemEntries: MealItemEntry[] = [];
-    
-    selectedIds.forEach(idStr => {
+
+    // Build a pruned itemQuantities map that only keeps selected items
+    const selectedIdNums = new Set(selectedIds.map((id) => parseInt(id)));
+    const prunedQuantities: Record<number, { quantity: number; unit: string }> = {};
+
+    selectedIds.forEach((idStr) => {
       const itemId = parseInt(idStr);
-      const item = allItems.find(i => i.id === itemId);
+      const item = allItems.find((i) => i.id === itemId);
       if (!item) return;
-      
-      const quantities = itemQuantities[itemId] || { quantity: 1, unit: item.serving_unit || 'serving' };
+
+      const existing = itemQuantities[itemId];
+      const fallbackUnit = item.serving_unit || 'serving';
+      const quantities = existing || { quantity: 1, unit: fallbackUnit };
+
+      // Populate pruned map with either existing or default values
+      prunedQuantities[itemId] = { quantity: quantities.quantity, unit: quantities.unit };
+
       const nutrition = calculateItemNutrition(item, quantities.quantity, quantities.unit);
-      
+
       newItemEntries.push({
         item_id: itemId,
         quantity: quantities.quantity,
@@ -180,13 +197,16 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         nutrition,
       });
     });
-    
-    setFormData(prev => ({
+
+    // Apply pruned map so deselected keys don't linger in memory
+    setItemQuantities(prunedQuantities);
+
+    setFormData((prev) => ({
       ...prev,
       item_entries: newItemEntries,
       nutrition: calculateCombinedNutrition(selectedRecipes, newItemEntries),
     }));
-    
+
     updateMealName(selectedRecipes, newItemEntries);
   };
 
@@ -265,7 +285,10 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle>{editingMealLog ? 'Edit Meal Log' : 'Log a Meal'}</DialogTitle>
           <DialogDescription>
@@ -353,8 +376,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                         
                         return (
                           <Card key={entry.item_id} className="p-3 bg-muted/30">
-                            <div className="flex items-center gap-2">
-                              <Apple className="h-4 w-4 text-primary flex-shrink-0" />
+                          <div className="flex items-center gap-2">
                               <div className="flex-1">
                                 <div className="font-medium text-sm">{item.name}</div>
                                 <div className="text-xs text-muted-foreground mb-2">
@@ -363,18 +385,21 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                   C: {entry.nutrition.carbs.toFixed(1)}g • 
                                   F: {entry.nutrition.fat.toFixed(1)}g
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                   <Input
                                     type="number"
                                     min="0.1"
                                     step="0.1"
-                                    value={entry.quantity}
-                                    onChange={(e) => handleItemQuantityChange(
-                                      entry.item_id, 
-                                      parseFloat(e.target.value) || 0, 
-                                      entry.unit
-                                    )}
-                                    className="w-20 h-8"
+                                    defaultValue={entry.quantity}
+                                    onChange={(e) => {
+                                      const str = e.target.value;
+                                      // Allow backspace to clear without forcing 0
+                                      if (str === '') return;
+                                      const next = parseFloat(str);
+                                      if (Number.isNaN(next)) return;
+                                      handleItemQuantityChange(entry.item_id, next, entry.unit);
+                                    }}
+                                    className="w-24 h-10 sm:h-9"
                                   />
                                   <Select
                                     value={entry.unit}
@@ -384,7 +409,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                       value
                                     )}
                                   >
-                                    <SelectTrigger className="w-28 h-8">
+                                    <SelectTrigger className="w-32 h-10 sm:h-9">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

@@ -261,8 +261,8 @@ IMPORTANT: These recipes are for MEAL PREP, so:
 Return a single JSON object with exactly 3 recipes.`;
 
     try {
-      // Debug: Log the user prompt being sent
-      console.log(`🤖 AI User Prompt for ${meat.name} 3 recipes:`, userPrompt);
+      // Debug: Log the user prompt being sent (no-op in prod)
+      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI User Prompt for ${meat.name} 3 recipes:`, userPrompt));
       
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -323,8 +323,8 @@ Rules:
       const data = await response.json();
       const generatedText = data.choices[0]?.message?.content;
       
-      // Debug: Log the AI response
-      console.log(`🤖 AI Response for ${meat.name} 3 recipes:`, generatedText);
+      // Debug: Log the AI response (no-op in prod)
+      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI Response for ${meat.name} 3 recipes:`, generatedText));
       
       let parsedRecipes: ParsedRecipeResponse;
       try {
@@ -353,7 +353,7 @@ Rules:
         }
         
         parsedRecipes = JSON.parse(jsonText);
-        console.log(`✅ Parsed recipes for ${meat.name}:`, parsedRecipes);
+        import('@/lib/logger').then(({ logger }) => logger.debug(`✅ Parsed recipes for ${meat.name}:`, parsedRecipes));
         
         // Validate that we have the expected structure
         if (!parsedRecipes['Recipe 1'] || !parsedRecipes['Recipe 2'] || !parsedRecipes['Recipe 3']) {

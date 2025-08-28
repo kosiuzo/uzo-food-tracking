@@ -301,25 +301,12 @@ export default function Meals() {
             </div>
             
             {/* Additional Stats Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
                 </div>
                 <div className="text-sm text-muted-foreground">Fat</div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-emerald-600">
-                  ${filteredMeals.reduce((sum, log) => sum + (log.estimated_cost || 0), 0).toFixed(2)}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedDate 
-                    ? 'Cost on ' + formatDateStringForDisplay(selectedDate)
-                    : dateRange
-                    ? `Cost ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
-                    : 'Total Cost'
-                  }
-                </div>
               </Card>
             </div>
 

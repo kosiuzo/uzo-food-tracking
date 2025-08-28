@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover"
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { useDebounce } from "@/lib/search"
 
 const multiSelectVariants = cva(
@@ -248,6 +249,17 @@ export const MultiSelect = React.forwardRef<
     const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
     const someFilteredSelected = filteredValues.some(value => selectedValues.includes(value))
 
+    // Virtualization setup for large lists
+    const parentRef = React.useRef<HTMLDivElement | null>(null)
+    const hasSelectAllRow = filteredOptions.length > 1
+    const rowsCount = filteredOptions.length + (hasSelectAllRow ? 1 : 0)
+    const rowVirtualizer = useVirtualizer({
+      count: rowsCount,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => 40,
+      overscan: 8,
+    })
+
     const CommandContent = (
       <Command className="w-full" shouldFilter={false}>
         <CommandInput
@@ -257,64 +269,71 @@ export const MultiSelect = React.forwardRef<
           onKeyDown={handleInputKeyDown}
           className="h-12 md:h-9"
         />
-        <CommandList className="max-h-[300px] md:max-h-[200px]">
+        <CommandList ref={parentRef as unknown as React.Ref<HTMLDivElement>} className="max-h-[300px] md:max-h-[200px]">
           <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup>
-            {filteredOptions.length > 1 && (
-              <CommandItem
-                key="all"
-                onSelect={(value) => {
-                  // Prevent the default command behavior and use our toggle
-                  toggleAll()
-                }}
-                className="cursor-pointer py-3 md:py-2 touch-manipulation"
-              >
-                <div
-                  className={cn(
-                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                    allFilteredSelected
-                      ? "bg-primary text-primary-foreground"
-                      : someFilteredSelected
-                      ? "bg-primary/50 text-primary-foreground"
-                      : "opacity-50 [&_svg]:invisible"
-                  )}
-                >
-                  <X className="h-4 w-4" />
-                </div>
-                <span className="text-sm md:text-sm">
-                  {searchQuery ? `(Select All ${filteredOptions.length} filtered)` : "(Select All)"}
-                </span>
-              </CommandItem>
-            )}
-            {filteredOptions.map((option) => {
-              const isSelected = selectedValues.includes(option.value)
+          <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const isSelectAllRow = hasSelectAllRow && virtualRow.index === 0
+              const optionIndex = virtualRow.index - (hasSelectAllRow ? 1 : 0)
+              const option = isSelectAllRow ? null : filteredOptions[optionIndex]
+
               return (
-                <CommandItem
-                  key={option.value}
-                  onSelect={(value) => {
-                    // Prevent the default command behavior and use our toggle
-                    toggleOption(option)
+                <div
+                  key={isSelectAllRow ? '__select_all__' : option?.value}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`
                   }}
-                  className="cursor-pointer py-3 md:py-2 touch-manipulation"
                 >
-                  <div
-                    className={cn(
-                      "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "opacity-50 [&_svg]:invisible"
-                    )}
-                  >
-                    <X className="h-4 w-4" />
-                  </div>
-                  {option.icon && (
-                    <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  )}
-                  <span className="text-sm md:text-sm">{option.label}</span>
-                </CommandItem>
+                  {isSelectAllRow ? (
+                    <CommandItem
+                      onSelect={() => toggleAll()}
+                      className="cursor-pointer py-3 md:py-2 touch-manipulation"
+                    >
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          allFilteredSelected
+                            ? "bg-primary text-primary-foreground"
+                            : someFilteredSelected
+                            ? "bg-primary/50 text-primary-foreground"
+                            : "opacity-50 [&_svg]:invisible"
+                        )}
+                      >
+                        <X className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm md:text-sm">
+                        {searchQuery ? `(Select All ${filteredOptions.length} filtered)` : "(Select All)"}
+                      </span>
+                    </CommandItem>
+                  ) : option ? (
+                    <CommandItem
+                      onSelect={() => toggleOption(option)}
+                      className="cursor-pointer py-3 md:py-2 touch-manipulation"
+                    >
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          selectedValues.includes(option.value)
+                            ? "bg-primary text-primary-foreground"
+                            : "opacity-50 [&_svg]:invisible"
+                        )}
+                      >
+                        <X className="h-4 w-4" />
+                      </div>
+                      {option.icon && (
+                        <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm md:text-sm">{option.label}</span>
+                    </CommandItem>
+                  ) : null}
+                </div>
               )
             })}
-          </CommandGroup>
+          </div>
         </CommandList>
       </Command>
     )

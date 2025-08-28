@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover"
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { useDebounce } from "@/lib/search"
 
 const multiSelectVariants = cva(
@@ -293,6 +294,41 @@ export const GroupedMultiSelect = React.forwardRef<
     const allFilteredSelected = filteredValues.every(value => selectedValues.includes(value))
     const someFilteredSelected = filteredValues.some(value => selectedValues.includes(value))
 
+    // Virtualization: flatten groups into rows (headers, toggles, items)
+    type Row =
+      | { type: 'all-toggle' }
+      | { type: 'group-header'; group: string; count: number }
+      | { type: 'group-toggle'; group: string; allSelected: boolean; someSelected: boolean }
+      | { type: 'item'; option: GroupedOption }
+
+    const rows: Row[] = React.useMemo(() => {
+      const r: Row[] = []
+      if (allFilteredOptions.length > 1) r.push({ type: 'all-toggle' })
+      Object.entries(filteredGroups)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([groupName, options]) => {
+          const groupValues = options.map(o => o.value)
+          const allSel = groupValues.every(v => selectedValues.includes(v))
+          const someSel = groupValues.some(v => selectedValues.includes(v))
+          r.push({ type: 'group-header', group: groupName, count: options.length })
+          r.push({ type: 'group-toggle', group: groupName, allSelected: allSel, someSelected: someSel })
+          options.forEach(option => r.push({ type: 'item', option }))
+        })
+      return r
+    }, [filteredGroups, allFilteredOptions.length, selectedValues])
+
+    const parentRef = React.useRef<HTMLDivElement | null>(null)
+    const rowVirtualizer = useVirtualizer({
+      count: rows.length,
+      getScrollElement: () => parentRef.current,
+      estimateSize: (i) => {
+        const row = rows[i]
+        if (row.type === 'group-header') return 28
+        return 40
+      },
+      overscan: 8,
+    })
+
     const CommandContent = (
       <Command className="w-full" shouldFilter={false}>
         <CommandInput
@@ -302,101 +338,96 @@ export const GroupedMultiSelect = React.forwardRef<
           onKeyDown={handleInputKeyDown}
           className="h-12 md:h-9"
         />
-        <CommandList className="max-h-[300px] md:max-h-[200px]">
+        <CommandList ref={parentRef as unknown as React.Ref<HTMLDivElement>} className="max-h-[300px] md:max-h-[200px]">
           <CommandEmpty>No ingredients found.</CommandEmpty>
-          <CommandGroup>
-            {allFilteredOptions.length > 1 && (
-              <CommandItem
-                key="all"
-                onSelect={(value) => {
-                  // Prevent the default command behavior and use our toggle
-                  toggleAll()
-                }}
-                className="cursor-pointer py-3 md:py-2 touch-manipulation"
-              >
-                <div
-                  className={cn(
-                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                    allFilteredSelected
-                      ? "bg-primary text-primary-foreground"
-                      : someFilteredSelected
-                      ? "bg-primary/50 text-primary-foreground"
-                      : "opacity-50 [&_svg]:invisible"
-                  )}
-                >
-                  <X className="h-4 w-4" />
-                </div>
-                <span className="text-sm md:text-sm">
-                  {searchQuery ? `(Select All ${allFilteredOptions.length} filtered)` : "(Select All)"}
-                </span>
-              </CommandItem>
-            )}
-          </CommandGroup>
-          {Object.entries(filteredGroups)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([groupName, options]) => {
-              const groupValues = options.map(option => option.value)
-              const allGroupSelected = groupValues.every(value => selectedValues.includes(value))
-              const someGroupSelected = groupValues.some(value => selectedValues.includes(value))
-              
+          <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
+            {rowVirtualizer.getVirtualItems().map((vr) => {
+              const row = rows[vr.index]
+              const rowKey = (() => {
+                if (row.type === 'item') return `${row.type}-${row.option.value}`
+                if (row.type === 'group-header' || row.type === 'group-toggle') return `${row.type}-${row.group}`
+                return `${row.type}-all`
+              })()
               return (
-            <CommandGroup key={groupName} heading={`${groupName}${searchQuery ? ` (${options.length})` : ''}`}>
-              <CommandItem
-                key={`${groupName}-select-all`}
-                onSelect={(value) => {
-                  // Prevent the default command behavior and use our toggle
-                  toggleGroup(groupName)
-                }}
-                className="cursor-pointer py-2 text-xs font-medium text-muted-foreground hover:text-foreground touch-manipulation"
-              >
                 <div
-                  className={cn(
-                    "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                    allGroupSelected
-                      ? "bg-primary text-primary-foreground"
-                      : someGroupSelected
-                      ? "bg-primary/50 text-primary-foreground"
-                      : "opacity-50 [&_svg]:invisible"
-                  )}
+                  key={`${rowKey}-${vr.index}`}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${vr.start}px)` }}
                 >
-                  <X className="h-3 w-3" />
-                </div>
-                <span className="italic">
-                  Select all {groupName.toLowerCase()} 
-                  {searchQuery && ` (${options.length})`}
-                </span>
-              </CommandItem>
-              {options.map((option) => {
-                const isSelected = selectedValues.includes(option.value)
-                return (
-                  <CommandItem
-                    key={option.value}
-                    onSelect={(value) => {
-                      // Prevent the default command behavior and use our toggle
-                      toggleOption(option)
-                    }}
-                    className="cursor-pointer py-3 md:py-2 touch-manipulation"
-                  >
-                    <div
-                      className={cn(
-                        "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
-                      )}
+                  {row.type === 'all-toggle' && (
+                    <CommandItem
+                      onSelect={() => toggleAll()}
+                      className="cursor-pointer py-3 md:py-2 touch-manipulation"
                     >
-                      <X className="h-4 w-4" />
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          allFilteredSelected
+                            ? "bg-primary text-primary-foreground"
+                            : someFilteredSelected
+                            ? "bg-primary/50 text-primary-foreground"
+                            : "opacity-50 [&_svg]:invisible"
+                        )}
+                      >
+                        <X className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm md:text-sm">
+                        {searchQuery ? `(Select All ${allFilteredOptions.length} filtered)` : "(Select All)"}
+                      </span>
+                    </CommandItem>
+                  )}
+                  {row.type === 'group-header' && (
+                    <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                      {row.group}
+                      {searchQuery && ` (${row.count})`}
                     </div>
-                    {option.icon && (
-                      <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="text-sm md:text-sm">{option.label}</span>
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
+                  )}
+                  {row.type === 'group-toggle' && (
+                    <CommandItem
+                      onSelect={() => toggleGroup(row.group)}
+                      className="cursor-pointer py-2 text-xs font-medium text-muted-foreground hover:text-foreground touch-manipulation"
+                    >
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          row.allSelected
+                            ? "bg-primary text-primary-foreground"
+                            : row.someSelected
+                            ? "bg-primary/50 text-primary-foreground"
+                            : "opacity-50 [&_svg]:invisible"
+                        )}
+                      >
+                        <X className="h-3 w-3" />
+                      </div>
+                      <span className="italic">
+                        Select all {row.group.toLowerCase()} {searchQuery && `(${filteredGroups[row.group]?.length ?? 0})`}
+                      </span>
+                    </CommandItem>
+                  )}
+                  {row.type === 'item' && (
+                    <CommandItem
+                      onSelect={() => toggleOption(row.option)}
+                      className="cursor-pointer py-3 md:py-2 touch-manipulation"
+                    >
+                      <div
+                        className={cn(
+                          "mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          selectedValues.includes(row.option.value)
+                            ? "bg-primary text-primary-foreground"
+                            : "opacity-50 [&_svg]:invisible"
+                        )}
+                      >
+                        <X className="h-4 w-4" />
+                      </div>
+                      {row.option.icon && (
+                        <row.option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm md:text-sm">{row.option.label}</span>
+                    </CommandItem>
+                  )}
+                </div>
               )
             })}
+          </div>
         </CommandList>
       </Command>
     )

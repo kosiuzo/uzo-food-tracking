@@ -8,9 +8,6 @@ export function dbItemToFoodItem(dbItem: DbItem): FoodItem {
     brand: dbItem.brand ?? undefined,
     category: dbItem.category ?? 'Other',
     in_stock: dbItem.in_stock ?? true,
-    price: dbItem.price !== null ? Number(dbItem.price) : undefined,
-    price_per_serving: dbItem.price_per_serving !== null ? Number(dbItem.price_per_serving) : undefined,
-    servings_per_container: dbItem.servings_per_container !== null ? Number(dbItem.servings_per_container) : undefined,
     serving_size: dbItem.serving_size_grams ?? 100,
     serving_quantity: dbItem.serving_quantity ?? undefined,
     serving_unit: dbItem.serving_unit ?? undefined,
@@ -43,13 +40,10 @@ export function foodItemToDbInsert(item: Omit<FoodItem, 'id'>): Omit<DbItem, 'id
     brand: item.brand || null,
     category: item.category,
     in_stock: item.in_stock,
-    price: item.price || null,
-    price_per_serving: item.price_per_serving || null,
     calories_per_serving: item.nutrition.calories_per_serving,
     carbs_per_serving: item.nutrition.carbs_per_serving,
     fat_per_serving: item.nutrition.fat_per_serving,
     protein_per_serving: item.nutrition.protein_per_serving,
-    servings_per_container: item.servings_per_container || 1,
     serving_size_grams: servingSizeGrams,
     serving_quantity: item.serving_quantity || null,
     serving_unit: item.serving_unit || null,
@@ -83,9 +77,6 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
       carbs_per_serving: (nutrition.carbs_per_serving as number) || (nutrition.carbs as number) || 0,
       fat_per_serving: (nutrition.fat_per_serving as number) || (nutrition.fat as number) || 0,
     },
-    cost_per_serving: dbRecipe.cost_per_serving || undefined,
-    total_cost: dbRecipe.total_cost || undefined,
-    cost_last_calculated: dbRecipe.cost_last_calculated || undefined,
     is_favorite: dbRecipe.is_favorite || false,
     notes: dbRecipe.notes || undefined,
     tags,
@@ -113,7 +104,6 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
     },
     is_favorite: recipe.is_favorite || false,
     source_link: null,
-    cost_per_serving: null,
     notes: recipe.notes || null,
   };
 }
@@ -134,7 +124,6 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLog): MealLog {
       carbs: (macros.carbs as number) || 0,
       fat: (macros.fat as number) || 0,
     },
-    estimated_cost: dbMealLog.cost || 0,
     created_at: dbMealLog.created_at || new Date().toISOString(),
   };
   
@@ -152,7 +141,7 @@ export function mealLogToDbInsert(mealLog: Omit<MealLog, 'id'>): Omit<DbMealLog,
     notes: mealLog.notes || null,
     rating: null,
     macros: mealLog.nutrition,
-    cost: mealLog.estimated_cost,
+    cost: null,
   };
 }
 

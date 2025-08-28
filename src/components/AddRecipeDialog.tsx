@@ -13,7 +13,6 @@ import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags, useRecipeTagManagement } from '../hooks/useTags';
 import { Recipe, RecipeIngredient, Tag } from '../types';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
-import { calculateRecipeTotalCost } from '../lib/costCalculations';
 
 // Form-specific type that allows string quantities during editing
 interface RecipeFormData {
@@ -86,27 +85,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       quantity: parseFloat(ing.quantity) || 0
     }));
     return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
-  };
-
-  // Calculate cost based on ingredients
-  const calculateCost = () => {
-    try {
-      // Convert string quantities to numbers for the calculation
-      const ingredientsWithNumbers = formData.ingredients.map(ing => ({
-        ...ing,
-        quantity: parseFloat(ing.quantity) || 0
-      }));
-      
-      // Only calculate if we have ingredients and items data
-      if (ingredientsWithNumbers.length === 0 || allItems.length === 0) {
-        return { totalCost: 0, costPerServing: 0, servings: 1 };
-      }
-      
-      return calculateRecipeTotalCost(ingredientsWithNumbers, allItems, parseInt(formData.servings) || 1);
-    } catch (error) {
-      console.error('Error calculating cost:', error);
-      return { totalCost: 0, costPerServing: 0, servings: 1 };
-    }
   };
 
   // Convert allItems to options for MultiSelect (in-stock items only)
@@ -379,42 +357,28 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
             )}
           </div>
 
-          {/* Calculated Nutrition & Cost Preview */}
-          {formData.ingredients.length > 0 && (
-            <div className="space-y-3">
-              <Label>Calculated Nutrition & Cost (per serving)</Label>
-              <div className="grid grid-cols-4 gap-2 text-sm">
-                <div className="text-center p-2 bg-muted rounded">
-                  <div className="font-medium">{calculateNutrition().calories_per_serving}</div>
-                  <div className="text-xs text-muted-foreground">cal</div>
+          {/* Calculated Nutrition Preview */}
+          <div className="space-y-3 bg-muted/50 p-3 rounded-md">
+            <Label>Calculated Nutrition (per serving)</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">Calories:</span> {calculateNutrition().calories_per_serving.toFixed(1)}
                 </div>
-                <div className="text-center p-2 bg-muted rounded">
-                  <div className="font-medium">{calculateNutrition().protein_per_serving}g</div>
-                  <div className="text-xs text-muted-foreground">protein</div>
-                </div>
-                <div className="text-center p-2 bg-muted rounded">
-                  <div className="font-medium">{calculateNutrition().carbs_per_serving}g</div>
-                  <div className="text-xs text-muted-foreground">carbs</div>
-                </div>
-                <div className="text-center p-2 bg-muted rounded">
-                  <div className="font-medium">{calculateNutrition().fat_per_serving}g</div>
-                  <div className="text-xs text-muted-foreground">fat</div>
+                <div className="text-sm">
+                  <span className="font-medium">Protein:</span> {calculateNutrition().protein_per_serving.toFixed(1)}g
                 </div>
               </div>
-              
-              {/* Cost Information */}
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="text-center p-2 bg-green-50 border border-green-200 rounded">
-                  <div className="font-medium text-green-700">${calculateCost().totalCost.toFixed(2)}</div>
-                  <div className="text-xs text-green-600">total cost</div>
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">Carbs:</span> {calculateNutrition().carbs_per_serving.toFixed(1)}g
                 </div>
-                <div className="text-center p-2 bg-green-50 border border-green-200 rounded">
-                  <div className="font-medium text-green-700">${calculateCost().costPerServing.toFixed(2)}</div>
-                  <div className="text-xs text-green-600">per serving</div>
+                <div className="text-sm">
+                  <span className="font-medium">Fat:</span> {calculateNutrition().fat_per_serving.toFixed(1)}g
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">

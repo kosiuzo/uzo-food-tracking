@@ -778,7 +778,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 options={meatOptions}
                 onValueChange={handleMeatSelectionChange}
                 defaultValue={selectedMeatIds}
-                placeholder="Search and select up to 2 in-stock meats..."
+                placeholder="Select up to 2 meats..."
                 maxCount={2}
               />
             </div>
@@ -790,7 +790,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 optionGroups={groupedSeasoningsAndSauces}
                 onValueChange={handleSeasoningSelectionChange}
                 defaultValue={selectedSeasoningIds}
-                placeholder="Search and select in-stock seasonings and sauces..."
+                placeholder="Select seasonings..."
                 maxCount={3}
               />
             </div>
@@ -802,7 +802,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 options={grainOptions}
                 onValueChange={handleGrainSelectionChange}
                 defaultValue={selectedGrainIds}
-                placeholder="Search and select in-stock grains and starches..."
+                placeholder="Select grains..."
                 maxCount={3}
               />
             </div>
@@ -814,7 +814,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 options={vegetableOptions}
                 onValueChange={handleVegetableSelectionChange}
                 defaultValue={selectedVegetableIds}
-                placeholder="Search and select in-stock vegetables..."
+                placeholder="Select vegetables..."
                 maxCount={4}
               />
             </div>
@@ -826,7 +826,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 options={dairyOptions}
                 onValueChange={handleDairySelectionChange}
                 defaultValue={selectedDairyIds}
-                placeholder="Search and select in-stock dairy products and eggs..."
+                placeholder="Select dairy & eggs..."
                 maxCount={3}
               />
             </div>
@@ -838,7 +838,7 @@ Return a single JSON object with exactly 3 recipes.`;
                 options={cookingMethods.map(method => ({ label: method.label, value: method.value }))}
                 onValueChange={handleCookingMethodsChange}
                 defaultValue={selectedCookingMethods}
-                placeholder="Select your available cooking methods..."
+                placeholder="Select cooking methods..."
                 maxCount={4}
               />
               <p className="text-sm text-muted-foreground">

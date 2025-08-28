@@ -5,6 +5,8 @@ export interface FoodItem {
   category: string;
   in_stock: boolean;
   price?: number;
+  price_per_serving?: number;
+  servings_per_container?: number;
   serving_size?: number;
   serving_quantity?: number;
   serving_unit?: string;
@@ -33,6 +35,7 @@ export interface DbItem {
   category?: string | null;
   in_stock?: boolean | null;
   price?: number | null;
+  price_per_serving?: number | null;
   calories_per_serving?: number | null;
   carbs_per_serving?: number | null;
   fat_per_serving?: number | null;

@@ -1,13 +1,19 @@
 import { FoodItem, RecipeIngredient } from '../types';
 
 /**
- * Calculate the cost per unit for a food item based on its price and quantity
+ * Calculate the cost per unit for a food item using price_per_serving
  */
 export function calculateCostPerUnit(item: FoodItem): number {
-  if (!item.price || !item.quantity || item.quantity === 0) {
+  // Use price_per_serving if available, otherwise fallback to old calculation
+  if (item.price_per_serving && item.price_per_serving > 0) {
+    return item.price_per_serving;
+  }
+  
+  // Fallback to old calculation for backward compatibility
+  if (!item.price || !item.serving_quantity || item.serving_quantity === 0) {
     return 0;
   }
-  return item.price / item.quantity;
+  return item.price / item.serving_quantity;
 }
 
 /**
@@ -18,18 +24,22 @@ export function calculateIngredientCost(
   quantityUsed: number, 
   unitUsed: string
 ): number {
-  const costPerUnit = calculateCostPerUnit(item);
-  
-  // For now, assume 1:1 unit conversion
-  // In a real system, you'd have unit conversion logic here
-  let adjustedQuantity = quantityUsed;
-  
-  // Simple unit conversion logic
-  if (item.unit !== unitUsed) {
-    // Convert common units
-    adjustedQuantity = convertUnits(quantityUsed, unitUsed, item.unit);
+  // Use price_per_serving directly if available
+  if (item.price_per_serving && item.price_per_serving > 0) {
+    // Simple unit conversion logic
+    let adjustedQuantity = quantityUsed;
+    if (item.serving_unit !== unitUsed) {
+      adjustedQuantity = convertUnits(quantityUsed, unitUsed, item.serving_unit || 'unit');
+    }
+    return item.price_per_serving * adjustedQuantity;
   }
   
+  // Fallback to old calculation
+  const costPerUnit = calculateCostPerUnit(item);
+  let adjustedQuantity = quantityUsed;
+  if (item.serving_unit !== unitUsed) {
+    adjustedQuantity = convertUnits(quantityUsed, unitUsed, item.serving_unit || 'unit');
+  }
   return costPerUnit * adjustedQuantity;
 }
 
@@ -69,7 +79,8 @@ function convertUnits(quantity: number, fromUnit: string, toUnit: string): numbe
  */
 export function calculateRecipeTotalCost(
   ingredients: RecipeIngredient[],
-  foodItems: FoodItem[]
+  foodItems: FoodItem[],
+  servings: number = 1
 ): { totalCost: number; costPerServing: number; servings: number } {
   let totalCost = 0;
   
@@ -85,10 +96,12 @@ export function calculateRecipeTotalCost(
     }
   }
   
+  const costPerServing = servings > 0 ? totalCost / servings : 0;
+  
   return {
     totalCost,
-    costPerServing: 0, // Will be calculated based on servings
-    servings: 1 // Default, should be passed in
+    costPerServing,
+    servings
   };
 }
 
@@ -151,4 +164,24 @@ export function updateRecipeIngredientCosts(
     }
     return ingredient;
   });
+}
+
+/**
+ * Calculate the total cost for a meal log based on the cost per serving of recipes
+ */
+export function calculateMealLogCost(
+  recipeIds: number[],
+  recipes: { id: number; cost_per_serving?: number | null }[]
+): number {
+  if (!recipeIds || recipeIds.length === 0) {
+    return 0;
+  }
+  
+  return recipeIds.reduce((totalCost, recipeId) => {
+    const recipe = recipes.find(r => r.id === recipeId);
+    const recipeCost = recipe?.cost_per_serving;
+    // Handle both null and undefined, and ensure it's a valid number
+    const validCost = (recipeCost && typeof recipeCost === 'number' && !isNaN(recipeCost)) ? recipeCost : 0;
+    return totalCost + validCost;
+  }, 0);
 }

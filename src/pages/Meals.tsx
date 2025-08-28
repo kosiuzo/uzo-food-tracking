@@ -123,11 +123,6 @@ export default function Meals() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Meal Log</h1>
-          <p className="text-muted-foreground">Track your daily meals and nutrition</p>
-        </div>
 
         {/* Loading State */}
         {loading && (
@@ -282,23 +277,26 @@ export default function Meals() {
               </Card>
             </div>
             
-            {/* Fat for mobile */}
-            <div className="grid grid-cols-1 gap-4 sm:hidden">
+            {/* Additional Stats Row */}
+            <div className="grid grid-cols-2 gap-4">
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
                 </div>
                 <div className="text-sm text-muted-foreground">Fat</div>
               </Card>
-            </div>
-            
-            {/* Fat for larger screens */}
-            <div className="hidden sm:grid grid-cols-1 gap-4">
               <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
+                <div className="text-2xl font-bold text-emerald-600">
+                  ${filteredMeals.reduce((sum, log) => sum + (log.estimated_cost || 0), 0).toFixed(2)}
                 </div>
-                <div className="text-sm text-muted-foreground">Fat</div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedDate 
+                    ? 'Cost on ' + formatDateStringForDisplay(selectedDate)
+                    : dateRange
+                    ? `Cost ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
+                    : 'Total Cost'
+                  }
+                </div>
               </Card>
             </div>
 
@@ -432,7 +430,7 @@ export default function Meals() {
                         </div>
 
                         {/* Nutrition */}
-                        <div className="flex gap-4 text-xs">
+                        <div className="flex gap-4 text-xs flex-wrap">
                           <span className="font-medium">
                             {log.nutrition.calories.toFixed(1)} cal
                           </span>
@@ -445,6 +443,11 @@ export default function Meals() {
                           <span className="text-muted-foreground">
                             F: {log.nutrition.fat.toFixed(1)}g
                           </span>
+                          {log.estimated_cost && log.estimated_cost > 0 && (
+                            <span className="text-green-600 font-medium">
+                              Cost: ${log.estimated_cost.toFixed(2)}
+                            </span>
+                          )}
                         </div>
 
                         {log.notes && (

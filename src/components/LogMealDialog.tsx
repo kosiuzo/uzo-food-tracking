@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
-import { X, Plus, Utensils } from 'lucide-react';
+import { X, Plus, Utensils, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '../hooks/useRecipes';
 import { MealLog, Recipe } from '../types';
+import { calculateMealLogCost } from '../lib/costCalculations';
 
 interface LogMealDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       carbs: 0,
       fat: 0,
     },
+    estimated_cost: 0,
   });
 
   // Update form data when editingMealLog changes
@@ -45,6 +47,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         meal_name: editingMealLog.meal_name,
         notes: editingMealLog.notes || '',
         nutrition: editingMealLog.nutrition,
+        estimated_cost: editingMealLog.estimated_cost || 0,
       });
     } else if (open) {
       // Reset form when opening for new meal log
@@ -59,6 +62,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           carbs: 0,
           fat: 0,
         },
+        estimated_cost: 0,
       });
     }
   }, [editingMealLog, open]);
@@ -85,12 +89,17 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   // Handle recipe selection from MultiSelect
   const handleRecipeSelectionChange = (selectedIds: string[]) => {
     const newRecipes = selectedIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
+    const estimatedCost = calculateMealLogCost(
+      selectedIds.map(id => parseInt(id)), 
+      allRecipes.map(r => ({ id: r.id, cost_per_serving: r.cost_per_serving }))
+    );
     
     setFormData(prev => ({
       ...prev,
       recipe_ids: selectedIds,
       meal_name: newRecipes.length === 1 ? newRecipes[0].name : newRecipes.length > 0 ? `${newRecipes.length} Recipe Combo` : '',
       nutrition: calculateCombinedNutrition(newRecipes),
+      estimated_cost: estimatedCost,
     }));
   };
 
@@ -129,6 +138,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         carbs: 0,
         fat: 0,
       },
+      estimated_cost: 0,
     });
 
     toast({
@@ -187,6 +197,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                             P: {recipe.nutrition.protein_per_serving.toFixed(1)}g • 
                             C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g • 
                             F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
+                            {recipe.cost_per_serving && recipe.cost_per_serving > 0 && (
+                              <span className="text-green-600 ml-1">• ${recipe.cost_per_serving.toFixed(2)}</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -210,7 +223,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           {/* Nutrition Information (Combined from Recipes) */}
           {selectedRecipes.length > 0 && (
             <div className="space-y-3 bg-muted/50 p-3 rounded-md">
-              <Label>Combined Nutrition</Label>
+              <Label>Combined Nutrition & Cost</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm">
@@ -219,14 +232,23 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                   <div className="text-sm">
                     <span className="font-medium">Protein:</span> {formData.nutrition.protein.toFixed(1)}g
                   </div>
-                </div>
-                <div className="space-y-2">
                   <div className="text-sm">
                     <span className="font-medium">Carbs:</span> {formData.nutrition.carbs.toFixed(1)}g
                   </div>
+                </div>
+                <div className="space-y-2">
                   <div className="text-sm">
                     <span className="font-medium">Fat:</span> {formData.nutrition.fat.toFixed(1)}g
                   </div>
+                  {formData.estimated_cost > 0 && (
+                    <div className="text-sm flex items-center gap-1">
+                      <DollarSign className="h-3 w-3 text-green-600" />
+                      <span className="font-medium">Est. Cost:</span> 
+                      <span className="text-green-600 font-semibold">
+                        ${formData.estimated_cost.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

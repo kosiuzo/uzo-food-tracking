@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot, Utensils } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot, Utensils, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { TagDialog } from '../components/TagDialog';
 import { useRecipes } from '../hooks/useRecipes';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useRecipeTagManagement, useTags } from '../hooks/useTags';
@@ -27,6 +28,7 @@ export default function Recipes() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isGeneratorDialogOpen, setIsGeneratorDialogOpen] = useState(false);
+  const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -100,21 +102,23 @@ export default function Recipes() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Recipes</h1>
-            <p className="text-muted-foreground">Manage your recipes and favorites</p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() => setIsGeneratorDialogOpen(true)}
-              className="flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <Bot className="h-4 w-4" />
-              Generate Recipe with AI
-            </Button>
-          </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => setIsTagDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Tag className="h-4 w-4" />
+            Manage Tags
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsGeneratorDialogOpen(true)}
+            className="flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <Bot className="h-4 w-4" />
+            Generate Recipe with AI
+          </Button>
         </div>
 
         {/* Mock Data Indicator */}
@@ -278,7 +282,7 @@ export default function Recipes() {
                   </div>
 
                   {/* Nutrition per serving */}
-                  <div className="flex gap-4 text-xs">
+                  <div className="flex gap-4 text-xs flex-wrap">
                     <Badge variant="secondary">
                       {recipe.nutrition.calories_per_serving.toFixed(1)} cal
                     </Badge>
@@ -291,6 +295,11 @@ export default function Recipes() {
                     <span className="text-muted-foreground">
                       F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
                     </span>
+                    {recipe.cost_per_serving && recipe.cost_per_serving > 0 && (
+                      <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">
+                        ${recipe.cost_per_serving.toFixed(2)} per serving
+                      </Badge>
+                    )}
                   </div>
 
                                     {/* Ingredients list */}
@@ -404,6 +413,12 @@ export default function Recipes() {
           open={isGeneratorDialogOpen}
           onOpenChange={setIsGeneratorDialogOpen}
           onRecipeGenerated={handleRecipeGenerated}
+        />
+
+        {/* Tag Management Dialog */}
+        <TagDialog
+          open={isTagDialogOpen}
+          onOpenChange={setIsTagDialogOpen}
         />
       </div>
     </Layout>

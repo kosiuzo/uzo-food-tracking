@@ -145,7 +145,7 @@ export const GroupedMultiSelect = React.forwardRef<
       if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
         setSelectedValues(defaultValue)
       }
-    }, [defaultValue])
+    }, [defaultValue]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleInputKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {

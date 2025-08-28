@@ -83,39 +83,29 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   const selectedRecipes = formData.recipe_ids.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
 
   const calculateCombinedNutrition = (recipes: Recipe[], itemEntries: MealItemEntry[]) => {
-    let totalNutrition = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    // Calculate nutrition from recipes
+    const recipeNutrition = recipes.reduce((total, recipe) => ({
+      calories: total.calories + recipe.nutrition.calories_per_serving,
+      protein: total.protein + recipe.nutrition.protein_per_serving,
+      carbs: total.carbs + recipe.nutrition.carbs_per_serving,
+      fat: total.fat + recipe.nutrition.fat_per_serving,
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
     
-    // Add nutrition from recipes
-    if (recipes.length > 0) {
-      const recipeNutrition = recipes.reduce((total, recipe) => ({
-        calories: total.calories + recipe.nutrition.calories_per_serving,
-        protein: total.protein + recipe.nutrition.protein_per_serving,
-        carbs: total.carbs + recipe.nutrition.carbs_per_serving,
-        fat: total.fat + recipe.nutrition.fat_per_serving,
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-      
-      totalNutrition.calories += recipeNutrition.calories;
-      totalNutrition.protein += recipeNutrition.protein;
-      totalNutrition.carbs += recipeNutrition.carbs;
-      totalNutrition.fat += recipeNutrition.fat;
-    }
+    // Calculate nutrition from item entries
+    const itemNutrition = itemEntries.reduce((total, entry) => ({
+      calories: total.calories + entry.nutrition.calories,
+      protein: total.protein + entry.nutrition.protein,
+      carbs: total.carbs + entry.nutrition.carbs,
+      fat: total.fat + entry.nutrition.fat,
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
     
-    // Add nutrition from item entries
-    if (itemEntries.length > 0) {
-      const itemNutrition = itemEntries.reduce((total, entry) => ({
-        calories: total.calories + entry.nutrition.calories,
-        protein: total.protein + entry.nutrition.protein,
-        carbs: total.carbs + entry.nutrition.carbs,
-        fat: total.fat + entry.nutrition.fat,
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-      
-      totalNutrition.calories += itemNutrition.calories;
-      totalNutrition.protein += itemNutrition.protein;
-      totalNutrition.carbs += itemNutrition.carbs;
-      totalNutrition.fat += itemNutrition.fat;
-    }
-    
-    return totalNutrition;
+    // Combine both
+    return {
+      calories: recipeNutrition.calories + itemNutrition.calories,
+      protein: recipeNutrition.protein + itemNutrition.protein,
+      carbs: recipeNutrition.carbs + itemNutrition.carbs,
+      fat: recipeNutrition.fat + itemNutrition.fat,
+    };
   };
 
   // Calculate nutrition for individual item entry

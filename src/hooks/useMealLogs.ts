@@ -138,6 +138,7 @@ export function useMealLogs() {
       const today = getTodayLocalDate();
       const newMealLog: Omit<MealLog, 'id'> = {
         recipe_ids: mealLog.recipe_ids,
+        item_entries: mealLog.item_entries,
         meal_name: mealLog.meal_name,
         date: today,
         notes: mealLog.notes,

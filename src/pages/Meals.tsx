@@ -10,6 +10,7 @@ import { LogMealDialog } from '../components/LogMealDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useMealLogs } from '../hooks/useMealLogs';
 import { useRecipes } from '../hooks/useRecipes';
+import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,6 +19,7 @@ import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastW
 export default function Meals() {
   const { mealLogs, addMealLog, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
   const { getRecipeById } = useRecipes();
+  const { allItems } = useInventorySearch();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
@@ -113,11 +115,32 @@ export default function Meals() {
   // Check if a meal is already logged for today
   const isMealLoggedToday = (mealLog: MealLog) => {
     const today = getTodayLocalDate();
-    return safeMealLogs.some(log => 
-      log.date === today && 
-      log.recipe_ids.length === mealLog.recipe_ids.length &&
-      log.recipe_ids.every(id => mealLog.recipe_ids.includes(id))
-    );
+    return safeMealLogs.some(log => {
+      if (log.date !== today) return false;
+      
+      // Check recipes match
+      const recipesMatch = log.recipe_ids.length === mealLog.recipe_ids.length &&
+        log.recipe_ids.every(id => mealLog.recipe_ids.includes(id));
+      
+      // Check items match
+      const logItems = log.item_entries || [];
+      const mealItems = mealLog.item_entries || [];
+      const itemsMatch = logItems.length === mealItems.length &&
+        logItems.every(item => 
+          mealItems.some(mItem => 
+            mItem.item_id === item.item_id && 
+            mItem.quantity === item.quantity && 
+            mItem.unit === item.unit
+          )
+        );
+      
+      return recipesMatch && itemsMatch;
+    });
+  };
+
+  // Helper to get food item by ID
+  const getFoodItemById = (id: number) => {
+    return allItems.find(item => item.id === id);
   };
 
   return (
@@ -424,6 +447,25 @@ export default function Meals() {
                                     {recipe.name}
                                   </Badge>
                                 ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Individual Items */}
+                          {log.item_entries && log.item_entries.length > 0 && (
+                            <div className="space-y-1">
+                              <div className="text-xs text-muted-foreground">
+                                Individual Items ({log.item_entries.length}):
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {log.item_entries.map((entry, index) => {
+                                  const item = getFoodItemById(entry.item_id);
+                                  return (
+                                    <Badge key={`${entry.item_id}-${index}`} variant="secondary" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
+                                      {item?.name || 'Unknown Item'} ({entry.quantity} {entry.unit})
+                                    </Badge>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

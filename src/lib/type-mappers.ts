@@ -130,6 +130,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
   return {
     id: dbMealLog.id,
     recipe_ids: dbMealLog.recipe_ids,
+    item_entries: dbMealLog.item_entries as any || undefined, // Cast for now since DB schema is JSONB
     date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
     meal_name: dbMealLog.meal_name || '',
     notes: dbMealLog.notes || undefined,
@@ -149,7 +150,8 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
  */
 export function mealLogToDbInsert(mealLog: Partial<MealLog>): Database['public']['Tables']['meal_logs']['Insert'] {
   return {
-    recipe_ids: mealLog.recipe_ids!,
+    recipe_ids: mealLog.recipe_ids || [],
+    item_entries: mealLog.item_entries as any || null, // Cast for now since DB schema is JSONB
     meal_name: mealLog.meal_name || null,
     cooked_at: mealLog.date || null,
     notes: mealLog.notes || null,

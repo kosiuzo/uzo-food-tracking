@@ -376,8 +376,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                         
                         return (
                           <Card key={entry.item_id} className="p-3 bg-muted/30">
-                            <div className="flex items-center gap-2">
-                              <Apple className="h-4 w-4 text-primary flex-shrink-0" />
+                          <div className="flex items-center gap-2">
                               <div className="flex-1">
                                 <div className="font-medium text-sm">{item.name}</div>
                                 <div className="text-xs text-muted-foreground mb-2">
@@ -391,12 +390,15 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                     type="number"
                                     min="0.1"
                                     step="0.1"
-                                    value={entry.quantity}
-                                    onChange={(e) => handleItemQuantityChange(
-                                      entry.item_id, 
-                                      parseFloat(e.target.value) || 0, 
-                                      entry.unit
-                                    )}
+                                    defaultValue={entry.quantity}
+                                    onChange={(e) => {
+                                      const str = e.target.value;
+                                      // Allow backspace to clear without forcing 0
+                                      if (str === '') return;
+                                      const next = parseFloat(str);
+                                      if (Number.isNaN(next)) return;
+                                      handleItemQuantityChange(entry.item_id, next, entry.unit);
+                                    }}
                                     className="w-24 h-10 sm:h-9"
                                   />
                                   <Select

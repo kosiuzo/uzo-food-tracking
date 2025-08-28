@@ -164,15 +164,25 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
   // Handle item selection from MultiSelect
   const handleItemSelectionChange = (selectedIds: string[]) => {
     const newItemEntries: MealItemEntry[] = [];
-    
-    selectedIds.forEach(idStr => {
+
+    // Build a pruned itemQuantities map that only keeps selected items
+    const selectedIdNums = new Set(selectedIds.map((id) => parseInt(id)));
+    const prunedQuantities: Record<number, { quantity: number; unit: string }> = {};
+
+    selectedIds.forEach((idStr) => {
       const itemId = parseInt(idStr);
-      const item = allItems.find(i => i.id === itemId);
+      const item = allItems.find((i) => i.id === itemId);
       if (!item) return;
-      
-      const quantities = itemQuantities[itemId] || { quantity: 1, unit: item.serving_unit || 'serving' };
+
+      const existing = itemQuantities[itemId];
+      const fallbackUnit = item.serving_unit || 'serving';
+      const quantities = existing || { quantity: 1, unit: fallbackUnit };
+
+      // Populate pruned map with either existing or default values
+      prunedQuantities[itemId] = { quantity: quantities.quantity, unit: quantities.unit };
+
       const nutrition = calculateItemNutrition(item, quantities.quantity, quantities.unit);
-      
+
       newItemEntries.push({
         item_id: itemId,
         quantity: quantities.quantity,
@@ -180,13 +190,16 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         nutrition,
       });
     });
-    
-    setFormData(prev => ({
+
+    // Apply pruned map so deselected keys don't linger in memory
+    setItemQuantities(prunedQuantities);
+
+    setFormData((prev) => ({
       ...prev,
       item_entries: newItemEntries,
       nutrition: calculateCombinedNutrition(selectedRecipes, newItemEntries),
     }));
-    
+
     updateMealName(selectedRecipes, newItemEntries);
   };
 

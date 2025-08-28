@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
       fat: 0,
     },
   });
+
+  // Cache per-item nutrition calculations to avoid recomputation churn
+  const nutritionCacheRef = useRef<Map<string, { calories: number; protein: number; carbs: number; fat: number }>>(new Map());
 
   // Update form data when editingMealLog changes
   useEffect(() => {
@@ -112,6 +115,9 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
   // Calculate nutrition for individual item entry using centralized utility
   const calculateItemNutrition = (item: FoodItem, quantity: number, unit: string) => {
+    const cacheKey = `${item.id}|${quantity}|${unit}`;
+    const cached = nutritionCacheRef.current.get(cacheKey);
+    if (cached) return cached;
     // Use the centralized calculateRecipeNutrition function for a single ingredient
     const ingredients = [{ item_id: item.id.toString(), quantity, unit }];
     
@@ -127,13 +133,14 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     };
     
     const nutrition = calculateRecipeNutrition(ingredients, 1, [adaptedItem]);
-    
-    return {
+    const result = {
       calories: nutrition.calories_per_serving,
       protein: nutrition.protein_per_serving,
       carbs: nutrition.carbs_per_serving,
       fat: nutrition.fat_per_serving,
     };
+    nutritionCacheRef.current.set(cacheKey, result);
+    return result;
   };
 
   // Convert allRecipes to options for MultiSelect

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Plus, X, Loader2, Search } from 'lucide-react';
+import { Bot, Plus, X, Loader2, Search, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +26,7 @@ interface RecipeGeneratorDialogProps {
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
-  const [servings, setServings] = useState(4);
+  const [servings, setServings] = useState('4');
   const [cuisineStyle, setCuisineStyle] = useState('none');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
   const [additionalNotes, setAdditionalNotes] = useState('');
@@ -94,7 +94,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
       const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using ONLY these ingredients:
 ${ingredientNames.map(name => `- ${name}`).join('\n')}
 
-Target: serves ${servings}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
+Target: serves ${servings || '4'}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
 ${additionalNotes ? `\nAdditional requirements: ${additionalNotes}` : ''}
 
 Available tags to choose from: ${availableTagsList}
@@ -249,10 +249,10 @@ Use only the provided ingredients. Make reasonable portions for the serving size
       const finalRecipe = {
         name: parsedRecipe.name,
         instructions: formatInstructions(parsedRecipe.instructions),
-        servings: parsedRecipe.servings || servings,
+        servings: parsedRecipe.servings || parseInt(servings) || 4,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
         ingredients: recipeIngredients,
-        nutrition: calculateRecipeNutrition(recipeIngredients, servings, allItems),
+        nutrition: calculateRecipeNutrition(recipeIngredients, parseInt(servings) || 4, allItems),
         tagIds: suggestedTagIds
       };
 
@@ -283,10 +283,16 @@ Use only the provided ingredients. Make reasonable portions for the serving size
     }
   };
 
+  const adjustServings = (increment: boolean) => {
+    const currentValue = parseInt(servings) || 4;
+    const newValue = increment ? currentValue + 1 : Math.max(1, currentValue - 1);
+    setServings(newValue.toString());
+  };
+
   const resetForm = () => {
     setSelectedIngredients([]);
     setSelectedIngredientIds([]);
-    setServings(4);
+    setServings('4');
     setCuisineStyle('none');
     setDietaryRestrictions('paleo');
     setAdditionalNotes('');
@@ -351,15 +357,37 @@ Use only the provided ingredients. Make reasonable portions for the serving size
           {/* Servings */}
           <div className="space-y-2">
             <Label htmlFor="servings">Number of Servings</Label>
-            <Input
-              id="servings"
-              type="number"
-              min="1"
-              max="20"
-              value={servings}
-              onChange={(e) => setServings(parseInt(e.target.value) || 4)}
-              disabled={isGenerating}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => adjustServings(false)}
+                disabled={isGenerating}
+                className="h-9 w-9 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                id="servings"
+                type="text"
+                placeholder="e.g. 4 or 4-6"
+                value={servings}
+                onChange={(e) => setServings(e.target.value)}
+                disabled={isGenerating}
+                className="text-center"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => adjustServings(true)}
+                disabled={isGenerating}
+                className="h-9 w-9 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Cuisine Style */}

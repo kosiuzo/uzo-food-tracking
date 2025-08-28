@@ -11,12 +11,10 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        price: 2.99,
         calories_per_serving: 95,
         carbs_per_serving: 25,
         fat_per_serving: 0.3,
         protein_per_serving: 0.5,
-        servings_per_container: 1,
         serving_size_grams: 100,
         serving_quantity: null,
         serving_unit: null,
@@ -42,7 +40,6 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        price: 2.99,
         serving_size: 100,
         serving_quantity: undefined,
         serving_unit: undefined,
@@ -71,12 +68,10 @@ describe('typeMappers', () => {
         brand: null,
         category: null,
         in_stock: null,
-        price: null,
         calories_per_serving: null,
         carbs_per_serving: null,
         fat_per_serving: null,
         protein_per_serving: null,
-        servings_per_container: null,
         serving_size_grams: null,
         serving_quantity: null,
         serving_unit: null,
@@ -102,7 +97,6 @@ describe('typeMappers', () => {
         brand: undefined,
         category: 'Other',
         in_stock: true,
-        price: undefined,
         serving_size: 100,
         serving_quantity: undefined,
         serving_unit: undefined,
@@ -132,7 +126,6 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        price: 2.99,
         serving_size: 100,
         image_url: 'https://example.com/apple.jpg',
         nutrition: {
@@ -154,12 +147,10 @@ describe('typeMappers', () => {
         brand: 'Organic Brand',
         category: 'Fruit',
         in_stock: true,
-        price: 2.99,
         calories_per_serving: 95,
         carbs_per_serving: 25,
         fat_per_serving: 0.3,
         protein_per_serving: 0.5,
-        servings_per_container: 1,
         serving_size_grams: 100,
         serving_quantity: null,
         serving_unit: null,
@@ -196,9 +187,6 @@ describe('typeMappers', () => {
         },
         is_favorite: false,
         source_link: null,
-        cost_per_serving: 2.5,
-        total_cost: null,
-        cost_last_calculated: null,
         notes: 'Great for holidays',
         times_cooked: null,
         last_cooked: null,
@@ -207,8 +195,8 @@ describe('typeMappers', () => {
       };
 
       const ingredients = [
-        { item_id: 1, quantity: 6, unit: 'pieces', cost_per_unit: 0.5, total_cost: 3, cost_calculated_at: '2025-01-01T00:00:00Z', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
-        { item_id: 2, quantity: 2, unit: 'cups', cost_per_unit: 1, total_cost: 2, cost_calculated_at: '2025-01-01T00:00:00Z', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+        { item_id: 1, quantity: 6, unit: 'pieces', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+        { item_id: 2, quantity: 2, unit: 'cups', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
       ];
 
       const result = dbRecipeToRecipe(dbRecipe, ingredients);
@@ -226,9 +214,6 @@ describe('typeMappers', () => {
           carbs_per_serving: 35,
           fat_per_serving: 12,
         },
-        cost_per_serving: 2.5,
-        total_cost: undefined,
-        cost_last_calculated: undefined,
         is_favorite: false,
         notes: 'Great for holidays',
         tags: [],
@@ -252,9 +237,6 @@ describe('typeMappers', () => {
           carbs_per_serving: 35,
           fat_per_serving: 12,
         },
-        cost_per_serving: undefined,
-        total_cost: undefined,
-        cost_last_calculated: undefined,
         is_favorite: true,
         notes: undefined,
         tags: [],
@@ -281,7 +263,6 @@ describe('typeMappers', () => {
         },
         is_favorite: true,
         source_link: null,
-        cost_per_serving: null,
         notes: null,
       });
     });
@@ -299,9 +280,6 @@ describe('typeMappers', () => {
           carbs_per_serving: 15,
           fat_per_serving: 2,
         },
-        cost_per_serving: undefined,
-        total_cost: undefined,
-        cost_last_calculated: undefined,
         is_favorite: false,
         notes: undefined,
         tags: [],
@@ -349,7 +327,6 @@ describe('typeMappers', () => {
           carbs: 60,
           fat: 20,
         },
-        estimated_cost: 12.50,
         created_at: '2025-01-15T12:00:00Z',
       });
     });
@@ -368,7 +345,6 @@ describe('typeMappers', () => {
           carbs: 60,
           fat: 20,
         },
-        estimated_cost: 12.50,
         created_at: '2025-01-15T12:00:00Z',
       };
 
@@ -386,7 +362,7 @@ describe('typeMappers', () => {
           carbs: 60,
           fat: 20,
         },
-        cost: 12.50,
+        cost: null,
       });
     });
   });

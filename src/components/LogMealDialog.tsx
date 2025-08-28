@@ -379,7 +379,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                   C: {entry.nutrition.carbs.toFixed(1)}g • 
                                   F: {entry.nutrition.fat.toFixed(1)}g
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                   <Input
                                     type="number"
                                     min="0.1"
@@ -390,7 +390,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                       parseFloat(e.target.value) || 0, 
                                       entry.unit
                                     )}
-                                    className="w-20 h-8"
+                                    className="w-24 h-10 sm:h-9"
                                   />
                                   <Select
                                     value={entry.unit}
@@ -400,7 +400,7 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                                       value
                                     )}
                                   >
-                                    <SelectTrigger className="w-28 h-8">
+                                    <SelectTrigger className="w-32 h-10 sm:h-9">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

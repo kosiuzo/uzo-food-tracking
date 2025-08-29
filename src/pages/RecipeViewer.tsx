@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export default function RecipeViewer() {
 
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [hasError, setHasError] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   const toggleStep = useCallback((idx: number) => {
     setCompletedSteps(prev => {
@@ -43,17 +44,31 @@ export default function RecipeViewer() {
   }, []);
 
   const getIngredientName = useCallback((itemId: number) => {
-    try {
-      return allItems.find(item => item.id === itemId)?.name || 'Unknown item';
-    } catch (error) {
-      setHasError(true);
-      return 'Error loading item';
-    }
+    const item = allItems.find(item => item.id === itemId);
+    return item?.name || 'Unknown item';
   }, [allItems]);
+
+  // Handle errors in useEffect to avoid side effects during render
+  useEffect(() => {
+    if (recipe && recipe.instructions) {
+      try {
+        recipe.instructions
+          .split('\n')
+          .map(step => step.trim())
+          .filter(Boolean);
+        setLoadingError(null);
+      } catch (error) {
+        setLoadingError('Failed to parse recipe instructions');
+        setHasError(true);
+      }
+    }
+  }, [recipe]);
 
   const retryLoad = useCallback(() => {
     setHasError(false);
-    // Force a re-render by updating a dummy state if needed
+    setLoadingError(null);
+    // The hooks will automatically refetch data
+    window.location.reload();
   }, []);
 
   if (!recipe) {
@@ -98,44 +113,41 @@ export default function RecipeViewer() {
   }
 
   const steps = useMemo(() => {
-    try {
-      return recipe.instructions
-        .split('\n')
-        .map(step => step.trim())
-        .filter(Boolean);
-    } catch (error) {
-      setHasError(true);
-      return [];
-    }
-  }, [recipe.instructions]);
+    if (!recipe?.instructions) return [];
+    return recipe.instructions
+      .split('\n')
+      .map(step => step.trim())
+      .filter(Boolean);
+  }, [recipe?.instructions]);
 
   const completedCount = completedSteps.size;
   const totalSteps = steps.length;
 
-  if (hasError) {
+  if (hasError || loadingError) {
     return (
       <main className="min-h-screen flex flex-col bg-background">
-        <header className="p-4 border-b flex items-center justify-between">
+        <header className="p-3 sm:p-4 border-b flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2"
+            size={isMobile ? "sm" : "default"}
             aria-label="Go back to previous page"
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            Back
+            <span className="hidden sm:inline">Back</span>
           </Button>
-          <div className="w-12" />
+          <div className="w-8 sm:w-12" />
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
           <Alert className="max-w-md">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="mt-2">
-              Something went wrong loading the recipe. Please try again.
+              {loadingError || "Something went wrong loading the recipe. Please try again."}
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="mt-2 w-full"
+                className="mt-3 w-full min-h-[44px] touch-manipulation"
                 onClick={retryLoad}
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
@@ -159,7 +171,7 @@ export default function RecipeViewer() {
           aria-label="Go back to previous page"
         >
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden xs:inline">Back</span>
+          <span className="hidden sm:inline">Back</span>
         </Button>
         <h1 className="text-base sm:text-lg font-bold truncate text-center flex-1 px-2">
           {recipe.name}
@@ -226,7 +238,7 @@ export default function RecipeViewer() {
               {recipe.ingredients.map((ing, i) => (
                 <li
                   key={`ingredient-${ing.item_id}-${i}`}
-                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
                   role="listitem"
                 >
                   <span className="text-sm sm:text-base font-medium text-foreground">
@@ -262,7 +274,7 @@ export default function RecipeViewer() {
                     variant="ghost" 
                     size="sm" 
                     onClick={resetProgress}
-                    className="text-xs"
+                    className="text-xs min-h-[36px] touch-manipulation"
                     aria-label="Reset all step progress"
                   >
                     <RotateCcw className="h-3 w-3 mr-1" />
@@ -277,7 +289,7 @@ export default function RecipeViewer() {
                     <li key={`step-${i}`} role="listitem">
                       <button
                         onClick={() => toggleStep(i)}
-                        className={`w-full flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg text-left border transition-all duration-200 touch-manipulation ${
+                        className={`w-full flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg text-left border transition-all duration-200 touch-manipulation min-h-[56px] ${
                           isCompleted
                             ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 opacity-75'
                             : 'bg-card hover:bg-accent/50 border-border hover:border-accent-foreground/20'

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Recipes from "./pages/Recipes";
+import RecipeViewer from "./pages/RecipeViewer";
 import Meals from "./pages/Meals";
 import NotFound from "./pages/NotFound";
 import Planner from "./pages/Planner";
@@ -31,6 +32,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/recipes" element={<Recipes />} />
+              <Route path="/recipes/:id" element={<RecipeViewer />} />
               <Route path="/meals" element={<Meals />} />
               <Route path="/planner" element={<Planner />} />
               <Route path="/tags" element={<Tags />} />

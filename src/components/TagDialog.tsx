@@ -301,14 +301,14 @@ export function TagDialog({ open, onOpenChange }: TagManagementDialogProps) {
 
             {/* Tags List */}
             <div className="flex-1 overflow-y-auto space-y-2 max-h-[400px]">
-              {tags.length === 0 ? (
+              {(!tags || tags.length === 0) ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
                     {searchQuery ? 'No tags match your search' : 'No tags created yet'}
                   </p>
                 </div>
               ) : (
-                tags.map((tag) => (
+                tags?.map((tag) => (
                   <Card key={tag.id} className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">

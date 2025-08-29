@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import RecipeViewer from '../../pages/RecipeViewer';
+import RecipeViewer from '@/pages/RecipeViewer';
 import { renderWithProviders } from '../setup';
-import * as recipesHook from '../../hooks/useRecipes';
-import * as inventoryHook from '../../hooks/useInventorySearch';
-import * as mobileHook from '../../hooks/use-mobile';
+import * as recipesHook from '@/hooks/useRecipes';
+import * as inventoryHook from '@/hooks/useInventorySearch';
+import * as mobileHook from '@/hooks/use-mobile';
 
-vi.mock('../../hooks/useRecipes');
-vi.mock('../../hooks/useInventorySearch');
-vi.mock('../../hooks/use-mobile');
+vi.mock('@/hooks/useRecipes');
+vi.mock('@/hooks/useInventorySearch');
+vi.mock('@/hooks/use-mobile');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {

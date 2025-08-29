@@ -4,8 +4,8 @@ import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useRecipes } from '../hooks/useRecipes';
-import { useInventorySearch } from '../hooks/useInventorySearch';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useInventorySearch } from '@/hooks/useInventorySearch';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function RecipeViewer() {

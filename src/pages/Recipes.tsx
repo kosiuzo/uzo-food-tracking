@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot, Utensils, Tag } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -265,6 +266,11 @@ export default function Recipes() {
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link to={`/recipes/${recipe.id}`} aria-label="Open recipe viewer">
+                          <Utensils className="h-4 w-4" />
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"

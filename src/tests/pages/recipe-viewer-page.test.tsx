@@ -45,6 +45,7 @@ describe('RecipeViewer Page', () => {
   beforeEach(() => {
     vi.mocked(recipesHook.useRecipes).mockReturnValue({
       getRecipeById: () => mockRecipe,
+      loading: false,
     } as unknown as ReturnType<typeof recipesHook.useRecipes>);
     vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       allItems: [
@@ -86,6 +87,15 @@ describe('RecipeViewer Page', () => {
     renderWithProviders(<RecipeViewer />);
     // Check if mobile-specific styling is applied
     expect(screen.getByLabelText('Go back to previous page')).toBeInTheDocument();
+  });
+
+  it('displays loading state when recipes are loading', () => {
+    vi.mocked(recipesHook.useRecipes).mockReturnValue({
+      getRecipeById: () => undefined,
+      loading: true,
+    } as unknown as ReturnType<typeof recipesHook.useRecipes>);
+    renderWithProviders(<RecipeViewer />);
+    expect(screen.getByText('Loading recipe...')).toBeInTheDocument();
   });
 });
 

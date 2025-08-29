@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export default function RecipeViewer() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, loading } = useRecipes();
   const { allItems } = useInventorySearch();
   const isMobile = useIsMobile();
 
@@ -79,6 +79,33 @@ export default function RecipeViewer() {
     // The hooks will automatically refetch data
     window.location.reload();
   }, []);
+
+  // Loading screen for smoother transition into full-screen cook mode
+  if (loading) {
+    return (
+      <main className="min-h-screen flex flex-col bg-background">
+        <header className="p-3 sm:p-4 border-b flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 sm:gap-2"
+            size={isMobile ? "sm" : "default"}
+            aria-label="Go back to previous page"
+          >
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+          <div className="w-8 sm:w-12" />
+        </header>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center space-y-3" role="status" aria-busy="true">
+            <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-primary mx-auto" />
+            <p className="text-sm sm:text-base text-muted-foreground">Loading recipe…</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!recipe) {
     const isInvalidId = id && isNaN(Number(id));
@@ -322,4 +349,3 @@ export default function RecipeViewer() {
     </main>
   );
 }
-

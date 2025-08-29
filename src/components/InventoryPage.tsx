@@ -157,8 +157,12 @@ export function InventoryPage() {
       <Button
         className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
         onClick={() => setIsAddDialogOpen(true)}
+        aria-label="Add new food item"
+        data-testid="add-item-button"
+        title="Add new food item"
       >
         <Plus className="h-6 w-6" />
+        <span className="sr-only">Add new food item</span>
       </Button>
 
       {/* Add/Edit Dialog */}

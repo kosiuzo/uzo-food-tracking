@@ -496,8 +496,12 @@ export default function Meals() {
         <Button
           className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
           onClick={() => setIsLogDialogOpen(true)}
+          aria-label="Log new meal"
+          data-testid="log-meal-button"
+          title="Log new meal"
         >
           <Plus className="h-6 w-6" />
+          <span className="sr-only">Log new meal</span>
         </Button>
 
         {/* Log Meal Dialog */}

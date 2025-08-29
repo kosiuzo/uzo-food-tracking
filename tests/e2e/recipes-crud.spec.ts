@@ -9,7 +9,7 @@ test.describe('Recipes CRUD Operations', () => {
 
   test('should test recipe form validation', async ({ page }) => {
     // Click the floating action button (with Plus icon) to add new recipe
-    const addButton = page.locator('.fixed.bottom-20.right-4 button, button.fixed');
+    const addButton = page.getByTestId('add-recipe-button');
     await addButton.click();
     
     // Wait for the dialog to open

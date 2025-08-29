@@ -371,8 +371,12 @@ export default function Recipes() {
         <Button
           className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
           onClick={() => setIsAddDialogOpen(true)}
+          aria-label="Add new recipe"
+          data-testid="add-recipe-button"
+          title="Add new recipe"
         >
           <Plus className="h-6 w-6" />
+          <span className="sr-only">Add new recipe</span>
         </Button>
 
         {/* Add/Edit Recipe Dialog */}

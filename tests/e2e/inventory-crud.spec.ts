@@ -9,7 +9,7 @@ test.describe('Inventory CRUD Operations', () => {
 
   test('should create a new inventory item', async ({ page }) => {
     // Click the floating action button (with Plus icon) to add new item
-    const addButton = page.locator('.fixed.bottom-20.right-4 button, button.fixed');
+    const addButton = page.getByTestId('add-item-button');
     await addButton.click();
     
     // Wait for the dialog to open
@@ -104,7 +104,7 @@ test.describe('Inventory CRUD Operations', () => {
 
   test('should handle form validation', async ({ page }) => {
     // Click floating action button
-    const addButton = page.locator('.fixed.bottom-20.right-4 button, button.fixed');
+    const addButton = page.getByTestId('add-item-button');
     await addButton.click();
     
     // Wait for dialog

@@ -27,6 +27,15 @@ export default function RecipeViewer() {
   const [hasError, setHasError] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
+  // Process recipe instructions into steps
+  const steps = useMemo(() => {
+    if (!recipe?.instructions) return [];
+    return recipe.instructions
+      .split('\n')
+      .map(step => step.trim())
+      .filter(Boolean);
+  }, [recipe?.instructions]);
+
   const toggleStep = useCallback((idx: number) => {
     setCompletedSteps(prev => {
       const newSet = new Set(prev);
@@ -111,14 +120,6 @@ export default function RecipeViewer() {
       </main>
     );
   }
-
-  const steps = useMemo(() => {
-    if (!recipe?.instructions) return [];
-    return recipe.instructions
-      .split('\n')
-      .map(step => step.trim())
-      .filter(Boolean);
-  }, [recipe?.instructions]);
 
   const completedCount = completedSteps.size;
   const totalSteps = steps.length;

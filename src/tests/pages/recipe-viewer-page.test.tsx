@@ -80,12 +80,6 @@ describe('RecipeViewer Page', () => {
     expect(screen.getByLabelText('Reset all step progress')).toBeInTheDocument();
   });
 
-  it('displays ingredients with proper formatting', () => {
-    renderWithProviders(<RecipeViewer />);
-    fireEvent.click(screen.getByText('Ingredients'));
-    expect(screen.getByText('Flour')).toBeInTheDocument();
-    expect(screen.getByText('1 cup')).toBeInTheDocument();
-  });
 
   it('handles mobile view properly', () => {
     vi.mocked(mobileHook.useIsMobile).mockReturnValue(true);

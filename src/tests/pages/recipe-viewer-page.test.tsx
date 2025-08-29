@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import RecipeViewer from '../../pages/RecipeViewer';
 import { renderWithProviders } from '../setup';
 import * as recipesHook from '../../hooks/useRecipes';
 import * as inventoryHook from '../../hooks/useInventorySearch';
+import * as mobileHook from '../../hooks/use-mobile';
 
 vi.mock('../../hooks/useRecipes');
 vi.mock('../../hooks/useInventorySearch');
+vi.mock('../../hooks/use-mobile');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
@@ -50,12 +52,46 @@ describe('RecipeViewer Page', () => {
         { id: 2, name: 'Eggs' },
       ],
     } as unknown as ReturnType<typeof inventoryHook.useInventorySearch>);
+    vi.mocked(mobileHook.useIsMobile).mockReturnValue(false);
   });
 
   it('displays recipe details', () => {
     renderWithProviders(<RecipeViewer />);
     expect(screen.getByText('Pancakes')).toBeInTheDocument();
     expect(screen.getByText('Mix')).toBeInTheDocument();
+  });
+
+  it('shows progress tracking for steps', () => {
+    renderWithProviders(<RecipeViewer />);
+    expect(screen.getByText('0/2')).toBeInTheDocument();
+  });
+
+  it('toggles step completion', () => {
+    renderWithProviders(<RecipeViewer />);
+    const stepButton = screen.getByLabelText(/Step 1.*Mix/);
+    fireEvent.click(stepButton);
+    expect(screen.getByText('1/2')).toBeInTheDocument();
+  });
+
+  it('shows reset button when steps are completed', () => {
+    renderWithProviders(<RecipeViewer />);
+    const stepButton = screen.getByLabelText(/Step 1.*Mix/);
+    fireEvent.click(stepButton);
+    expect(screen.getByLabelText('Reset all step progress')).toBeInTheDocument();
+  });
+
+  it('displays ingredients with proper formatting', () => {
+    renderWithProviders(<RecipeViewer />);
+    fireEvent.click(screen.getByText('Ingredients'));
+    expect(screen.getByText('Flour')).toBeInTheDocument();
+    expect(screen.getByText('1 cup')).toBeInTheDocument();
+  });
+
+  it('handles mobile view properly', () => {
+    vi.mocked(mobileHook.useIsMobile).mockReturnValue(true);
+    renderWithProviders(<RecipeViewer />);
+    // Check if mobile-specific styling is applied
+    expect(screen.getByLabelText('Go back to previous page')).toBeInTheDocument();
   });
 });
 

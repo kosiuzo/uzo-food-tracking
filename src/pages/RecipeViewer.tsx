@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export default function RecipeViewer() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, loading: recipesLoading } = useRecipes();
   const { allItems } = useInventorySearch();
   const isMobile = useIsMobile();
 
@@ -79,6 +79,31 @@ export default function RecipeViewer() {
     // The hooks will automatically refetch data
     window.location.reload();
   }, []);
+
+  if (recipesLoading) {
+    return (
+      <main className="min-h-screen flex flex-col bg-background">
+        <header className="p-4 border-b flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+            aria-label="Go back to previous page"
+          >
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            Back
+          </Button>
+          <div className="w-12" />
+        </header>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center space-y-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-sm text-muted-foreground">Loading recipe...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!recipe) {
     const isInvalidId = id && isNaN(Number(id));

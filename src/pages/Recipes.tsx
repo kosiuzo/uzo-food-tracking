@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, ChevronDown, ChevronUp, Heart, Trash2, Bot, Utensils, Tag } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, Heart, Trash2, Bot, Utensils, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +15,12 @@ import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TagDialog } from '../components/TagDialog';
 import { useRecipes } from '../hooks/useRecipes';
-import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useRecipeTagManagement, useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe } from '../types';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
-  const { allItems } = useInventorySearch();
   const { allTags } = useTags();
   const { toast } = useToast();
 
@@ -30,7 +28,6 @@ export default function Recipes() {
   const [isGeneratorDialogOpen, setIsGeneratorDialogOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
-  const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
@@ -43,17 +40,7 @@ export default function Recipes() {
         recipe.tags?.some(tag => tag.id === tagId)
       );
     });
-  const toggleRecipeExpansion = (recipeId: string) => {
-    setExpandedRecipes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(recipeId)) {
-        newSet.delete(recipeId);
-      } else {
-        newSet.add(recipeId);
-      }
-      return newSet;
-    });
-  };
+  
 
   const handleEditRecipe = (recipe: Recipe) => {
     setEditingRecipe(recipe.id);
@@ -209,29 +196,35 @@ export default function Recipes() {
           ) : (
             displayedRecipes.map(recipe => (
               <Card key={recipe.id} className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
+                <div className="space-y-4">
+                  {/* Enhanced Header Section */}
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <h3 className="font-medium">{recipe.name}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight">{recipe.name}</h3>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          {recipe.servings} servings
+                          <span className="font-medium">{recipe.servings} servings</span>
                         </div>
                         {recipe.total_time_minutes && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {recipe.total_time_minutes} min
+                            <span className="font-medium">{recipe.total_time_minutes} min</span>
                           </div>
+                        )}
+                        {recipe.cost_per_serving && recipe.cost_per_serving > 0 && (
+                          <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50 font-semibold">
+                            ${recipe.cost_per_serving.toFixed(2)} per serving
+                          </Badge>
                         )}
                       </div>
                       {recipe.tags && recipe.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="flex flex-wrap gap-1 mt-3">
                           {recipe.tags.map((tag) => (
-                            <Badge 
-                              key={tag.id} 
-                              variant="outline" 
-                              className="text-xs text-white"
+                            <Badge
+                              key={tag.id}
+                              variant="outline"
+                              className="text-xs text-white font-medium"
                               style={{ backgroundColor: tag.color, borderColor: tag.color }}
                             >
                               {tag.name}
@@ -240,133 +233,93 @@ export default function Recipes() {
                         </div>
                       )}
                     </div>
-<div className="flex gap-2">
+                    {/* Action Buttons - Mobile Optimized */}
+                    <div className="flex gap-2">
+                      {/* Cook Button - Primary Action */}
+                      <Button asChild variant="default" size="sm" className="bg-primary hover:bg-primary/90" aria-label="Cook this recipe">
+                        <Link to={`/recipes/${recipe.id}`}>
+                          <Utensils className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      {/* Heart Button */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleFavorite(recipe.id)}
                         aria-label="Toggle favorite"
+                        className="hover:bg-pink-50 hover:text-pink-600"
                       >
                         <Heart
-                          className={`h-4 w-4 ${recipe.is_favorite ? 'text-primary' : ''}`}
+                          className={`h-4 w-4 ${recipe.is_favorite ? 'text-pink-600' : ''}`}
                           fill={recipe.is_favorite ? 'currentColor' : 'none'}
                         />
                       </Button>
+                      {/* Edit Button */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditRecipe(recipe)}
+                        aria-label="Edit recipe"
+                        className="hover:bg-blue-50 hover:text-blue-600"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {/* Delete Button */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteConfirm({ open: true, recipe })}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive hover:bg-red-50"
+                        aria-label="Delete recipe"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link to={`/recipes/${recipe.id}`} aria-label="Open recipe viewer">
-                          <Utensils className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleRecipeExpansion(recipe.id)}
-                      >
-                        {expandedRecipes.has(recipe.id) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
                     </div>
                   </div>
 
-                  {/* Nutrition per serving */}
-                  <div className="flex gap-4 text-xs flex-wrap">
-                    <Badge variant="secondary">
-                      {recipe.nutrition.calories_per_serving.toFixed(1)} cal
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      P: {recipe.nutrition.protein_per_serving.toFixed(1)}g
-                    </span>
-                    <span className="text-muted-foreground">
-                      C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g
-                    </span>
-                    <span className="text-muted-foreground">
-                      F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
-                    </span>
-                    {recipe.cost_per_serving && recipe.cost_per_serving > 0 && (
-                      <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">
-                        ${recipe.cost_per_serving.toFixed(2)} per serving
-                      </Badge>
-                    )}
-                  </div>
-
-                                    {/* Ingredients list */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
+                  {/* Enhanced Nutrition Display */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <p className="text-sm font-semibold text-gray-800">Ingredients ({recipe.ingredients.length})</p>
-                    </div>
-                    <div className="space-y-2.5" aria-live="polite">
-                      {(expandedRecipes.has(recipe.id) ? recipe.ingredients : recipe.ingredients.slice(0, 3)).map((ingredient, idx) => {
-                        const item = allItems.find(item => item.id === ingredient.item_id);
-                        return (
-                          <div key={idx} className="flex items-center gap-3 text-sm bg-gray-50 rounded-lg p-3 border border-gray-100">
-                            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
-                              {idx + 1}
-                            </div>
-                            <div className="flex-1">
-                              <span className="font-semibold text-gray-900">{ingredient.quantity}</span>
-                              <span className="text-sm text-gray-500 ml-1">{ingredient.unit}</span>
-                              <span className="text-gray-700 ml-2 font-medium">{item?.name || 'Unknown item'}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {!expandedRecipes.has(recipe.id) && recipe.ingredients.length > 3 && (
-                        <div className="text-xs text-gray-500 ml-9 bg-gray-50 rounded-lg p-2 border border-gray-100">+ {recipe.ingredients.length - 3} more ingredients</div>
-                      )}
+                      Nutrition per serving
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-white rounded-lg p-3 border border-blue-200 text-center">
+                        <div className="text-xl font-bold text-blue-600">{recipe.nutrition.calories_per_serving.toFixed(0)}</div>
+                        <div className="text-xs text-gray-600 font-medium">Calories</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-green-200 text-center">
+                        <div className="text-xl font-bold text-green-600">{recipe.nutrition.protein_per_serving.toFixed(1)}g</div>
+                        <div className="text-xs text-gray-600 font-medium">Protein</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-orange-200 text-center">
+                        <div className="text-xl font-bold text-orange-600">{recipe.nutrition.carbs_per_serving.toFixed(1)}g</div>
+                        <div className="text-xs text-gray-600 font-medium">Carbs</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-purple-200 text-center">
+                        <div className="text-xl font-bold text-purple-600">{recipe.nutrition.fat_per_serving.toFixed(1)}g</div>
+                        <div className="text-xs text-gray-600 font-medium">Fat</div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Instructions - only show when expanded */}
-                  {expandedRecipes.has(recipe.id) && (
-                    <div className="space-y-3 border-t pt-4">
+                  {/* Recipe Summary Info */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-100">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <p className="text-sm font-semibold text-gray-800">Instructions</p>
+                        <span className="text-sm font-semibold text-gray-700">Ready to cook</span>
                       </div>
-                      <div className="space-y-3">
-                        {recipe.instructions.split('\n').filter(step => step.trim()).map((step, idx) => (
-                          <div key={idx} className="flex gap-3 text-sm bg-green-50 rounded-lg p-3 border border-green-100">
-                            <div className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                              {idx + 1}
-                            </div>
-                            <div className="text-gray-700 leading-relaxed">{step.trim().replace(/^\d+\.\s*/, '')}</div>
-                          </div>
-                        ))}
+                      <div className="text-sm text-gray-600">
+                        {recipe.ingredients.length} ingredients • {recipe.instructions.split('\n').filter(step => step.trim()).length} steps
                       </div>
-                      
-                      {/* Notes - only show when expanded and notes exist */}
-                      {recipe.notes && (
-                        <div className="space-y-3 border-t pt-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            <p className="text-sm font-semibold text-gray-800">Notes</p>
-                          </div>
-                          <div className="text-sm bg-purple-50 rounded-lg p-3 border border-purple-100">
-                            <div className="text-gray-700 leading-relaxed">{recipe.notes}</div>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  )}
+                    {recipe.notes && (
+                      <div className="mt-3 p-3 bg-white rounded-lg border border-green-200">
+                        <p className="text-sm text-gray-700 italic">"{recipe.notes}"</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))

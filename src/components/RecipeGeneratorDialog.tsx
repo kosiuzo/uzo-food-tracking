@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Plus, X, Loader2, Search, Minus } from 'lucide-react';
+import { Bot, Plus, Loader2, Search, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,8 @@ import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
-import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
+// calculateRecipeNutrition not used here; parsing uses aiJson utilities
+import { parseFirstJsonObject } from '../lib/aiJson';
 import { CUISINE_STYLES, DIETARY_RESTRICTIONS } from '../lib/constants';
 
 interface RecipeGeneratorDialogProps {
@@ -24,7 +25,7 @@ interface RecipeGeneratorDialogProps {
 
 
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
-  const [customIngredients, setCustomIngredients] = useState<string[]>(['']);
+  const [customIngredients, setCustomIngredients] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [useInventoryOnly, setUseInventoryOnly] = useState(false);
@@ -76,7 +77,7 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   };
 
   const generateRecipe = async () => {
-    const hasCustomIngredients = customIngredients.some(ing => ing.trim());
+    const hasCustomIngredients = customIngredients.trim().length > 0;
     const hasSelectedIngredients = selectedIngredients.length > 0;
     
     if (!hasCustomIngredients && !hasSelectedIngredients) {
@@ -92,8 +93,9 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     
     try {
       // Combine custom ingredients and inventory ingredients
+      const customIngredientsList = customIngredients.split(',').map(s => s.trim()).filter(Boolean);
       const allIngredientNames = [
-        ...customIngredients.filter(ing => ing.trim()),
+        ...customIngredientsList,
         ...selectedIngredients.map(item => item.name)
       ];
       
@@ -110,7 +112,11 @@ Available tags to choose from: ${availableTagsList}
 
 Please auto-assign relevant tags from the available list based on the recipe characteristics (diet type, meal category, cooking method, etc.).
 
-Return a single JSON object that matches the schema exactly.`;
+IMPORTANT:
+- Use specific measurements in both ingredients AND instructions (e.g., "2 tsp oregano", "3 tbsp olive oil").
+- Calculate accurate nutrition values based on the specific ingredients and quantities used.
+
+Output: Return a single JSON object ONLY. No explanations, no markdown, no code fences.`;
 
       // Call OpenRouter API with streamlined approach
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -125,13 +131,13 @@ Return a single JSON object that matches the schema exactly.`;
           "model": "microsoft/mai-ds-r1:free",
           "temperature": 0.3,
           "top_p": 0.9,
-          "max_tokens": 1200,
+          "max_tokens": 2000,
           // Prefer JSON mode if the route honors it
           "response_format": { "type": "json_object" },
           "messages": [
             {
               "role": "system",
-              "content": `Return only valid JSON. Use this exact schema:
+              "content": `Return only valid JSON. Output a single JSON object, with no code fences and no extra text. Use this exact schema:
 {
   "name": "Recipe Name",
   "instructions": "Step by step cooking instructions as one paragraph.",
@@ -147,7 +153,13 @@ Return a single JSON object that matches the schema exactly.`;
   "tags": ["tag1", "tag2", "tag3"]
 }
 
-Use the provided ingredients as inspiration but feel free to suggest additional common ingredients to make a complete recipe. Include realistic nutrition information per serving. Select relevant tags from the available tags list provided by the user.`
+Rules:
+- Only include ingredients in the recipe that you actually use in the instructions.
+- Don't feel obligated to use every ingredient provided - only use what makes sense for the recipe.
+- CRITICAL: Ingredient quantities must match exactly what's used in instructions. If instructions say "1 tsp salt", ingredients must list "1 tsp salt", not "As needed salt".
+- Calculate realistic nutrition values based on the specific ingredients and quantities used.
+- Select relevant tags from the available tags list provided by the user.
+- Do not add any commentary before or after the JSON.`
             },
             {
               "role": "user",
@@ -162,9 +174,13 @@ Use the provided ingredients as inspiration but feel free to suggest additional 
       }
 
       const data = await response.json();
-      const generatedText = data.choices[0]?.message?.content;
-      
-      // Try to extract JSON from the response
+      const generatedText = data.choices?.[0]?.message?.content as string | undefined;
+      if (!generatedText || typeof generatedText !== 'string') {
+        console.error('AI returned empty or invalid content:', generatedText);
+        throw new Error('Failed to parse AI response');
+      }
+
+      // Try to extract JSON from the response (robust)
       let parsedRecipe: {
         name: string;
         instructions: string;
@@ -180,15 +196,10 @@ Use the provided ingredients as inspiration but feel free to suggest additional 
         tags?: string[];
       };
       try {
-        // Look for JSON in the response
-        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedRecipe = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No JSON found in response');
-        }
+        parsedRecipe = parseFirstJsonObject(generatedText);
       } catch (parseError) {
         console.warn('Failed to parse AI response as JSON:', parseError);
+        console.warn('Raw AI response:', generatedText);
         
         // Notify user about the failure
         toast({
@@ -356,46 +367,15 @@ Use the provided ingredients as inspiration but feel free to suggest additional 
           <div className="space-y-3">
             <Label>Custom Ingredients</Label>
             <p className="text-sm text-muted-foreground">
-              Enter ingredients you want to use (even if not in your inventory)
+              Enter ingredients you want to use (comma-separated)
             </p>
-            <div className="space-y-2">
-              {customIngredients.map((ingredient, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={ingredient}
-                    onChange={(e) => {
-                      const newList = [...customIngredients];
-                      newList[index] = e.target.value;
-                      setCustomIngredients(newList);
-                    }}
-                    placeholder="e.g., chicken breast, olive oil, garlic"
-                    disabled={isGenerating}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newList = customIngredients.filter((_, i) => i !== index);
-                      setCustomIngredients(newList.length === 0 ? [''] : newList);
-                    }}
-                    disabled={isGenerating}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setCustomIngredients([...customIngredients, ''])}
-                disabled={isGenerating}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Ingredient
-              </Button>
-            </div>
+            <Input
+              value={customIngredients}
+              onChange={(e) => setCustomIngredients(e.target.value)}
+              placeholder="e.g., chicken breast, olive oil, garlic, bell peppers"
+              disabled={isGenerating}
+              className="w-full"
+            />
           </div>
 
           {/* Optional: Ingredients from Inventory */}
@@ -506,7 +486,7 @@ Use the provided ingredients as inspiration but feel free to suggest additional 
             </Button>
             <Button 
               onClick={generateRecipe}
-              disabled={(!customIngredients.some(ing => ing.trim()) && selectedIngredients.length === 0) || isGenerating}
+              disabled={(!customIngredients.trim() && selectedIngredients.length === 0) || isGenerating}
               className="flex-1"
             >
               {isGenerating ? (

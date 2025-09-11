@@ -73,14 +73,24 @@ export function RecipePreviewDialog({
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {recipe.ingredients.map((ingredient, index) => (
-                  <li key={index} className="flex items-center justify-between">
-                    <span className="font-medium">{getIngredientName(ingredient.item_id)}</span>
-                    <Badge variant="outline">
-                      {ingredient.quantity} {ingredient.unit}
-                    </Badge>
-                  </li>
-                ))}
+                {/* Display ingredient_list if available (AI recipes) */}
+                {recipe.ingredient_list && recipe.ingredient_list.length > 0 ? (
+                  recipe.ingredient_list.map((ingredient, index) => (
+                    <li key={index} className="flex items-center">
+                      <span className="font-medium">{ingredient}</span>
+                    </li>
+                  ))
+                ) : (
+                  /* Display linked ingredients (manual recipes) */
+                  recipe.ingredients.map((ingredient, index) => (
+                    <li key={index} className="flex items-center justify-between">
+                      <span className="font-medium">{getIngredientName(ingredient.item_id)}</span>
+                      <Badge variant="outline">
+                        {ingredient.quantity} {ingredient.unit}
+                      </Badge>
+                    </li>
+                  ))
+                )}
               </ul>
             </CardContent>
           </Card>

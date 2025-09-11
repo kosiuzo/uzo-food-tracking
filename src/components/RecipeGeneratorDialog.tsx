@@ -24,8 +24,10 @@ interface RecipeGeneratorDialogProps {
 
 
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
+  const [customIngredients, setCustomIngredients] = useState<string[]>(['']);
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+  const [useInventoryOnly, setUseInventoryOnly] = useState(false);
   const [servings, setServings] = useState('4');
   const [cuisineStyle, setCuisineStyle] = useState('none');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
@@ -74,10 +76,13 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   };
 
   const generateRecipe = async () => {
-    if (selectedIngredients.length === 0) {
+    const hasCustomIngredients = customIngredients.some(ing => ing.trim());
+    const hasSelectedIngredients = selectedIngredients.length > 0;
+    
+    if (!hasCustomIngredients && !hasSelectedIngredients) {
       toast({
         title: 'No ingredients',
-        description: 'Please select at least one ingredient to generate a recipe.',
+        description: 'Please enter at least one ingredient to generate a recipe.',
         variant: 'destructive',
       });
       return;
@@ -86,13 +91,17 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     setIsGenerating(true);
     
     try {
-      const ingredientNames = selectedIngredients.map(item => item.name);
+      // Combine custom ingredients and inventory ingredients
+      const allIngredientNames = [
+        ...customIngredients.filter(ing => ing.trim()),
+        ...selectedIngredients.map(item => item.name)
+      ];
       
       // Create user prompt with selected ingredients and available tags
       const availableTagsList = allTags.map(tag => tag.name).join(', ');
       
-      const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using ONLY these ingredients:
-${ingredientNames.map(name => `- ${name}`).join('\n')}
+      const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using these ingredients:
+${allIngredientNames.map(name => `- ${name}`).join('\n')}
 
 Target: serves ${servings || '4'}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
 ${additionalNotes ? `\nAdditional requirements: ${additionalNotes}` : ''}
@@ -128,13 +137,17 @@ Return a single JSON object that matches the schema exactly.`;
   "instructions": "Step by step cooking instructions as one paragraph.",
   "servings": 4,
   "total_time_minutes": 30,
-  "ingredients": [
-    { "ingredient_name": "exact ingredient name", "quantity": 1, "unit": "pieces" }
-  ],
+  "ingredient_list": ["2 cups flour", "1 tsp salt", "3 large eggs"],
+  "nutrition": {
+    "calories_per_serving": 350,
+    "protein_per_serving": 12,
+    "carbs_per_serving": 45,
+    "fat_per_serving": 8
+  },
   "tags": ["tag1", "tag2", "tag3"]
 }
 
-Use only the provided ingredients. Make reasonable portions for the serving size. Select relevant tags from the available tags list provided by the user.`
+Use the provided ingredients as inspiration but feel free to suggest additional common ingredients to make a complete recipe. Include realistic nutrition information per serving. Select relevant tags from the available tags list provided by the user.`
             },
             {
               "role": "user",
@@ -157,11 +170,13 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         instructions: string;
         servings: number;
         total_time_minutes: number;
-        ingredients: Array<{
-          ingredient_name: string;
-          quantity: number;
-          unit: string;
-        }>;
+        ingredient_list: string[];
+        nutrition: {
+          calories_per_serving: number;
+          protein_per_serving: number;
+          carbs_per_serving: number;
+          fat_per_serving: number;
+        };
         tags?: string[];
       };
       try {
@@ -186,20 +201,13 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         throw new Error('Failed to parse AI response');
       }
 
-      // Map the AI response ingredients to our expected format
-      const recipeIngredients = parsedRecipe.ingredients.map((aiIngredient: { ingredient_name: string; quantity: number; unit: string }) => {
-        // Find matching ingredient from selected ingredients
-        const matchingIngredient = selectedIngredients.find(
-          item => item.name.toLowerCase().includes(aiIngredient.ingredient_name.toLowerCase()) ||
-                 aiIngredient.ingredient_name.toLowerCase().includes(item.name.toLowerCase())
-        );
-        
-        return {
-          item_id: matchingIngredient?.id || selectedIngredients[0]?.id,
-          quantity: aiIngredient.quantity || 1,
-          unit: aiIngredient.unit || 'pieces'
-        };
-      });
+      // Validate nutrition data
+      const nutrition = parsedRecipe.nutrition || {
+        calories_per_serving: 300,
+        protein_per_serving: 10,
+        carbs_per_serving: 30,
+        fat_per_serving: 10
+      };
 
       // Parse and format instructions properly
       const formatInstructions = (instructions: string) => {
@@ -251,8 +259,10 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         instructions: formatInstructions(parsedRecipe.instructions),
         servings: parsedRecipe.servings || parseInt(servings) || 4,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
-        ingredients: recipeIngredients,
-        nutrition: calculateRecipeNutrition(recipeIngredients, parseInt(servings) || 4, allItems),
+        ingredients: [], // Empty for AI recipes
+        ingredient_list: parsedRecipe.ingredient_list || allIngredientNames,
+        nutrition_source: 'ai_generated' as const,
+        nutrition: nutrition,
         tagIds: suggestedTagIds
       };
 
@@ -342,9 +352,55 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Ingredients Selector */}
+          {/* Custom Ingredients Input */}
           <div className="space-y-3">
-            <Label>Ingredients from Your Inventory (in-stock only)</Label>
+            <Label>Custom Ingredients</Label>
+            <p className="text-sm text-muted-foreground">
+              Enter ingredients you want to use (even if not in your inventory)
+            </p>
+            <div className="space-y-2">
+              {customIngredients.map((ingredient, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={ingredient}
+                    onChange={(e) => {
+                      const newList = [...customIngredients];
+                      newList[index] = e.target.value;
+                      setCustomIngredients(newList);
+                    }}
+                    placeholder="e.g., chicken breast, olive oil, garlic"
+                    disabled={isGenerating}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newList = customIngredients.filter((_, i) => i !== index);
+                      setCustomIngredients(newList.length === 0 ? [''] : newList);
+                    }}
+                    disabled={isGenerating}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCustomIngredients([...customIngredients, ''])}
+                disabled={isGenerating}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Ingredient
+              </Button>
+            </div>
+          </div>
+
+          {/* Optional: Ingredients from Inventory */}
+          <div className="space-y-3">
+            <Label>+ Ingredients from Your Inventory (optional)</Label>
             <GroupedMultiSelect
               optionGroups={groupedIngredients}
               onValueChange={handleIngredientSelectionChange}
@@ -450,7 +506,7 @@ Use only the provided ingredients. Make reasonable portions for the serving size
             </Button>
             <Button 
               onClick={generateRecipe}
-              disabled={selectedIngredients.length === 0 || isGenerating}
+              disabled={(!customIngredients.some(ing => ing.trim()) && selectedIngredients.length === 0) || isGenerating}
               className="flex-1"
             >
               {isGenerating ? (

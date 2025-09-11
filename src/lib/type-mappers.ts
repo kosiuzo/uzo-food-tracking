@@ -84,6 +84,8 @@ export function dbRecipeToRecipe(
     servings: dbRecipe.servings || 1,
     total_time_minutes: dbRecipe.total_time || undefined,
     ingredients: ingredients,
+    ingredient_list: dbRecipe.ingredient_list || undefined,
+    nutrition_source: (dbRecipe.nutrition_source as 'calculated' | 'ai_generated' | 'manual') || 'calculated',
     nutrition: {
       calories_per_serving: nutrition.calories_per_serving || nutrition.calories || 0,
       protein_per_serving: nutrition.protein_per_serving || nutrition.protein || 0,
@@ -110,6 +112,8 @@ export function recipeToDbInsert(recipe: Partial<Recipe>): Database['public']['T
     instructions: recipe.instructions || null,
     servings: recipe.servings || null,
     total_time: recipe.total_time_minutes || null,
+    ingredient_list: recipe.ingredient_list || null,
+    nutrition_source: recipe.nutrition_source || 'calculated',
     nutrition_per_serving: recipe.nutrition ? {
       calories: recipe.nutrition.calories_per_serving,
       protein: recipe.nutrition.protein_per_serving,

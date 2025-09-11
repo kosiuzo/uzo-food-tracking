@@ -257,26 +257,42 @@ export default function RecipeViewer() {
           role="tabpanel"
           aria-label="Recipe ingredients list"
         >
-          {recipe.ingredients.length === 0 ? (
+          {(recipe.ingredients.length === 0 && (!recipe.ingredient_list || recipe.ingredient_list.length === 0)) ? (
             <div className="text-center text-muted-foreground py-8">
               <p>No ingredients listed for this recipe.</p>
             </div>
           ) : (
             <ul className="space-y-2 sm:space-y-3" role="list">
-              {recipe.ingredients.map((ing, i) => (
-                <li
-                  key={`ingredient-${ing.item_id}-${i}`}
-                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
-                  role="listitem"
-                >
-                  <span className="text-sm sm:text-base font-medium text-foreground">
-                    {getIngredientName(ing.item_id)}
-                  </span>
-                  <span className="text-sm sm:text-base font-semibold text-primary shrink-0 ml-2">
-                    {ing.quantity} {ing.unit}
-                  </span>
-                </li>
-              ))}
+              {/* Display ingredient_list if available (AI recipes) */}
+              {recipe.ingredient_list && recipe.ingredient_list.length > 0 ? (
+                recipe.ingredient_list.map((ingredient, i) => (
+                  <li
+                    key={`ingredient-list-${i}`}
+                    className="flex items-center p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
+                    role="listitem"
+                  >
+                    <span className="text-sm sm:text-base font-medium text-foreground">
+                      {ingredient}
+                    </span>
+                  </li>
+                ))
+              ) : (
+                /* Display linked ingredients (manual recipes) */
+                recipe.ingredients.map((ing, i) => (
+                  <li
+                    key={`ingredient-${ing.item_id}-${i}`}
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
+                    role="listitem"
+                  >
+                    <span className="text-sm sm:text-base font-medium text-foreground">
+                      {getIngredientName(ing.item_id)}
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold text-primary shrink-0 ml-2">
+                      {ing.quantity} {ing.unit}
+                    </span>
+                  </li>
+                ))
+              )}
             </ul>
           )}
         </TabsContent>

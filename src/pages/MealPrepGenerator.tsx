@@ -16,8 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useInventorySearch } from '@/hooks/useInventorySearch';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useTags } from '@/hooks/useTags';
-import { FoodItem, Recipe, RecipeIngredient } from '@/types';
-import { calculateRecipeNutrition } from '@/lib/servingUnitUtils';
+import { FoodItem, Recipe } from '@/types';
 import { DIETARY_RESTRICTIONS } from '@/lib/constants';
 
 // Diet types now come from tags system
@@ -368,54 +367,6 @@ Rules:
 
       // Convert the parsed recipes object to an array of GeneratedRecipe objects
       const recipes: GeneratedRecipe[] = [];
-      
-      // Calculate nutrition using actual ingredient mapping
-      const recipeIngredients: RecipeIngredient[] = [];
-      
-      // Add the main meat
-      recipeIngredients.push({
-        item_id: meat.id,
-        quantity: 2,
-        unit: 'lbs'
-      });
-      
-      // Add selected seasonings
-      selectedSeasonings.slice(0, 3).forEach(seasoning => {
-        recipeIngredients.push({
-          item_id: seasoning.id,
-          quantity: 1,
-          unit: 'tsp'
-        });
-      });
-      
-      // Add selected vegetables
-      selectedVegetables.slice(0, 3).forEach(vegetable => {
-        recipeIngredients.push({
-          item_id: vegetable.id,
-          quantity: 1,
-          unit: 'cup'
-        });
-      });
-      
-      // Add selected dairy
-      selectedDairy.slice(0, 2).forEach(dairyItem => {
-        recipeIngredients.push({
-          item_id: dairyItem.id,
-          quantity: 0.5,
-          unit: 'cup'
-        });
-      });
-      
-      // Add selected grains
-      selectedGrains.slice(0, 2).forEach(grainItem => {
-        recipeIngredients.push({
-          item_id: grainItem.id,
-          quantity: 1,
-          unit: 'cup'
-        });
-      });
-
-      const nutrition = calculateRecipeNutrition(recipeIngredients, 4, allItems);
 
       // Process each recipe
       ['Recipe 1', 'Recipe 2', 'Recipe 3'].forEach((recipeKey, index) => {
@@ -444,7 +395,7 @@ Rules:
             instructions: Array.isArray(parsedRecipe.instructions) 
               ? parsedRecipe.instructions 
               : (parsedRecipe.instructions || '').split('\n').filter(Boolean),
-            ingredients: parsedRecipe.ingredients || [
+            ingredients: parsedRecipe.ingredient_list || [
               `2 lbs ${meat.name.toLowerCase()}`,
               ...selectedSeasonings.slice(0, 3).map(s => `1 tsp ${s.name}`),
               ...selectedGrains.slice(0, 2).map(g => `1 cup ${g.name}`),
@@ -455,11 +406,11 @@ Rules:
             ],
             notes: parsedRecipe.notes || `Storage: Refrigerate for up to 4 days. Reheat gently in microwave or oven at 350°F until heated through.`,
             nutrition: {
-              calories: Math.round(nutrition.calories_per_serving),
-              protein: Math.round(nutrition.protein_per_serving),
-              carbs: Math.round(nutrition.carbs_per_serving),
-              fat: Math.round(nutrition.fat_per_serving),
-              fiber: 2 // Default fiber value since calculateRecipeNutrition doesn't calculate it
+              calories: Math.round(parsedRecipe.nutrition?.calories_per_serving || 350),
+              protein: Math.round(parsedRecipe.nutrition?.protein_per_serving || 25),
+              carbs: Math.round(parsedRecipe.nutrition?.carbs_per_serving || 30),
+              fat: Math.round(parsedRecipe.nutrition?.fat_per_serving || 12),
+              fiber: 3 // Default fiber value
             },
             tagIds: suggestedTagIds
           });
@@ -582,63 +533,15 @@ Rules:
   };
 
   const convertToRecipeFormat = (generatedRecipe: GeneratedRecipe): Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] } => {
-    // Create recipe ingredients by mapping to actual items in inventory
-    const recipeIngredients: RecipeIngredient[] = [];
-    
-    // Add the main meat
-    const meatOption = meatRecipeOptions.find(option => 
-      option.recipes.some(r => r.id === generatedRecipe.id)
-    );
-    if (meatOption) {
-      recipeIngredients.push({
-        item_id: meatOption.meat.id,
-        quantity: 2,
-        unit: 'lbs'
-      });
-    }
-    
-    // Add selected seasonings
-    selectedSeasonings.slice(0, 3).forEach(seasoning => {
-      recipeIngredients.push({
-        item_id: seasoning.id,
-        quantity: 1,
-        unit: 'tsp'
-      });
-    });
-    
-    // Add selected vegetables
-    selectedVegetables.slice(0, 3).forEach(vegetable => {
-      recipeIngredients.push({
-        item_id: vegetable.id,
-        quantity: 1,
-        unit: 'cup'
-      });
-    });
-    
-    // Add selected grains
-    selectedGrains.slice(0, 2).forEach(grainItem => {
-      recipeIngredients.push({
-        item_id: grainItem.id,
-        quantity: 1,
-        unit: 'cup'
-      });
-    });
-    
-    // Add selected dairy
-    selectedDairy.slice(0, 2).forEach(dairyItem => {
-      recipeIngredients.push({
-        item_id: dairyItem.id,
-        quantity: 0.5,
-        unit: 'cup'
-      });
-    });
 
     return {
       name: generatedRecipe.name,
       instructions: generatedRecipe.instructions.join('\n'),
       servings: generatedRecipe.servings,
       total_time_minutes: generatedRecipe.prepTime + generatedRecipe.cookTime,
-      ingredients: recipeIngredients,
+      ingredients: [], // Empty for AI recipes
+      ingredient_list: generatedRecipe.ingredients, // Use AI ingredient strings
+      nutrition_source: 'ai_generated' as const,
       notes: generatedRecipe.notes,
       nutrition: {
         calories_per_serving: generatedRecipe.nutrition.calories,

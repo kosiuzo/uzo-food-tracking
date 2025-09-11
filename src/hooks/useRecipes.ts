@@ -215,6 +215,8 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
           servings: updatesWithoutTags.servings,
           total_time: updatesWithoutTags.total_time_minutes,
           nutrition_per_serving: nutritionToSave,
+          ingredient_list: updatesWithoutTags.ingredient_list || null,
+          nutrition_source: updatesWithoutTags.nutrition_source || 'calculated',
           is_favorite: updatesWithoutTags.is_favorite || false,
           notes: updatesWithoutTags.notes || null,
         })

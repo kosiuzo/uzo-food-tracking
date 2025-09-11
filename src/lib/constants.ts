@@ -13,13 +13,8 @@ export const CUISINE_STYLES = [
 
 export const DIETARY_RESTRICTIONS = [
   { value: 'none', label: 'None' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'vegan', label: 'Vegan' },
-  { value: 'gluten-free', label: 'Gluten-Free' },
-  { value: 'dairy-free', label: 'Dairy-Free' },
   { value: 'paleo', label: 'Paleo' },
-  { value: 'keto', label: 'Keto' },
-  { value: 'low-carb', label: 'Low-Carb' },
-  { value: 'low-sodium', label: 'Low-Sodium' },
-  { value: 'diabetic-friendly', label: 'Diabetic-Friendly' }
+  { value: 'whole-foods', label: 'Whole-Foods' },
+  { value: 'animal-based', label: 'Animal-Based' },
+
 ];

@@ -99,6 +99,8 @@ export interface Database {
           servings: number | null
           instructions: string | null
           nutrition_per_serving: Record<string, unknown> | null
+          ingredient_list: string[] | null
+          nutrition_source: string | null
           is_favorite: boolean | null
           source_link: string | null
           cost_per_serving: number | null
@@ -121,6 +123,8 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
+          ingredient_list?: string[] | null
+          nutrition_source?: string | null
           is_favorite?: boolean | null
           source_link?: string | null
           cost_per_serving?: number | null
@@ -143,6 +147,8 @@ export interface Database {
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
+          ingredient_list?: string[] | null
+          nutrition_source?: string | null
           is_favorite?: boolean | null
           source_link?: string | null
           cost_per_serving?: number | null

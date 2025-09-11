@@ -15,6 +15,5 @@ export const DIETARY_RESTRICTIONS = [
   { value: 'none', label: 'None' },
   { value: 'paleo', label: 'Paleo' },
   { value: 'whole-foods', label: 'Whole-Foods' },
-  { value: 'animal-based', label: 'Animal-Based' },
-
+  { value: 'animal-based', label: 'Animal-Based' }
 ];

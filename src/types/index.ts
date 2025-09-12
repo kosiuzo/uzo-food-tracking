@@ -80,10 +80,6 @@ export interface Recipe {
 export interface DbRecipe {
   id: number;
   name: string;
-  cuisine_type?: string | null;
-  difficulty?: string | null;
-  prep_time?: number | null;
-  cook_time?: number | null;
   total_time?: number | null;
   servings?: number | null;
   instructions?: string | null;

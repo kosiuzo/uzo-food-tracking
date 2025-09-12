@@ -212,11 +212,6 @@ export default function Recipes() {
                             <span className="font-medium">{recipe.total_time_minutes} min</span>
                           </div>
                         )}
-                        {recipe.cost_per_serving && recipe.cost_per_serving > 0 && (
-                          <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50 font-semibold">
-                            ${recipe.cost_per_serving.toFixed(2)} per serving
-                          </Badge>
-                        )}
                       </div>
                       {recipe.tags && recipe.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-3">

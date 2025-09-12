@@ -90,10 +90,6 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
 export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id' | 'created_at' | 'updated_at' | 'times_cooked' | 'average_rating' | 'last_cooked'> {
   return {
     name: recipe.name,
-    cuisine_type: null,
-    difficulty: null,
-    prep_time: null,
-    cook_time: null,
     total_time: recipe.total_time_minutes || null,
     servings: recipe.servings,
     instructions: recipe.instructions,

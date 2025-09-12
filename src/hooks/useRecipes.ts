@@ -272,36 +272,8 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
         }
       }
       
-      // Recalculate recipe cost if ingredients were updated
-      if (updatesWithoutTags.ingredients) {
-        console.log('🔄 Updating recipe with ingredients, triggering cost calculation for recipe ID:', id);
-        try {
-          console.log('📞 Calling calculate_recipe_cost RPC function...');
-          const { data: rpcResult, error: rpcError } = await supabase.rpc('calculate_recipe_cost', { p_recipe_id: id });
-          console.log('📊 RPC Result:', rpcResult, 'RPC Error:', rpcError);
-          
-          // Fetch just the updated cost values instead of refetching everything
-          console.log('📖 Fetching updated cost values...');
-          const { data: updatedRecipe, error: fetchError } = await supabase
-            .from('recipes')
-            .select('cost_per_serving, total_cost, cost_last_calculated')
-            .eq('id', id)
-            .single();
-            
-          console.log('💰 Updated cost data:', updatedRecipe, 'Fetch Error:', fetchError);
-          if (fetchError) throw fetchError;
-          
-          // Reload recipes to get the updated data including tags and costs
-          await loadRecipes();
-        } catch (costError) {
-          console.warn('Failed to calculate recipe cost:', costError);
-          // Reload recipes to get the updated data including tags
-          await loadRecipes();
-        }
-      } else {
-        // For non-ingredient changes, reload the recipe to get updated tags
-        await loadRecipes();
-      }
+      // Reload recipes to get the updated data including tags
+      await loadRecipes();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update recipe');
       throw err;

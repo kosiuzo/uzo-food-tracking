@@ -131,8 +131,8 @@ INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
 ('stir-fry', '#f97316', 'Stir-fry dishes', NOW(), NOW());
 
 -- Insert recipes from Recipes.md
-INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total_time, servings, instructions, notes, nutrition_per_serving, is_favorite, created_at, updated_at) VALUES
-('Tzatziki', 'Greek', 'easy', 15, 0, 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
+INSERT INTO recipes (name, total_time, servings, instructions, notes, nutrition_per_serving, is_favorite, created_at, updated_at) VALUES
+('Tzatziki', 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
 
 2. Combine ingredients: Return the drained cucumber to the food processor. Add the Greek yogurt, minced garlic, olive oil, lemon juice, dill, and a pinch of salt and black pepper.
 
@@ -141,12 +141,12 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 4. Taste and adjust: Taste the mixture and adjust seasoning as needed. Add more lemon juice, dill, or salt to suit your preferences.
 
 5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', true, NOW(), NOW()),
-('Coconut Aminos Sauce', 'Asian', 'easy', 5, 3, 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
+('Coconut Aminos Sauce', 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
 
 2. Heat and simmer: Bring the mixture to a simmer over medium heat. Let it simmer for 2-3 minutes, or until the flavors have combined and the sauce has thickened slightly.
 
 3. Cool and use: Remove from heat and let cool slightly before using.', 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', true, NOW(), NOW()),
-('Paleo Pineapple Fried Rice with Chicken Breast', 'Asian', 'medium', 15, 20, 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
+('Paleo Pineapple Fried Rice with Chicken Breast', 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
 
 2. Cook the chicken: Heat the remaining avocado oil in the same skillet over medium-high heat. Add the diced chicken and cook for 5-7 minutes, or until golden brown and cooked through. Remove the chicken from the pan and set aside.
 
@@ -159,7 +159,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 6. Combine everything: Add the cooked cauliflower rice, chicken, coconut aminos, and cashews (if using) back to the pan. Stir-fry for 2-3 minutes, or until everything is heated through.
 
 7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', '{"calories": 285, "protein": 24, "carbs": 18, "fat": 12}', true, NOW(), NOW()),
-('Bacon Brussels Sprouts', 'American', 'easy', 10, 30, 40, 4, '1. Preheat oven to 400°F (200°C).
+('Bacon Brussels Sprouts', 40, 4, '1. Preheat oven to 400°F (200°C).
 
 2. Prepare sprouts: Trim the stem end of each Brussels sprout. Remove loose or yellow leaves. Cut each sprout in half lengthwise (through the stem). Quarter large ones.
 
@@ -168,7 +168,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 4. Roast: Spread on a parchment-lined baking sheet in a single layer, cut side down. Roast for 25–30 minutes, flipping halfway, until Brussels are golden and bacon is crisp.
 
 5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', '{"calories": 165, "protein": 8, "carbs": 12, "fat": 11}', true, NOW(), NOW()),
-('Paleo Banana Almond Flour Protein Waffles', 'American', 'medium', 15, 20, 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
+('Paleo Banana Almond Flour Protein Waffles', 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
 
 2. In a large bowl, mash the bananas or blend them until smooth.
 
@@ -183,7 +183,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 7. Serve hot or store for later!', 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', true, NOW(), NOW()),
 
 -- Additional recipes from All-Apple Recipes.txt
-('Reverse Sear Steak', 'American', 'medium', 5, 35, 40, 1, '1. Preheat oven to 275°F (135°C). Place a wire rack on a baking sheet.
+('Reverse Sear Steak', 40, 1, '1. Preheat oven to 275°F (135°C). Place a wire rack on a baking sheet.
 
 2. Season the steak generously with salt and pepper on both sides.
 
@@ -199,7 +199,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Serve immediately.', 'Perfect method for thick steaks (1.5+ inches). Results in even cooking throughout with a beautiful crust. Rest time is crucial for even temperature. Can finish with butter, garlic, and herbs in the pan for extra flavor.', '{"calories": 280, "protein": 26, "carbs": 0, "fat": 18}', true, NOW(), NOW()),
 
-('Jasmine Rice', 'Asian', 'easy', 2, 15, 17, 4, '1. In a 4-quart saucepan over high heat, bring 1½ cups room temperature water to a boil.
+('Jasmine Rice', 17, 4, '1. In a 4-quart saucepan over high heat, bring 1½ cups room temperature water to a boil.
 
 2. Add 1 cup jasmine rice, 1 tablespoon oil, and ½ teaspoon kosher salt. Stir once.
 
@@ -209,7 +209,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 5. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Perfect ratio for fluffy jasmine rice. Do not lift lid during cooking. Can substitute coconut oil for olive oil. Doubles easily for 8 servings using 2 cups rice and 3 cups water.', '{"calories": 180, "protein": 3, "carbs": 42, "fat": 3.5}', true, NOW(), NOW()),
 
-('Basmati Rice', 'Asian', 'easy', 2, 20, 22, 4, '1. In a 4-quart saucepan over high heat, bring 2 cups room temperature water to a boil.
+('Basmati Rice', 22, 4, '1. In a 4-quart saucepan over high heat, bring 2 cups room temperature water to a boil.
 
 2. Add 1 cup basmati rice, 1 tablespoon oil, and ½ teaspoon kosher salt. Stir once.
 
@@ -221,7 +221,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Key is to boil uncovered until water level matches rice level, then cover. This prevents mushy rice. Basmati needs more water than jasmine rice due to longer grains.', '{"calories": 200, "protein": 4, "carbs": 45, "fat": 3.5}', true, NOW(), NOW()),
 
-('Coconut Almond Flour Waffles', 'American', 'medium', 15, 15, 30, 4, '1. Preheat waffle iron according to manufacturer''s instructions.
+('Coconut Almond Flour Waffles', 30, 4, '1. Preheat waffle iron according to manufacturer''s instructions.
 
 2. In a large bowl, mash 1 medium banana until almost smooth. Whisk in 3 eggs (at room temperature), 1 teaspoon vanilla extract, and 1 tablespoon melted coconut oil.
 
@@ -237,7 +237,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Serve warm with favorite toppings.', 'Start with 2 tbsp coconut flour and add more if needed - it absorbs liquid differently than regular flour. Resting the batter is crucial for proper texture. Waffles should be fully set before removing to prevent crumbling.', '{"calories": 165, "protein": 8, "carbs": 8, "fat": 12}', true, NOW(), NOW()),
 
-('Paleo Vanilla Loaf', 'American', 'medium', 15, 45, 60, 8, '1. Preheat oven to 350°F (175°C). Grease an 8x4-inch loaf pan with coconut oil or line with parchment paper.
+('Paleo Vanilla Loaf', 60, 8, '1. Preheat oven to 350°F (175°C). Grease an 8x4-inch loaf pan with coconut oil or line with parchment paper.
 
 2. In a large bowl, whisk together 2 cups almond flour, ½ cup tapioca starch, ½ teaspoon baking soda, ¼ teaspoon sea salt, 2 tablespoons coconut sugar (optional), and ½ teaspoon vanilla powder.
 
@@ -251,7 +251,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Cool in pan for 10 minutes, then transfer to wire rack to cool completely.', 'Check at 40 minutes as ovens vary. Cover with foil if top browns too quickly. Extra egg adds structure for loaf format. Can add nuts, chocolate chips, or berries. Store covered for up to 3 days.', '{"calories": 195, "protein": 7, "carbs": 12, "fat": 14}', true, NOW(), NOW()),
 
-('Paleo Fried Chicken', 'American', 'hard', 20, 15, 35, 8, '1. Pat 3.48 lbs boneless, skinless chicken thighs dry with paper towels. Optional: pound slightly for even thickness.
+('Paleo Fried Chicken', 35, 8, '1. Pat 3.48 lbs boneless, skinless chicken thighs dry with paper towels. Optional: pound slightly for even thickness.
 
 2. In a large bowl, whisk together 2 cups almond flour, 1 tablespoon garlic powder, 1 tablespoon onion powder, 1 teaspoon smoked paprika, 1 teaspoon dried thyme, ½ teaspoon cayenne pepper, 1 teaspoon kosher salt, and ½ teaspoon black pepper.
 
@@ -265,7 +265,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Transfer to paper towel-lined plate to drain. Let rest few minutes before serving.', 'Without tapioca flour, press almond flour coating firmly for better adhesion. Double dredging (egg-flour-egg-flour) creates extra crispy coating. Monitor oil temperature carefully. May take slightly longer to cook through than traditional breaded chicken.', '{"calories": 285, "protein": 28, "carbs": 6, "fat": 16}', true, NOW(), NOW()),
 
-('Paleo Meatloaf', 'American', 'medium', 20, 50, 70, 8, '1. Preheat oven to 375°F (190°C).
+('Paleo Meatloaf', 70, 8, '1. Preheat oven to 375°F (190°C).
 
 2. In a large mixing bowl, combine 3 pounds 80/20 ground beef, ¾ cup almond flour, 1½ tablespoons Dijon mustard, 3 tablespoons ketchup, 3 tablespoons coconut aminos, 1 cooked and cooled diced medium onion, 3 minced garlic cloves, 3 beaten large eggs, salt, and black pepper.
 
@@ -281,7 +281,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Let rest 15-20 minutes before slicing. Garnish with minced parsley.', 'Cooking the onion first prevents raw onion taste and excess moisture. Taste testing ensures proper seasoning. Resting time allows juices to redistribute for better slicing. Can make ahead and refrigerate before baking.', '{"calories": 295, "protein": 25, "carbs": 4, "fat": 19}', true, NOW(), NOW()),
 
-('Simple Paleo Waffles', 'American', 'easy', 10, 15, 25, 6, '1. Preheat waffle iron and lightly grease with coconut oil.
+('Simple Paleo Waffles', 25, 6, '1. Preheat waffle iron and lightly grease with coconut oil.
 
 2. In a large bowl, mash 2 ripe bananas until smooth.
 
@@ -297,7 +297,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Serve immediately with paleo-friendly toppings.', 'For fluffier waffles, separate eggs and beat whites to stiff peaks before folding in. Leftover waffles freeze well - reheat in toaster. Full-fat coconut milk gives richest texture. Can add vanilla extract or spices for variation.', '{"calories": 175, "protein": 7, "carbs": 12, "fat": 12}', true, NOW(), NOW()),
 
-('Baked BBQ Beef Ribs', 'American', 'medium', 15, 210, 225, 6, '1. Preheat oven to 250°F (120°C).
+('Baked BBQ Beef Ribs', 225, 6, '1. Preheat oven to 250°F (120°C).
 
 2. In a bowl, combine 2 tablespoons chili powder, 1 tablespoon garlic powder, 1 tablespoon onion powder, 1 teaspoon paprika, ½ teaspoon dried oregano, salt, and black pepper.
 
@@ -315,7 +315,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 9. Serve with additional sauce on side.', 'Low and slow cooking ensures tender ribs. Water prevents drying out. Can make more complex sauce by sautéing onions, adding tomatoes and apple. Sauce should be thick enough to coat ribs. Great with roasted vegetables or salad.', '{"calories": 385, "protein": 24, "carbs": 6, "fat": 28}', true, NOW(), NOW()),
 
-('Cinnamon Roasted Butternut Squash', 'American', 'easy', 15, 30, 45, 8, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
+('Cinnamon Roasted Butternut Squash', 45, 8, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
 
 2. Peel and cube 2 pounds butternut squash into 1-inch pieces.
 
@@ -329,7 +329,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Serve immediately.', 'Don''t overcrowd pan for even browning. Can drizzle with maple syrup after roasting for extra sweetness (not strictly paleo). Try different spice blends like Italian seasoning. Stores well in fridge for 4 days - great for meal prep or adding to salads.', '{"calories": 65, "protein": 1, "carbs": 16, "fat": 3.5}', true, NOW(), NOW()),
 
-('Fried Boneless Chicken Thighs', 'American', 'medium', 15, 8, 23, 4, '1. Pat 4 boneless, skinless chicken thighs dry and season lightly with salt.
+('Fried Boneless Chicken Thighs', 23, 4, '1. Pat 4 boneless, skinless chicken thighs dry and season lightly with salt.
 
 2. In a shallow bowl, whisk 2 large eggs. In another bowl, combine 1 cup almond flour, ½ teaspoon garlic powder, ½ teaspoon onion powder, 1 teaspoon paprika, ½ teaspoon dried thyme, ¼ teaspoon black pepper, and salt to taste.
 
@@ -341,7 +341,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Transfer to paper towel-lined plate to drain. Season with additional salt if desired.', 'Thighs stay juicier than breasts. For thicker coating, double dredge (egg-flour-egg-flour). Can bake at 400°F for 20-25 minutes per side instead of frying. Use high smoke point oil for frying. Don''t use olive oil due to low smoke point.', '{"calories": 245, "protein": 26, "carbs": 5, "fat": 13}', true, NOW(), NOW()),
 
-('Classic Guacamole', 'Mexican', 'easy', 10, 0, 10, 6, '1. Cut 2-3 ripe avocados in half, remove pits, and scoop flesh into bowl.
+('Classic Guacamole', 10, 6, '1. Cut 2-3 ripe avocados in half, remove pits, and scoop flesh into bowl.
 
 2. Mash avocado with fork to desired consistency (chunky or smooth).
 
@@ -353,7 +353,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Serve immediately with tortilla chips.', 'To prevent browning, press plastic wrap directly onto surface if not serving immediately. Adding avocado pits to guacamole is a myth. Can add diced tomato for extra flavor. Ground coriander can substitute for fresh cilantro (¼ tsp). Best served fresh.', '{"calories": 95, "protein": 2, "carbs": 6, "fat": 8}', true, NOW(), NOW()),
 
-('Banana Coconut Flour Cookies', 'American', 'medium', 15, 13, 28, 18, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
+('Banana Coconut Flour Cookies', 28, 18, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
 
 2. In large bowl, whisk together ⅓ cup + 3 tablespoons coconut flour, 2 tablespoons tapioca flour (optional), 1 teaspoon ground cinnamon, ½ teaspoon baking soda, and ¼ teaspoon sea salt.
 
@@ -369,7 +369,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Let cool completely on baking sheet before serving.', 'Start with 2 tbsp coconut flour and add more if batter is too loose. Omit tapioca flour for keto version. Cookies will be fragile when warm - cooling completely is essential. Can substitute any chocolate chips or omit entirely.', '{"calories": 55, "protein": 2, "carbs": 5, "fat": 3}', true, NOW(), NOW()),
 
-('Banana Chocolate Chip Cookies', 'American', 'easy', 10, 24, 34, 24, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
+('Banana Chocolate Chip Cookies', 34, 24, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
 
 2. In a bowl, mash 2 ripe bananas until creamy (about ⅔ cup).
 
@@ -385,7 +385,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Let cool on baking sheet for few minutes before transferring to wire rack.', 'Simple 5-ingredient base recipe. Dough will be stickier than traditional cookie dough - this is normal. Don''t overbake or cookies will be dry. Can add vanilla extract, nuts, or different spices for variation.', '{"calories": 65, "protein": 2, "carbs": 8, "fat": 3}', true, NOW(), NOW()),
 
-('Simple Paleo Meatballs', 'American', 'easy', 10, 15, 25, 4, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
+('Simple Paleo Meatballs', 25, 4, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
 
 2. In a bowl, combine 1 pound ground beef, 1 beaten egg, ½ cup almond flour, and any desired paleo seasonings (salt, pepper, garlic powder, onion powder, Italian herbs).
 
@@ -397,7 +397,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Serve with your favorite paleo-friendly sauce or over vegetables.', 'Simple base recipe that can be customized with any paleo seasonings. Can pan-fry in olive oil instead of baking. Great for meal prep - freeze cooked meatballs for quick meals. Don''t overmix or meatballs will be tough.', '{"calories": 185, "protein": 18, "carbs": 2, "fat": 11}', true, NOW(), NOW()),
 
-('Perfect Chicken Breast', 'American', 'easy', 10, 7, 17, 1, '1. Tenderize chicken breast with meat mallet to even thickness (about ¾ inch).
+('Perfect Chicken Breast', 17, 1, '1. Tenderize chicken breast with meat mallet to even thickness (about ¾ inch).
 
 2. Season both sides with salt and pepper.
 

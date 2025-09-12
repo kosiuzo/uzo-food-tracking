@@ -7,6 +7,7 @@ import {
   updateRecipeById, 
   updateRecipeByName,
   deleteRecipeById,
+  deleteRecipeByName,
   type CreateRecipeRequest 
 } from '@/lib/recipes-api';
 import { supabase } from '@/lib/supabase';
@@ -386,6 +387,64 @@ describe('Recipes API Integration Tests (Local Supabase)', () => {
 
       expect(result.success).toBe(true); // Supabase doesn't error on delete of non-existent rows
       expect(result.data).toEqual({ id: 999999 });
+    });
+  });
+
+  describe('deleteRecipeByName', () => {
+    it('should delete recipe by name successfully', async () => {
+      const createResult = await createRecipe(testRecipe1);
+      const recipeId = createResult.data!.id;
+
+      const deleteResult = await deleteRecipeByName(testRecipe1.name);
+
+      expect(deleteResult.success).toBe(true);
+      expect(deleteResult.error).toBeNull();
+      expect(deleteResult.data).toEqual({ 
+        id: recipeId, 
+        name: testRecipe1.name 
+      });
+
+      // Verify recipe is actually deleted
+      const getResult = await getRecipeByName(testRecipe1.name);
+      expect(getResult.success).toBe(false);
+      expect(getResult.error).toContain('not found');
+    });
+
+    it('should handle deleting non-existent recipe by name', async () => {
+      const result = await deleteRecipeByName('Non-existent Recipe XYZ');
+
+      expect(result.success).toBe(false);
+      expect(result.data).toBeNull();
+      expect(result.error).toContain('not found');
+    });
+
+    it('should handle case-sensitive name matching', async () => {
+      const createResult = await createRecipe(testRecipe1);
+      createdRecipeIds.push(createResult.data!.id);
+
+      // Try to delete with different case
+      const result = await deleteRecipeByName(testRecipe1.name.toLowerCase());
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
+    });
+
+    it('should trim whitespace from recipe name', async () => {
+      const createResult = await createRecipe(testRecipe1);
+      const recipeId = createResult.data!.id;
+
+      // Delete with extra whitespace
+      const deleteResult = await deleteRecipeByName(`  ${testRecipe1.name}  `);
+
+      expect(deleteResult.success).toBe(true);
+      expect(deleteResult.data).toEqual({ 
+        id: recipeId, 
+        name: testRecipe1.name 
+      });
+
+      // Verify deletion
+      const getResult = await getRecipeByName(testRecipe1.name);
+      expect(getResult.success).toBe(false);
     });
   });
 

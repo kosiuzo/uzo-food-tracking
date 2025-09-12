@@ -419,3 +419,54 @@ export async function deleteRecipeById(id: number): Promise<ApiResponse<{ id: nu
     };
   }
 }
+
+/**
+ * Delete a recipe by name
+ */
+export async function deleteRecipeByName(name: string): Promise<ApiResponse<{ id: number, name: string }>> {
+  try {
+    if (!name || name.trim().length === 0) {
+      return {
+        data: null,
+        error: 'Recipe name is required',
+        success: false,
+      };
+    }
+
+    // First get the recipe to find its ID and verify it exists
+    const existingRecipe = await getRecipeByName(name.trim());
+    if (!existingRecipe.success || !existingRecipe.data) {
+      return {
+        data: null,
+        error: existingRecipe.error || `Recipe with name "${name}" not found`,
+        success: false,
+      };
+    }
+
+    // Use the ID-based delete
+    const deleteResult = await deleteRecipeById(existingRecipe.data.id);
+    if (!deleteResult.success) {
+      return {
+        data: null,
+        error: deleteResult.error,
+        success: false,
+      };
+    }
+
+    return {
+      data: { 
+        id: existingRecipe.data.id, 
+        name: existingRecipe.data.name 
+      },
+      error: null,
+      success: true,
+    };
+  } catch (err) {
+    console.error('Unexpected error deleting recipe by name:', err);
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : 'Unknown error occurred',
+      success: false,
+    };
+  }
+}

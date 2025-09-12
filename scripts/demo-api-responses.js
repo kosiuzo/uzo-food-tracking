@@ -96,6 +96,57 @@ async function updateRecipeById(id, updates) {
   }
 }
 
+async function deleteRecipeById(id) {
+  try {
+    const { error } = await supabase
+      .from('recipes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      return { data: null, error: error.message, success: false };
+    }
+    return { data: { id }, error: null, success: true };
+  } catch (err) {
+    return { data: null, error: err.message, success: false };
+  }
+}
+
+async function deleteRecipeByName(name) {
+  try {
+    if (!name || name.trim().length === 0) {
+      return { data: null, error: 'Recipe name is required', success: false };
+    }
+
+    // First get the recipe to find its ID and verify it exists
+    const existingRecipe = await getRecipeByName(name.trim());
+    if (!existingRecipe.success || !existingRecipe.data) {
+      return {
+        data: null,
+        error: existingRecipe.error || `Recipe with name "${name}" not found`,
+        success: false,
+      };
+    }
+
+    // Use the ID-based delete
+    const deleteResult = await deleteRecipeById(existingRecipe.data.id);
+    if (!deleteResult.success) {
+      return { data: null, error: deleteResult.error, success: false };
+    }
+
+    return {
+      data: { 
+        id: existingRecipe.data.id, 
+        name: existingRecipe.data.name 
+      },
+      error: null,
+      success: true,
+    };
+  } catch (err) {
+    return { data: null, error: err.message, success: false };
+  }
+}
+
 function logResponse(title, response) {
   console.log(`\n🔷 ${title}`);
   console.log('=' .repeat(50));
@@ -162,15 +213,20 @@ async function demo() {
     logResponse('UPDATE RECIPE (Partial Update)', updateResult);
   }
 
-  // 6. Error Response Example
+  // 6. Delete Recipe By Name
+  if (createdId) {
+    const deleteByNameResult = await deleteRecipeByName('Demo API Recipe');
+    logResponse('DELETE RECIPE BY NAME', deleteByNameResult);
+  }
+
+  // 7. Error Response Examples
   const errorResponse = await getRecipeByName('Non-Existent Recipe XYZ');
   logResponse('ERROR RESPONSE: Recipe Not Found', errorResponse);
 
-  // Cleanup - delete the demo recipe we created
-  if (createdId) {
-    await supabase.from('recipes').delete().eq('id', createdId);
-    console.log(`\n🧹 Cleaned up demo recipe (ID: ${createdId})`);
-  }
+  const errorDeleteResponse = await deleteRecipeByName('Non-Existent Recipe ABC');
+  logResponse('ERROR RESPONSE: Delete Recipe By Name Not Found', errorDeleteResponse);
+
+  // No need to cleanup since we already deleted via name
 
   console.log('\n✨ Demo completed! These are the exact JSON responses your API returns.');
 }

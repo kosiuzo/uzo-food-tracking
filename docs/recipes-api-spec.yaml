@@ -408,6 +408,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /recipes/by-name/{name}:
+    delete:
+      summary: Delete recipe by name
+      description: |
+        Delete a recipe by its exact name match.
+        This is useful for conversational interfaces where the recipe name is known.
+        This action cannot be undone.
+      operationId: deleteRecipeByName
+      tags:
+        - Recipes
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Exact name of the recipe to delete (case-sensitive)
+          schema:
+            type: string
+            minLength: 1
+            example: "Spaghetti Bolognese"
+      responses:
+        '200':
+          description: Recipe deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: ID of the deleted recipe
+                        example: 123
+                      name:
+                        type: string
+                        description: Name of the deleted recipe
+                        example: "Spaghetti Bolognese"
+                  error:
+                    type: null
+                  success:
+                    type: boolean
+                    example: true
+              example:
+                data:
+                  id: 123
+                  name: "Spaghetti Bolognese"
+                error: null
+                success: true
+        '400':
+          description: Invalid recipe name (empty or missing)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                data: null
+                error: "Recipe name is required"
+                success: false
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                data: null
+                error: 'Recipe with name "Non-existent Recipe" not found'
+                success: false
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     Recipe:

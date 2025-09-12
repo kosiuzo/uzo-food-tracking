@@ -218,6 +218,53 @@ async function deleteRecipeById(id) {
   }
 }
 
+async function deleteRecipeByName(name) {
+  try {
+    if (!name || name.trim().length === 0) {
+      return {
+        data: null,
+        error: 'Recipe name is required',
+        success: false,
+      };
+    }
+
+    // First get the recipe to find its ID and verify it exists
+    const existingRecipe = await getRecipeByName(name.trim());
+    if (!existingRecipe.success || !existingRecipe.data) {
+      return {
+        data: null,
+        error: existingRecipe.error || `Recipe with name "${name}" not found`,
+        success: false,
+      };
+    }
+
+    // Use the ID-based delete
+    const deleteResult = await deleteRecipeById(existingRecipe.data.id);
+    if (!deleteResult.success) {
+      return {
+        data: null,
+        error: deleteResult.error,
+        success: false,
+      };
+    }
+
+    return {
+      data: { 
+        id: existingRecipe.data.id, 
+        name: existingRecipe.data.name 
+      },
+      error: null,
+      success: true,
+    };
+  } catch (err) {
+    return {
+      data: null,
+      error: err.message,
+      success: false,
+    };
+  }
+}
+
 async function searchRecipesByName(searchTerm) {
   try {
     const { data, error } = await supabase
@@ -366,16 +413,25 @@ async function runTests() {
     console.log(`   Correctly handled not found: ${result.error}`);
   });
 
-  // Test 8: Delete Recipe
-  await test('Should delete recipe', async () => {
-    const result = await deleteRecipeById(createdRecipeId);
-    assert(result.success, `Delete failed: ${result.error}`);
-    assert(result.data.id === createdRecipeId, 'Wrong ID returned from delete');
+  // Test 8: Delete Recipe By Name
+  await test('Should delete recipe by name', async () => {
+    const result = await deleteRecipeByName(testRecipe.name);
+    assert(result.success, `Delete by name failed: ${result.error}`);
+    assert(result.data.id === createdRecipeId, 'Wrong ID returned from delete by name');
+    assert(result.data.name === testRecipe.name, 'Wrong name returned from delete by name');
     
     // Verify deletion
     const getResult = await getRecipeByName(testRecipe.name);
-    assert(!getResult.success, 'Recipe still exists after deletion');
-    console.log(`   Deleted recipe ID ${createdRecipeId}`);
+    assert(!getResult.success, 'Recipe still exists after deletion by name');
+    console.log(`   Deleted recipe "${testRecipe.name}" with ID ${createdRecipeId}`);
+  });
+
+  // Test 9: Handle Delete By Name Non-Existent Recipe
+  await test('Should handle non-existent recipe deletion by name', async () => {
+    const result = await deleteRecipeByName('Non-Existent Recipe XYZ');
+    assert(!result.success, 'Should have failed to delete non-existent recipe by name');
+    assert(result.error.includes('not found'), 'Wrong error message for delete by name not found');
+    console.log(`   Correctly handled delete by name not found: ${result.error}`);
   });
 
   // Cleanup after tests
@@ -386,10 +442,11 @@ async function runTests() {
   console.log(`   ✅ Passed: ${passed}`);
   console.log(`   ❌ Failed: ${failed}`);
   console.log(`   📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
+  console.log(`   🔢 Total Tests: ${passed + failed}`);
   
   if (failed === 0) {
     console.log();
-    console.log('🎉 All tests passed! Your Recipes API is working correctly with local Supabase.');
+    console.log('🎉 All tests passed! Your Recipes API (including deleteRecipeByName) is working correctly with local Supabase.');
   } else {
     console.log();
     console.log('⚠️  Some tests failed. Check the errors above.');

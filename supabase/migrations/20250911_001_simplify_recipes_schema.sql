@@ -20,3 +20,17 @@ ALTER TABLE recipes
 
 -- Recreate the name index without cuisine_type
 CREATE INDEX IF NOT EXISTS idx_recipes_name ON recipes (name);
+
+-- Update the search vector trigger to remove references to deleted fields
+CREATE OR REPLACE FUNCTION update_recipes_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('english', 
+    COALESCE(NEW.name, '') || ' ' ||
+    COALESCE(NEW.instructions, '') || ' ' ||
+    COALESCE(NEW.notes, '') || ' ' ||
+    COALESCE(array_to_string(NEW.ingredient_list, ' '), '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;

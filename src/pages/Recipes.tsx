@@ -32,6 +32,20 @@ export default function Recipes() {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
 
+  // Helper function to get ingredient count for both regular and AI-generated recipes
+  const getIngredientCount = (recipe: Recipe): number => {
+    // Prioritize ingredient_list for AI-generated recipes
+    if (recipe.ingredient_list && recipe.ingredient_list.length > 0) {
+      return recipe.ingredient_list.length;
+    }
+    // If recipe has linked ingredients (regular recipe), use those
+    if (recipe.ingredients && recipe.ingredients.length > 0) {
+      return recipe.ingredients.length;
+    }
+    // Fallback to 0 if no ingredients found
+    return 0;
+  };
+
   const displayedRecipes = recipes
     .filter(recipe => favoritesOnly ? recipe.is_favorite : true)
     .filter(recipe => {
@@ -306,7 +320,7 @@ export default function Recipes() {
                         <span className="text-sm font-semibold text-gray-700">Ready to cook</span>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {recipe.ingredients.length} ingredients • {recipe.instructions.split('\n').filter(step => step.trim()).length} steps
+                        {getIngredientCount(recipe)} ingredients • {recipe.instructions.split('\n').filter(step => step.trim()).length} steps
                       </div>
                     </div>
                     {recipe.notes && (

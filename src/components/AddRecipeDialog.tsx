@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { Card } from '@/components/ui/card';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Minus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags, useRecipeTagManagement } from '../hooks/useTags';
@@ -58,6 +58,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
   });
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+  const [originalServings, setOriginalServings] = useState<number>(1); // Track original servings for AI recipes
 
   // Update form data when editingRecipe changes
   useEffect(() => {
@@ -75,6 +76,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         selectedTagIds: editingRecipe.tags?.map(tag => tag.id.toString()) || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id.toString()));
+      setOriginalServings(editingRecipe.servings); // Track original servings for scaling
     } else if (open) {
       // Reset form when opening for new recipe
       setFormData({
@@ -89,14 +91,23 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         selectedTagIds: [],
       });
       setSelectedIngredientIds([]);
+      setOriginalServings(1);
     }
   }, [editingRecipe, open]);
 
   // Calculate nutrition based on nutrition source priority
   const calculateNutrition = () => {
-    // If recipe has ingredient_list (AI-imported), use stored nutrition
+    // If recipe has ingredient_list (AI-imported), use stored nutrition with scaling
     if (formData.nutrition_source === 'ai_generated' && formData.nutrition) {
-      return formData.nutrition;
+      const currentServings = parseInt(formData.servings) || 1;
+      const scaleFactor = originalServings / currentServings; // Scale per serving values
+
+      return {
+        calories_per_serving: formData.nutrition.calories_per_serving * scaleFactor,
+        protein_per_serving: formData.nutrition.protein_per_serving * scaleFactor,
+        carbs_per_serving: formData.nutrition.carbs_per_serving * scaleFactor,
+        fat_per_serving: formData.nutrition.fat_per_serving * scaleFactor,
+      };
     }
     
     // If recipe has manual nutrition, use stored nutrition
@@ -225,6 +236,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       selectedTagIds: [],
     });
     setSelectedIngredientIds([]);
+    setOriginalServings(1);
 
     toast({
       title: "Recipe added",
@@ -256,13 +268,50 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="servings">Servings</Label>
-              <Input
-                id="servings"
-                type="number"
-                value={formData.servings}
-                onChange={(e) => setFormData(prev => ({ ...prev, servings: e.target.value }))}
-                min="1"
-              />
+              {formData.nutrition_source === 'ai_generated' ? (
+                <div className="flex items-center gap-2 h-10">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const current = parseInt(formData.servings) || 1;
+                      if (current > 1) {
+                        setFormData(prev => ({ ...prev, servings: (current - 1).toString() }));
+                      }
+                    }}
+                    disabled={parseInt(formData.servings) <= 1}
+                    className="h-8 w-8 p-0 rounded-full shrink-0"
+                    aria-label="Decrease servings"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="font-medium text-center flex-1">
+                    {formData.servings} serving{parseInt(formData.servings) !== 1 ? 's' : ''}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const current = parseInt(formData.servings) || 1;
+                      setFormData(prev => ({ ...prev, servings: (current + 1).toString() }));
+                    }}
+                    className="h-8 w-8 p-0 rounded-full shrink-0"
+                    aria-label="Increase servings"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  id="servings"
+                  type="number"
+                  value={formData.servings}
+                  onChange={(e) => setFormData(prev => ({ ...prev, servings: e.target.value }))}
+                  min="1"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="prep-time">Total Time (min)</Label>

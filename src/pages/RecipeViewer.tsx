@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Users, AlertCircle, RotateCcw, Loader2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,6 +26,7 @@ export default function RecipeViewer() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [hasError, setHasError] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [currentServings, setCurrentServings] = useState<number>(recipe?.servings || 1);
 
   // Process recipe instructions into steps
   const steps = useMemo(() => {
@@ -72,6 +73,116 @@ export default function RecipeViewer() {
       }
     }
   }, [recipe]);
+
+  // Update current servings when recipe changes
+  useEffect(() => {
+    if (recipe) {
+      setCurrentServings(recipe.servings);
+    }
+  }, [recipe]);
+
+  // Scale ingredient quantities based on serving size
+  const scaleIngredient = useCallback((ingredient: string, originalServings: number, newServings: number): string => {
+    if (originalServings === newServings) return ingredient;
+
+    const scaleFactor = newServings / originalServings;
+
+    // Regex to match numbers (including fractions and decimals) at the start of ingredient
+    const quantityMatch = ingredient.match(/^(\d+(?:\.\d+)?(?:\/\d+)?|\d+\/\d+)\s*/);
+
+    if (!quantityMatch) return ingredient;
+
+    const originalQuantityStr = quantityMatch[1];
+    const restOfIngredient = ingredient.replace(quantityMatch[0], '');
+
+    // Parse fractions and decimals
+    let originalQuantity: number;
+    if (originalQuantityStr.includes('/')) {
+      const [numerator, denominator] = originalQuantityStr.split('/').map(Number);
+      originalQuantity = numerator / denominator;
+    } else {
+      originalQuantity = parseFloat(originalQuantityStr);
+    }
+
+    const scaledQuantity = originalQuantity * scaleFactor;
+
+    // Format the scaled quantity nicely
+    let formattedQuantity: string;
+    if (scaledQuantity < 1) {
+      // For quantities less than 1, try to represent as fraction if reasonable
+      const commonFractions: { [key: string]: string } = {
+        '0.25': '1/4',
+        '0.33': '1/3',
+        '0.5': '1/2',
+        '0.67': '2/3',
+        '0.75': '3/4'
+      };
+      const rounded = Math.round(scaledQuantity * 100) / 100;
+      formattedQuantity = commonFractions[rounded.toString()] || rounded.toString();
+    } else if (scaledQuantity % 1 === 0) {
+      // Whole numbers
+      formattedQuantity = scaledQuantity.toString();
+    } else {
+      // Decimals rounded to 2 places
+      formattedQuantity = (Math.round(scaledQuantity * 100) / 100).toString();
+    }
+
+    return `${formattedQuantity} ${restOfIngredient}`;
+  }, []);
+
+  // Get scaled ingredients for AI recipes
+  const scaledIngredients = useMemo(() => {
+    if (!recipe?.ingredient_list) return [];
+
+    return recipe.ingredient_list.map(ingredient =>
+      scaleIngredient(ingredient, recipe.servings, currentServings)
+    );
+  }, [recipe, currentServings, scaleIngredient]);
+
+  // Format quantity for display (handles decimals and fractions)
+  const formatQuantity = useCallback((quantity: number): string => {
+    // Common fractions for better display
+    const commonFractions: { [key: string]: string } = {
+      '0.25': '1/4',
+      '0.33': '1/3',
+      '0.5': '1/2',
+      '0.67': '2/3',
+      '0.75': '3/4'
+    };
+
+    if (quantity % 1 === 0) {
+      // Whole numbers
+      return quantity.toString();
+    }
+
+    const rounded = Math.round(quantity * 100) / 100;
+
+    // Check if it matches a common fraction
+    const fraction = commonFractions[rounded.toString()];
+    if (fraction) {
+      return fraction;
+    }
+
+    // For other decimals, show up to 2 decimal places
+    return rounded.toString();
+  }, []);
+
+  // Get scaled manual recipe ingredients
+  const scaledManualIngredients = useMemo(() => {
+    if (!recipe?.ingredients) return [];
+
+    const scaleFactor = currentServings / recipe.servings;
+
+    return recipe.ingredients.map(ingredient => ({
+      ...ingredient,
+      quantity: ingredient.quantity * scaleFactor
+    }));
+  }, [recipe, currentServings]);
+
+  // Adjust servings
+  const adjustServings = useCallback((increment: boolean) => {
+    setCurrentServings(prev => increment ? prev + 1 : Math.max(1, prev - 1));
+  }, []);
 
   const retryLoad = useCallback(() => {
     setHasError(false);
@@ -208,9 +319,31 @@ export default function RecipeViewer() {
       </header>
 
       <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-muted-foreground flex justify-center gap-4 sm:gap-6 border-b">
-        <div className="flex items-center gap-1">
+        {/* Show scaling controls for all recipes */}
+        <div className="flex items-center gap-2">
           <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>{recipe.servings} servings</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => adjustServings(false)}
+            disabled={currentServings <= 1}
+            className="h-6 w-6 p-0 rounded-full"
+            aria-label="Decrease servings"
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <span className="font-medium min-w-[60px] text-center">
+            {currentServings} serving{currentServings !== 1 ? 's' : ''}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => adjustServings(true)}
+            className="h-6 w-6 p-0 rounded-full"
+            aria-label="Increase servings"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
         </div>
         {recipe.total_time_minutes && (
           <div className="flex items-center gap-1">
@@ -265,7 +398,7 @@ export default function RecipeViewer() {
             <ul className="space-y-2 sm:space-y-3" role="list">
               {/* Display ingredient_list if available (AI recipes) */}
               {recipe.ingredient_list && recipe.ingredient_list.length > 0 ? (
-                recipe.ingredient_list.map((ingredient, i) => (
+                scaledIngredients.map((ingredient, i) => (
                   <li
                     key={`ingredient-list-${i}`}
                     className="flex items-center p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
@@ -274,21 +407,33 @@ export default function RecipeViewer() {
                     <span className="text-sm sm:text-base font-medium text-foreground">
                       {ingredient}
                     </span>
+                    {currentServings !== recipe.servings && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        (scaled from {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''})
+                      </span>
+                    )}
                   </li>
                 ))
               ) : (
                 /* Display linked ingredients (manual recipes) */
-                recipe.ingredients.map((ing, i) => (
+                scaledManualIngredients.map((ing, i) => (
                   <li
                     key={`ingredient-${ing.item_id}-${i}`}
                     className="flex items-center justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors min-h-[56px]"
                     role="listitem"
                   >
-                    <span className="text-sm sm:text-base font-medium text-foreground">
-                      {getIngredientName(ing.item_id)}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm sm:text-base font-medium text-foreground">
+                        {getIngredientName(ing.item_id)}
+                      </span>
+                      {currentServings !== recipe.servings && (
+                        <span className="text-xs text-muted-foreground">
+                          (scaled from {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm sm:text-base font-semibold text-primary shrink-0 ml-2">
-                      {ing.quantity} {ing.unit}
+                      {formatQuantity(ing.quantity)} {ing.unit}
                     </span>
                   </li>
                 ))

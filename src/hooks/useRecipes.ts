@@ -206,20 +206,23 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
       const nutritionToSave = updatesWithoutTags.nutrition;
       
+      // Build update object with only provided fields to avoid resetting existing data
+      const updateData: Partial<Database['public']['Tables']['recipes']['Update']> = {};
+
+      if (updatesWithoutTags.name !== undefined) updateData.name = updatesWithoutTags.name;
+      if (updatesWithoutTags.instructions !== undefined) updateData.instructions = updatesWithoutTags.instructions;
+      if (updatesWithoutTags.servings !== undefined) updateData.servings = updatesWithoutTags.servings;
+      if (updatesWithoutTags.total_time_minutes !== undefined) updateData.total_time = updatesWithoutTags.total_time_minutes;
+      if (nutritionToSave !== undefined) updateData.nutrition_per_serving = nutritionToSave;
+      if (updatesWithoutTags.ingredient_list !== undefined) updateData.ingredient_list = updatesWithoutTags.ingredient_list;
+      if (updatesWithoutTags.nutrition_source !== undefined) updateData.nutrition_source = updatesWithoutTags.nutrition_source;
+      if (updatesWithoutTags.is_favorite !== undefined) updateData.is_favorite = updatesWithoutTags.is_favorite;
+      if (updatesWithoutTags.notes !== undefined) updateData.notes = updatesWithoutTags.notes;
+
       // Update recipe
       const { error: recipeError } = await supabase
         .from('recipes')
-        .update({
-          name: updatesWithoutTags.name,
-          instructions: updatesWithoutTags.instructions,
-          servings: updatesWithoutTags.servings,
-          total_time: updatesWithoutTags.total_time_minutes,
-          nutrition_per_serving: nutritionToSave,
-          ingredient_list: updatesWithoutTags.ingredient_list || null,
-          nutrition_source: updatesWithoutTags.nutrition_source || 'calculated',
-          is_favorite: updatesWithoutTags.is_favorite || false,
-          notes: updatesWithoutTags.notes || null,
-        })
+        .update(updateData)
         .eq('id', id);
       
       if (recipeError) throw recipeError;

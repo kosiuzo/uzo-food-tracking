@@ -57,8 +57,8 @@ paths:
         - apiKeyAuth: []
 
     post:
-      operationId: createRecipe
-      summary: Create a new recipe
+      operationId: saveRecipe
+      summary: Create a new recipe in the database
       description: Inserts a new recipe row.
       parameters:
         - name: Prefer
@@ -74,6 +74,49 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RecipeInsert'
+            examples:
+              minimalRecipe:
+                summary: Minimal recipe
+                description: Smallest recommended payload to create a recipe
+                value:
+                  name: Simple Scrambled Eggs
+                  instructions: Beat eggs, cook in butter, season.
+              fullRecipe:
+                summary: Full recipe with nutrition and ingredients
+                description: Includes optional fields commonly used by the app
+                value:
+                  name: AI-Generated Chicken Stir Fry
+                  instructions: |
+                    1. Heat oil in wok
+                    2. Add chicken until golden
+                    3. Add vegetables and stir-fry
+                    4. Season with soy
+                  servings: 4
+                  total_time: 25
+                  ingredient_list:
+                    - chicken breast
+                    - mixed vegetables
+                    - soy sauce
+                    - garlic
+                    - ginger
+                    - oil
+                  nutrition_per_serving:
+                    calories: 320
+                    protein: 28
+                    carbs: 12
+                    fat: 15
+                  notes: Quick and healthy weeknight dinner
+                  nutrition_source: ai_generated
+                  is_favorite: false
+                  source_link: https://example.com/stirfry
+              ingredientListArray:
+                summary: Single ingredient must be an array
+                description: Even one ingredient must be wrapped in an array of strings
+                value:
+                  name: Salted Water
+                  instructions: Boil water; add salt.
+                  ingredient_list:
+                    - salt
       responses:
         '201':
           description: Recipe created
@@ -377,8 +420,12 @@ components:
           type:
             - array
             - 'null'
+          description: Array of ingredient names. Must be an array of strings; for a single ingredient use a one-element array.
           items:
             type: string
+          example:
+            - chicken breast
+            - garlic
         nutrition_source:
           type:
             - string
@@ -438,8 +485,13 @@ components:
           type:
             - array
             - 'null'
+          description: Array of ingredient names (strings). Do not send a single string or objects.
           items:
             type: string
+          example:
+            - spaghetti
+            - eggs
+            - parmesan cheese
         nutrition_per_serving:
           type:
             - object
@@ -492,8 +544,12 @@ components:
           type:
             - array
             - 'null'
+          description: Array of ingredient names (strings). Use a one-element array for a single ingredient.
           items:
             type: string
+          example:
+            - salt
+            - water
         nutrition_per_serving:
           type:
             - object

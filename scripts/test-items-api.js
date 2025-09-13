@@ -281,7 +281,7 @@ async function runTests() {
     assert(Array.isArray(result.data), 'Categories data is not an array');
     assert(result.data.length > 0, 'No categories found');
     assert(result.data.includes('Condiments & Sauces'), 'Expected category not found');
-    assert(result.data.includes('Seasonings & Spices'), 'Expected category not found');
+    assert(result.data.includes('Single-Ingredient Spices/Herbs'), 'Expected category not found');
     console.log(`   Found ${result.data.length} categories: ${result.data.slice(0, 3).join(', ')}${result.data.length > 3 ? '...' : ''}`);
   });
 
@@ -303,8 +303,8 @@ async function runTests() {
 
   // Test 3: Get Items by Category (In-Stock Only)
   await test('Should get in-stock items only', async () => {
-    const allResult = await getItemsByCategory('Seasonings & Spices', true);
-    const inStockResult = await getItemsByCategory('Seasonings & Spices', false);
+    const allResult = await getItemsByCategory('Single-Ingredient Spices/Herbs', true);
+    const inStockResult = await getItemsByCategory('Single-Ingredient Spices/Herbs', false);
     
     assert(allResult.success, `Get all items failed: ${allResult.error}`);
     assert(inStockResult.success, `Get in-stock items failed: ${inStockResult.error}`);
@@ -315,7 +315,7 @@ async function runTests() {
       assert(item.in_stock === true, `Item ${item.name} is not in stock`);
     });
     
-    console.log(`   Total seasonings & spices: ${allResult.data.length}, In-stock: ${inStockResult.data.length}`);
+    console.log(`   Total single-ingredient spices/herbs: ${allResult.data.length}, In-stock: ${inStockResult.data.length}`);
   });
 
   // Test 4: Search Items by Category (Partial Match)

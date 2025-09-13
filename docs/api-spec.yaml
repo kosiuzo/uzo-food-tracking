@@ -1,0 +1,824 @@
+openapi: 3.1.0
+info:
+  title: Supabase Items and Recipes API
+  description: RESTful API for reading and writing items and recipes using Supabase PostgREST.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://amehiertzqtbtcjhugql.supabase.co/rest/v1
+    description: Supabase REST API (production)
+
+security:
+  - apiKeyAuth: []
+
+paths:
+  /recipes:
+    get:
+      operationId: getRecipes
+      summary: Get recipes
+      description: Retrieves recipes visible to the authenticated user.
+      parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. created_at.desc.
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of rows to return.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    post:
+      operationId: createRecipe
+      summary: Create a new recipe
+      description: Inserts a new recipe row.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeInsert'
+      responses:
+        '201':
+          description: Recipe created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    patch:
+      operationId: updateRecipe
+      summary: Update a recipe by ID
+      description: Updates rows in the recipes table filtered by ID.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeUpdate'
+      responses:
+        '200':
+          description: Updated recipe rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    delete:
+      operationId: deleteRecipe
+      summary: Delete a recipe by ID
+      description: Deletes rows in the recipes table filtered by ID.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted recipe rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+  /items:
+    get:
+      operationId: getItems
+      summary: Get items
+      description: Retrieves items visible to the authenticated user.
+      parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. updated_at.desc.
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of rows to return.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    post:
+      operationId: createItem
+      summary: Create a new item
+      description: Inserts a new item row.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemInsert'
+      responses:
+        '201':
+          description: Item created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    patch:
+      operationId: updateItem
+      summary: Update an item by ID
+      description: Updates rows in the items table filtered by ID.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemUpdate'
+      responses:
+        '200':
+          description: Updated item rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+    delete:
+      operationId: deleteItem
+      summary: Delete an item by ID
+      description: Deletes rows in the items table filtered by ID.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted item rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - apiKeyAuth: []
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Invalid request parameters
+        code:
+          type: string
+          description: Optional error code
+          example: bad_request
+        details:
+          type: object
+          additionalProperties: true
+          description: Optional error details
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        total_time:
+          type:
+            - integer
+            - 'null'
+        servings:
+          type:
+            - integer
+            - 'null'
+        instructions:
+          type:
+            - string
+            - 'null'
+        nutrition_per_serving:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        ingredient_list:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        is_favorite:
+          type:
+            - boolean
+            - 'null'
+        source_link:
+          type:
+            - string
+            - 'null'
+        notes:
+          type:
+            - string
+            - 'null'
+        times_cooked:
+          type:
+            - integer
+            - 'null'
+        last_cooked:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    RecipeInsert:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        instructions:
+          type:
+            - string
+            - 'null'
+        servings:
+          type:
+            - integer
+            - 'null'
+        total_time:
+          type:
+            - integer
+            - 'null'
+        ingredient_list:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+        nutrition_per_serving:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        notes:
+          type:
+            - string
+            - 'null'
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        is_favorite:
+          type:
+            - boolean
+            - 'null'
+        source_link:
+          type:
+            - string
+            - 'null'
+        times_cooked:
+          type:
+            - integer
+            - 'null'
+        last_cooked:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    RecipeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        instructions:
+          type:
+            - string
+            - 'null'
+        servings:
+          type:
+            - integer
+            - 'null'
+        total_time:
+          type:
+            - integer
+            - 'null'
+        ingredient_list:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+        nutrition_per_serving:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        notes:
+          type:
+            - string
+            - 'null'
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        is_favorite:
+          type:
+            - boolean
+            - 'null'
+        source_link:
+          type:
+            - string
+            - 'null'
+        times_cooked:
+          type:
+            - integer
+            - 'null'
+        last_cooked:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        brand:
+          type:
+            - string
+            - 'null'
+        category:
+          type:
+            - string
+            - 'null'
+        in_stock:
+          type:
+            - boolean
+            - 'null'
+        price:
+          type:
+            - number
+            - 'null'
+        carbs_per_serving:
+          type:
+            - number
+            - 'null'
+        fat_per_serving:
+          type:
+            - number
+            - 'null'
+        protein_per_serving:
+          type:
+            - number
+            - 'null'
+        calories_per_serving:
+          type:
+            - number
+            - 'null'
+        servings_per_container:
+          type:
+            - number
+            - 'null'
+        serving_size_grams:
+          type:
+            - number
+            - 'null'
+        serving_quantity:
+          type:
+            - number
+            - 'null'
+        serving_unit:
+          type:
+            - string
+            - 'null'
+        serving_unit_type:
+          type:
+            - string
+            - 'null'
+          enum: [volume, weight, package]
+        image_url:
+          type:
+            - string
+            - 'null'
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        barcode:
+          type:
+            - string
+            - 'null'
+        last_purchased:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        purchase_count:
+          type:
+            - number
+            - 'null'
+        rating:
+          type:
+            - number
+            - 'null'
+        last_edited:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        normalized_name:
+          type:
+            - string
+            - 'null'
+        ingredients:
+          type:
+            - string
+            - 'null'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ItemInsert:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        brand:
+          type:
+            - string
+            - 'null'
+        category:
+          type:
+            - string
+            - 'null'
+        in_stock:
+          type:
+            - boolean
+            - 'null'
+        price:
+          type:
+            - number
+            - 'null'
+        carbs_per_serving:
+          type:
+            - number
+            - 'null'
+        fat_per_serving:
+          type:
+            - number
+            - 'null'
+        protein_per_serving:
+          type:
+            - number
+            - 'null'
+        calories_per_serving:
+          type:
+            - number
+            - 'null'
+        servings_per_container:
+          type:
+            - number
+            - 'null'
+        serving_size_grams:
+          type:
+            - number
+            - 'null'
+        serving_quantity:
+          type:
+            - number
+            - 'null'
+        serving_unit:
+          type:
+            - string
+            - 'null'
+        serving_unit_type:
+          type:
+            - string
+            - 'null'
+          enum: [volume, weight, package]
+        image_url:
+          type:
+            - string
+            - 'null'
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        barcode:
+          type:
+            - string
+            - 'null'
+        last_purchased:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        purchase_count:
+          type:
+            - number
+            - 'null'
+        rating:
+          type:
+            - number
+            - 'null'
+        last_edited:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        ingredients:
+          type:
+            - string
+            - 'null'
+
+    ItemUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        brand:
+          type:
+            - string
+            - 'null'
+        category:
+          type:
+            - string
+            - 'null'
+        in_stock:
+          type:
+            - boolean
+            - 'null'
+        price:
+          type:
+            - number
+            - 'null'
+        carbs_per_serving:
+          type:
+            - number
+            - 'null'
+        fat_per_serving:
+          type:
+            - number
+            - 'null'
+        protein_per_serving:
+          type:
+            - number
+            - 'null'
+        calories_per_serving:
+          type:
+            - number
+            - 'null'
+        servings_per_container:
+          type:
+            - number
+            - 'null'
+        serving_size_grams:
+          type:
+            - number
+            - 'null'
+        serving_quantity:
+          type:
+            - number
+            - 'null'
+        serving_unit:
+          type:
+            - string
+            - 'null'
+        serving_unit_type:
+          type:
+            - string
+            - 'null'
+          enum: [volume, weight, package]
+        image_url:
+          type:
+            - string
+            - 'null'
+        nutrition_source:
+          type:
+            - string
+            - 'null'
+        barcode:
+          type:
+            - string
+            - 'null'
+        last_purchased:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        purchase_count:
+          type:
+            - number
+            - 'null'
+        rating:
+          type:
+            - number
+            - 'null'
+        last_edited:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        ingredients:
+          type:
+            - string
+            - 'null'

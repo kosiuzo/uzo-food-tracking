@@ -4,33 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
-import { getServingUnitType, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 // Form-specific type that allows string values during editing
 interface FoodItemFormData {
   name: string;
   brand: string;
   category: string;
-  in_stock: boolean;
-  price: string;
-  serving_size: string;
-  serving_quantity: string;
-  serving_unit: string;
-  serving_unit_type: 'volume' | 'weight' | 'package' | '';
   image_url: string;
   ingredients: string;
   rating: number;
-  nutrition: {
-    calories_per_serving: string;
-    protein_per_serving: string;
-    carbs_per_serving: string;
-    fat_per_serving: string;
-    fiber_per_serving: string;
-  };
 }
 
 interface AddEditItemDialogProps {
@@ -50,22 +35,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     name: '',
     brand: '',
     category: '',
-    in_stock: true,
-    price: '',
-    serving_size: '100',
-    serving_quantity: '',
-    serving_unit: '',
-    serving_unit_type: '',
     image_url: '',
     ingredients: '',
     rating: 0,
-    nutrition: {
-      calories_per_serving: '',
-      protein_per_serving: '',
-      carbs_per_serving: '',
-      fat_per_serving: '',
-      fiber_per_serving: '',
-    },
   });
 
   useEffect(() => {
@@ -74,93 +46,22 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         name: item.name,
         brand: item.brand || '',
         category: item.category,
-        in_stock: item.in_stock,
-        price: item.price ? item.price.toString() : '',
-        serving_size: item.serving_size ? item.serving_size.toString() : '100',
-        serving_quantity: item.serving_quantity ? item.serving_quantity.toString() : '',
-        serving_unit: item.serving_unit || '',
-        serving_unit_type: item.serving_unit_type || '',
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
         rating: item.rating || 0,
-        nutrition: {
-          calories_per_serving: item.nutrition.calories_per_serving ? item.nutrition.calories_per_serving.toString() : '',
-          protein_per_serving: item.nutrition.protein_per_serving ? item.nutrition.protein_per_serving.toString() : '',
-          carbs_per_serving: item.nutrition.carbs_per_serving ? item.nutrition.carbs_per_serving.toString() : '',
-          fat_per_serving: item.nutrition.fat_per_serving ? item.nutrition.fat_per_serving.toString() : '',
-          fiber_per_serving: item.nutrition.fiber_per_serving ? item.nutrition.fiber_per_serving.toString() : '',
-        },
       });
     } else {
       setFormData({
         name: '',
         brand: '',
         category: '',
-        in_stock: true,
-        price: '',
-        serving_size: '100',
-        serving_quantity: '',
-        serving_unit: '',
-        serving_unit_type: '',
         image_url: '',
         ingredients: '',
         rating: 0,
-        nutrition: {
-          calories_per_serving: '',
-          protein_per_serving: '',
-          carbs_per_serving: '',
-          fat_per_serving: '',
-          fiber_per_serving: '',
-        },
       });
     }
   }, [item, open]);
 
-  // Auto-set serving unit type when serving unit changes
-  const handleServingUnitChange = (unit: string) => {
-    const unitType = getServingUnitType(unit);
-    setFormData(prev => ({
-      ...prev,
-      serving_unit: unit,
-      serving_unit_type: unitType || '',
-    }));
-  };
-
-  const fetchNutritionData = async () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: "Enter product name",
-        description: "Please enter a product name to generate nutrition data.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    // Generate mock nutrition data
-    const mockNutrition = {
-      calories_per_serving: Math.floor(Math.random() * 300) + 50,
-      protein_per_serving: Math.floor(Math.random() * 20) + 1,
-      carbs_per_serving: Math.floor(Math.random() * 50) + 5,
-      fat_per_serving: Math.floor(Math.random() * 15) + 1,
-      fiber_per_serving: Math.floor(Math.random() * 8) + 1,
-    };
-
-    setFormData(prev => ({
-      ...prev,
-      nutrition: mockNutrition,
-      image_url: prev.image_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=400&fit=crop',
-    }));
-
-    toast({
-      title: "Nutrition data generated",
-      description: "Estimated nutrition data has been generated. Please verify and adjust as needed.",
-      variant: "default",
-    });
-    
-    setLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,21 +79,25 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     try {
       setLoading(true);
       
-      // Prepare the data to save, converting strings to numbers and empty strings to null for optional fields
+      // Prepare the data to save with default values for removed fields
       const dataToSave = {
         ...formData,
-        price: formData.price ? parseFloat(formData.price) || undefined : undefined,
-        serving_size: formData.serving_size ? parseFloat(formData.serving_size) || 100 : 100,
-        serving_quantity: formData.serving_quantity ? parseFloat(formData.serving_quantity) || undefined : undefined,
-        image_url: formData.image_url.trim() || undefined,
         brand: formData.brand.trim() || undefined,
+        image_url: formData.image_url.trim() || undefined,
         ingredients: formData.ingredients.trim() || undefined,
+        // Default values for removed fields
+        in_stock: true,
+        price: undefined,
+        serving_size: 100,
+        serving_quantity: undefined,
+        serving_unit: undefined,
+        serving_unit_type: undefined,
         nutrition: {
-          calories_per_serving: formData.nutrition.calories_per_serving ? parseFloat(formData.nutrition.calories_per_serving) || 0 : 0,
-          protein_per_serving: formData.nutrition.protein_per_serving ? parseFloat(formData.nutrition.protein_per_serving) || 0 : 0,
-          carbs_per_serving: formData.nutrition.carbs_per_serving ? parseFloat(formData.nutrition.carbs_per_serving) || 0 : 0,
-          fat_per_serving: formData.nutrition.fat_per_serving ? parseFloat(formData.nutrition.fat_per_serving) || 0 : 0,
-          fiber_per_serving: formData.nutrition.fiber_per_serving ? parseFloat(formData.nutrition.fiber_per_serving) || 0 : 0,
+          calories_per_serving: 0,
+          protein_per_serving: 0,
+          carbs_per_serving: 0,
+          fat_per_serving: 0,
+          fiber_per_serving: 0,
         },
       };
 
@@ -227,33 +132,20 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         <DialogHeader>
           <DialogTitle>{item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
           <DialogDescription>
-            {item ? 'Update the details of your food item.' : 'Add a new food item to your inventory with nutritional information.'}
+            {item ? 'Update the details of your food item.' : 'Add a new food item to your inventory.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="space-y-2">
             <Label htmlFor="name">Product Name *</Label>
-            <div className="flex gap-2">
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Organic Bananas"
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={fetchNutritionData}
-                disabled={loading}
-                title="Generate nutrition data"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Organic Bananas"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -282,118 +174,13 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
             </div>
           </div>
 
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
-              <Input
-                id="price"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Rating</Label>
-              <StarRating
-                rating={formData.rating}
-                onRatingChange={(rating) => setFormData(prev => ({ ...prev, rating }))}
-                size="md"
-              />
-            </div>
-          </div>
-
-          {/* Serving Size */}
+          {/* Rating */}
           <div className="space-y-2">
-            <Label htmlFor="serving_size">Serving Size (grams)</Label>
-                          <Input
-                id="serving_size"
-                type="number"
-                value={formData.serving_size}
-                onChange={(e) => setFormData(prev => ({ ...prev, serving_size: e.target.value }))}
-                min="1"
-                step="1"
-                placeholder="100"
-              />
-            <p className="text-xs text-muted-foreground">
-              The weight of one serving in grams. Used for accurate macro calculations.
-            </p>
-          </div>
-
-          {/* Serving Unit Information */}
-          <div className="space-y-3">
-            <Label>Serving Unit Information (Optional)</Label>
-            <p className="text-xs text-muted-foreground">
-              For volume-based measurements in recipes (e.g., 1 cup of rice = 45g)
-            </p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="serving_quantity">Serving Quantity</Label>
-                <Input
-                  id="serving_quantity"
-                  type="number"
-                  value={formData.serving_quantity}
-                  onChange={(e) => setFormData(prev => ({ ...prev, serving_quantity: e.target.value }))}
-                  min="0"
-                  step="0.25"
-                  placeholder="e.g., 0.25"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="serving_unit">Serving Unit</Label>
-                <Select 
-                  value={formData.serving_unit} 
-                  onValueChange={handleServingUnitChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
-                    <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
-                    <SelectItem value="cup">cups</SelectItem>
-                    <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
-                    <SelectItem value="ml">milliliters (ml)</SelectItem>
-                    <SelectItem value="l">liters (l)</SelectItem>
-                    <SelectItem value="g">grams (g)</SelectItem>
-                    <SelectItem value="kg">kilograms (kg)</SelectItem>
-                    <SelectItem value="oz">ounces (oz)</SelectItem>
-                    <SelectItem value="lb">pounds (lb)</SelectItem>
-                    <SelectItem value="piece">pieces</SelectItem>
-                    <SelectItem value="slice">slices</SelectItem>
-                    <SelectItem value="can">cans</SelectItem>
-                    <SelectItem value="bottle">bottles</SelectItem>
-                    <SelectItem value="pouch">pouches</SelectItem>
-                    <SelectItem value="scoop">scoops</SelectItem>
-                    <SelectItem value="serving">servings</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {formData.serving_unit_type && (
-              <div className="text-xs text-muted-foreground">
-                Unit type: <span className="font-medium">{formData.serving_unit_type}</span>
-                {formData.serving_quantity && formData.serving_unit && formData.serving_size && (
-                  <span className="ml-2">
-                    • {formData.serving_quantity} {formData.serving_unit} = {formData.serving_size}g
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="in_stock">Currently in stock</Label>
-            <Switch
-              id="in_stock"
-              checked={formData.in_stock}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked }))}
+            <Label>Rating</Label>
+            <StarRating
+              rating={formData.rating}
+              onRatingChange={(rating) => setFormData(prev => ({ ...prev, rating }))}
+              size="md"
             />
           </div>
 
@@ -447,84 +234,9 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
               value={formData.ingredients}
               onChange={(e) => setFormData(prev => ({ ...prev, ingredients: e.target.value }))}
               placeholder="e.g., Organic chicken breast, water, salt, natural flavoring"
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              rows={3}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              rows={4}
             />
-          </div>
-
-          {/* Nutrition Info */}
-          <div className="space-y-3">
-            <Label>Nutrition (per serving)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="calories" className="text-xs">Calories</Label>
-                <Input
-                  id="calories"
-                  type="number"
-                  value={formData.nutrition.calories_per_serving}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { 
-                      ...prev.nutrition, 
-                      calories_per_serving: e.target.value 
-                    }
-                  }))}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="protein" className="text-xs">Protein (g)</Label>
-                <Input
-                  id="protein"
-                  type="number"
-                  value={formData.nutrition.protein_per_serving}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { 
-                      ...prev.nutrition, 
-                      protein_per_serving: e.target.value 
-                    }
-                  }))}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="carbs" className="text-xs">Carbs (g)</Label>
-                <Input
-                  id="carbs"
-                  type="number"
-                  value={formData.nutrition.carbs_per_serving}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { 
-                      ...prev.nutrition, 
-                      carbs_per_serving: e.target.value 
-                    }
-                  }))}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="fat" className="text-xs">Fat (g)</Label>
-                <Input
-                  id="fat"
-                  type="number"
-                  value={formData.nutrition.fat_per_serving}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    nutrition: { 
-                      ...prev.nutrition, 
-                      fat_per_serving: e.target.value 
-                    }
-                  }))}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -532,7 +244,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Fetching...' : (item ? 'Update Item' : 'Add Item')}
+              {loading ? 'Saving...' : (item ? 'Update Item' : 'Add Item')}
             </Button>
           </div>
         </form>
@@ -540,4 +252,3 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     </Dialog>
   );
 }
-import { Search } from 'lucide-react';

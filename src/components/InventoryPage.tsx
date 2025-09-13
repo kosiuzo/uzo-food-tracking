@@ -32,8 +32,6 @@ export function InventoryPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
-  const inStockCount = items.filter(item => item.in_stock).length;
-  const outOfStockCount = items.filter(item => !item.in_stock).length;
 
   return (
     <div className="space-y-6">
@@ -57,27 +55,16 @@ export function InventoryPage() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">{inStockCount}</div>
-          <div className="text-sm text-muted-foreground">In Stock</div>
-        </div>
-        <div className="rounded-lg border bg-card p-4 text-center">
-          <div className="text-2xl font-bold text-orange-600">{outOfStockCount}</div>
-          <div className="text-sm text-muted-foreground">Out of Stock</div>
-        </div>
-      </div>
 
       {/* Search and Filters */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search items by name, brand, category, or ingredients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11"
           />
           {!usingMockData && searchQuery && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -88,10 +75,10 @@ export function InventoryPage() {
           )}
         </div>
         
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
@@ -101,20 +88,9 @@ export function InventoryPage() {
             </SelectContent>
           </Select>
           
-          <Select value={stockFilter} onValueChange={setStockFilter}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Stock" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Items</SelectItem>
-              <SelectItem value="in-stock">In Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-            </SelectContent>
-          </Select>
-          
           <Select value={ratingFilter} onValueChange={setRatingFilter}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Rating" />
+              <SelectValue placeholder="All Ratings" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Ratings</SelectItem>
@@ -130,26 +106,28 @@ export function InventoryPage() {
       </div>
 
       {/* Items List */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {loading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading...</p>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading your inventory...</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-12">
             <p className="text-muted-foreground">No items found</p>
+            <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
           </div>
         ) : (
-          items.map(item => (
-            <FoodItemCard
-              key={item.id}
-              item={item}
-              onToggleStock={() => toggleStock(item.id)}
-              onEdit={() => setEditingItem(item.id)}
-              onDelete={() => deleteItem(item.id)}
-              onRatingChange={(rating) => updateItem(item.id, { rating })}
-            />
-          ))
+          <div className="space-y-3">
+            {items.map(item => (
+              <FoodItemCard
+                key={item.id}
+                item={item}
+                onEdit={() => setEditingItem(item.id)}
+                onDelete={() => deleteItem(item.id)}
+                onRatingChange={(rating) => updateItem(item.id, { rating })}
+              />
+            ))}
+          </div>
         )}
       </div>
 

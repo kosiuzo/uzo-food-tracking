@@ -70,7 +70,7 @@ export function extractFirstJsonObject(text: string): string | null {
   );
 }
 
-export function parseFirstJsonObject<T = any>(text: string): T {
+export function parseFirstJsonObject<T = unknown>(text: string): T {
   const candidate = extractFirstJsonObject(text);
   if (!candidate) {
     throw new Error('No JSON found in response');
@@ -82,4 +82,3 @@ export function parseFirstJsonObject<T = any>(text: string): T {
     return JSON.parse(cleaned) as T;
   }
 }
-

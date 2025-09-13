@@ -7,15 +7,15 @@ import * as inventoryHook from '../../hooks/useInventorySearch';
 
 vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../components/FoodItemCard', () => ({
-  FoodItemCard: ({ item, onToggleStock, onEdit, onDelete }: {
+  FoodItemCard: ({ item, onRatingChange, onEdit, onDelete }: {
     item: { name: string };
-    onToggleStock: () => void;
+    onRatingChange?: (rating: number) => void;
     onEdit: () => void;
     onDelete: () => void;
   }) => (
     <div>
       <span>{item.name}</span>
-      <button onClick={onToggleStock}>toggle</button>
+      <button onClick={() => onRatingChange && onRatingChange(5)}>rate</button>
       <button onClick={onEdit}>edit</button>
       <button onClick={onDelete}>delete</button>
     </div>
@@ -40,13 +40,12 @@ describe('Inventory Page', () => {
   let addItem: ReturnType<typeof vi.fn>;
   let updateItem: ReturnType<typeof vi.fn>;
   let deleteItem: ReturnType<typeof vi.fn>;
-  let toggleStock: ReturnType<typeof vi.fn>;
+  // no toggleStock in the current UI flow
 
   beforeEach(() => {
     addItem = vi.fn();
     updateItem = vi.fn();
     deleteItem = vi.fn();
-    toggleStock = vi.fn();
 
     vi.mocked(inventoryHook.useInventorySearch).mockReturnValue({
       items: [{ id: '1', name: 'Apple', category: 'Fruit', in_stock: true, rating: 0 }],
@@ -62,7 +61,7 @@ describe('Inventory Page', () => {
       addItem,
       updateItem,
       deleteItem,
-      toggleStock,
+      toggleStock: vi.fn(),
       usingMockData: false,
       error: null,
     } as ReturnType<typeof inventoryHook.useInventorySearch>);
@@ -102,11 +101,10 @@ describe('Inventory Page', () => {
     expect(deleteItem).toHaveBeenCalledWith('1');
   });
 
-  it('toggles stock status', async () => {
+  it('updates rating', async () => {
     const user = userEvent.setup();
     renderWithProviders(<InventoryPage />);
-    await user.click(screen.getByText('toggle'));
-    expect(toggleStock).toHaveBeenCalledWith('1');
+    await user.click(screen.getByText('rate'));
+    expect(updateItem).toHaveBeenCalledWith('1', { rating: 5 });
   });
 });
-

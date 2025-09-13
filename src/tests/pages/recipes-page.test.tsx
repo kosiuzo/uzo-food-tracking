@@ -26,7 +26,7 @@ vi.mock('@/components/ui/multi-select', () => ({
 describe('Recipes Page', () => {
   beforeEach(() => {
     vi.mocked(recipesHook.useRecipes).mockReturnValue({
-      recipes: [{ id: '1', name: 'Cake', servings: 1, prep_time: 0, cook_time: 0, instructions: '', ingredients: [], notes: '', is_favorite: false, tags: [], nutrition: { calories_per_serving: 0, protein_per_serving: 0, carbs_per_serving: 0, fat_per_serving: 0 } }],
+      recipes: [{ id: '1', name: 'Cake', servings: 1, total_time_minutes: 30, instructions: '', ingredients: [], notes: '', is_favorite: false, tags: [], nutrition: { calories_per_serving: 0, protein_per_serving: 0, carbs_per_serving: 0, fat_per_serving: 0 } }],
       searchQuery: '',
       setSearchQuery: vi.fn(),
       performSearch: vi.fn(),

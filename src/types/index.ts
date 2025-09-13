@@ -52,13 +52,17 @@ export interface DbItem {
   updated_at: string; // Added new audit field
 }
 
+export type NutritionSource = 'calculated' | 'ai_generated' | 'manual';
+
 export interface Recipe {
   id: number; // Changed from string to match database
   name: string;
   instructions: string;
   servings: number;
   total_time_minutes?: number;
-  ingredients: RecipeIngredient[];
+  ingredients: RecipeIngredient[]; // Linked ingredients (for cost calculation)
+  ingredient_list?: string[]; // AI-generated ingredient strings
+  nutrition_source?: NutritionSource; // How nutrition was determined
   nutrition: {
     calories_per_serving: number;
     protein_per_serving: number;
@@ -76,14 +80,12 @@ export interface Recipe {
 export interface DbRecipe {
   id: number;
   name: string;
-  cuisine_type?: string | null;
-  difficulty?: string | null;
-  prep_time?: number | null;
-  cook_time?: number | null;
   total_time?: number | null;
   servings?: number | null;
   instructions?: string | null;
   nutrition_per_serving?: Record<string, unknown> | null;
+  ingredient_list?: string[] | null; // AI-generated ingredient strings
+  nutrition_source?: string | null; // How nutrition was determined
   is_favorite?: boolean | null;
   source_link?: string | null;
   notes?: string | null;

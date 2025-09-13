@@ -172,10 +172,6 @@ describe('typeMappers', () => {
       const dbRecipe = {
         id: 1,
         name: 'Apple Pie',
-        cuisine_type: null,
-        difficulty: null,
-        prep_time: null,
-        cook_time: null,
         total_time: 75,
         servings: 8,
         instructions: 'Mix ingredients and bake',
@@ -185,6 +181,8 @@ describe('typeMappers', () => {
           carbs: 35,
           fat: 12,
         },
+        ingredient_list: null,
+        nutrition_source: 'manual',
         is_favorite: false,
         source_link: null,
         notes: 'Great for holidays',
@@ -248,10 +246,6 @@ describe('typeMappers', () => {
 
       expect(result).toEqual({
         name: 'Apple Pie',
-        cuisine_type: null,
-        difficulty: null,
-        prep_time: null,
-        cook_time: null,
         total_time: 30,
         servings: 8,
         instructions: 'Mix ingredients and bake',

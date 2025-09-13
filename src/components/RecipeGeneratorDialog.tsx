@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Plus, X, Loader2, Search, Minus } from 'lucide-react';
+import { Bot, Plus, Loader2, Search, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,8 @@ import { Recipe, FoodItem, RecipeIngredient } from '../types';
 import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
-import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
+// calculateRecipeNutrition not used here; parsing uses aiJson utilities
+import { parseFirstJsonObject } from '../lib/aiJson';
 import { CUISINE_STYLES, DIETARY_RESTRICTIONS } from '../lib/constants';
 
 interface RecipeGeneratorDialogProps {
@@ -24,8 +25,10 @@ interface RecipeGeneratorDialogProps {
 
 
 export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }: RecipeGeneratorDialogProps) {
+  const [customIngredients, setCustomIngredients] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<FoodItem[]>([]);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
+  const [useInventoryOnly, setUseInventoryOnly] = useState(false);
   const [servings, setServings] = useState('4');
   const [cuisineStyle, setCuisineStyle] = useState('none');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
@@ -74,10 +77,13 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
   };
 
   const generateRecipe = async () => {
-    if (selectedIngredients.length === 0) {
+    const hasCustomIngredients = customIngredients.trim().length > 0;
+    const hasSelectedIngredients = selectedIngredients.length > 0;
+    
+    if (!hasCustomIngredients && !hasSelectedIngredients) {
       toast({
         title: 'No ingredients',
-        description: 'Please select at least one ingredient to generate a recipe.',
+        description: 'Please enter at least one ingredient to generate a recipe.',
         variant: 'destructive',
       });
       return;
@@ -86,13 +92,18 @@ export function RecipeGeneratorDialog({ open, onOpenChange, onRecipeGenerated }:
     setIsGenerating(true);
     
     try {
-      const ingredientNames = selectedIngredients.map(item => item.name);
+      // Combine custom ingredients and inventory ingredients
+      const customIngredientsList = customIngredients.split(',').map(s => s.trim()).filter(Boolean);
+      const allIngredientNames = [
+        ...customIngredientsList,
+        ...selectedIngredients.map(item => item.name)
+      ];
       
       // Create user prompt with selected ingredients and available tags
       const availableTagsList = allTags.map(tag => tag.name).join(', ');
       
-      const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using ONLY these ingredients:
-${ingredientNames.map(name => `- ${name}`).join('\n')}
+      const userPrompt = `Create a ${dietaryRestrictions !== 'none' ? dietaryRestrictions : 'healthy'} recipe using these ingredients:
+${allIngredientNames.map(name => `- ${name}`).join('\n')}
 
 Target: serves ${servings || '4'}${cuisineStyle && cuisineStyle !== 'none' ? `, ${cuisineStyle} style` : ''}, total time ≈ 30-45 minutes.
 ${additionalNotes ? `\nAdditional requirements: ${additionalNotes}` : ''}
@@ -101,7 +112,11 @@ Available tags to choose from: ${availableTagsList}
 
 Please auto-assign relevant tags from the available list based on the recipe characteristics (diet type, meal category, cooking method, etc.).
 
-Return a single JSON object that matches the schema exactly.`;
+IMPORTANT:
+- Use specific measurements in both ingredients AND instructions (e.g., "2 tsp oregano", "3 tbsp olive oil").
+- Calculate accurate nutrition values based on the specific ingredients and quantities used.
+
+Output: Return a single JSON object ONLY. No explanations, no markdown, no code fences.`;
 
       // Call OpenRouter API with streamlined approach
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -116,25 +131,35 @@ Return a single JSON object that matches the schema exactly.`;
           "model": "microsoft/mai-ds-r1:free",
           "temperature": 0.3,
           "top_p": 0.9,
-          "max_tokens": 1200,
+          "max_tokens": 2000,
           // Prefer JSON mode if the route honors it
           "response_format": { "type": "json_object" },
           "messages": [
             {
               "role": "system",
-              "content": `Return only valid JSON. Use this exact schema:
+              "content": `Return only valid JSON. Output a single JSON object, with no code fences and no extra text. Use this exact schema:
 {
   "name": "Recipe Name",
   "instructions": "Step by step cooking instructions as one paragraph.",
   "servings": 4,
   "total_time_minutes": 30,
-  "ingredients": [
-    { "ingredient_name": "exact ingredient name", "quantity": 1, "unit": "pieces" }
-  ],
+  "ingredient_list": ["2 cups flour", "1 tsp salt", "3 large eggs"],
+  "nutrition": {
+    "calories_per_serving": 350,
+    "protein_per_serving": 12,
+    "carbs_per_serving": 45,
+    "fat_per_serving": 8
+  },
   "tags": ["tag1", "tag2", "tag3"]
 }
 
-Use only the provided ingredients. Make reasonable portions for the serving size. Select relevant tags from the available tags list provided by the user.`
+Rules:
+- Only include ingredients in the recipe that you actually use in the instructions.
+- Don't feel obligated to use every ingredient provided - only use what makes sense for the recipe.
+- CRITICAL: Ingredient quantities must match exactly what's used in instructions. If instructions say "1 tsp salt", ingredients must list "1 tsp salt", not "As needed salt".
+- Calculate realistic nutrition values based on the specific ingredients and quantities used.
+- Select relevant tags from the available tags list provided by the user.
+- Do not add any commentary before or after the JSON.`
             },
             {
               "role": "user",
@@ -149,31 +174,32 @@ Use only the provided ingredients. Make reasonable portions for the serving size
       }
 
       const data = await response.json();
-      const generatedText = data.choices[0]?.message?.content;
-      
-      // Try to extract JSON from the response
+      const generatedText = data.choices?.[0]?.message?.content as string | undefined;
+      if (!generatedText || typeof generatedText !== 'string') {
+        console.error('AI returned empty or invalid content:', generatedText);
+        throw new Error('Failed to parse AI response');
+      }
+
+      // Try to extract JSON from the response (robust)
       let parsedRecipe: {
         name: string;
         instructions: string;
         servings: number;
         total_time_minutes: number;
-        ingredients: Array<{
-          ingredient_name: string;
-          quantity: number;
-          unit: string;
-        }>;
+        ingredient_list: string[];
+        nutrition: {
+          calories_per_serving: number;
+          protein_per_serving: number;
+          carbs_per_serving: number;
+          fat_per_serving: number;
+        };
         tags?: string[];
       };
       try {
-        // Look for JSON in the response
-        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedRecipe = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No JSON found in response');
-        }
+        parsedRecipe = parseFirstJsonObject(generatedText);
       } catch (parseError) {
         console.warn('Failed to parse AI response as JSON:', parseError);
+        console.warn('Raw AI response:', generatedText);
         
         // Notify user about the failure
         toast({
@@ -186,20 +212,13 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         throw new Error('Failed to parse AI response');
       }
 
-      // Map the AI response ingredients to our expected format
-      const recipeIngredients = parsedRecipe.ingredients.map((aiIngredient: { ingredient_name: string; quantity: number; unit: string }) => {
-        // Find matching ingredient from selected ingredients
-        const matchingIngredient = selectedIngredients.find(
-          item => item.name.toLowerCase().includes(aiIngredient.ingredient_name.toLowerCase()) ||
-                 aiIngredient.ingredient_name.toLowerCase().includes(item.name.toLowerCase())
-        );
-        
-        return {
-          item_id: matchingIngredient?.id || selectedIngredients[0]?.id,
-          quantity: aiIngredient.quantity || 1,
-          unit: aiIngredient.unit || 'pieces'
-        };
-      });
+      // Validate nutrition data
+      const nutrition = parsedRecipe.nutrition || {
+        calories_per_serving: 300,
+        protein_per_serving: 10,
+        carbs_per_serving: 30,
+        fat_per_serving: 10
+      };
 
       // Parse and format instructions properly
       const formatInstructions = (instructions: string) => {
@@ -251,8 +270,10 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         instructions: formatInstructions(parsedRecipe.instructions),
         servings: parsedRecipe.servings || parseInt(servings) || 4,
         total_time_minutes: parsedRecipe.total_time_minutes || 30,
-        ingredients: recipeIngredients,
-        nutrition: calculateRecipeNutrition(recipeIngredients, parseInt(servings) || 4, allItems),
+        ingredients: [], // Empty for AI recipes
+        ingredient_list: parsedRecipe.ingredient_list || allIngredientNames,
+        nutrition_source: 'ai_generated' as const,
+        nutrition: nutrition,
         tagIds: suggestedTagIds
       };
 
@@ -342,9 +363,24 @@ Use only the provided ingredients. Make reasonable portions for the serving size
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Ingredients Selector */}
+          {/* Custom Ingredients Input */}
           <div className="space-y-3">
-            <Label>Ingredients from Your Inventory (in-stock only)</Label>
+            <Label>Custom Ingredients</Label>
+            <p className="text-sm text-muted-foreground">
+              Enter ingredients you want to use (comma-separated)
+            </p>
+            <Input
+              value={customIngredients}
+              onChange={(e) => setCustomIngredients(e.target.value)}
+              placeholder="e.g., chicken breast, olive oil, garlic, bell peppers"
+              disabled={isGenerating}
+              className="w-full"
+            />
+          </div>
+
+          {/* Optional: Ingredients from Inventory */}
+          <div className="space-y-3">
+            <Label>+ Ingredients from Your Inventory (optional)</Label>
             <GroupedMultiSelect
               optionGroups={groupedIngredients}
               onValueChange={handleIngredientSelectionChange}
@@ -450,7 +486,7 @@ Use only the provided ingredients. Make reasonable portions for the serving size
             </Button>
             <Button 
               onClick={generateRecipe}
-              disabled={selectedIngredients.length === 0 || isGenerating}
+              disabled={(!customIngredients.trim() && selectedIngredients.length === 0) || isGenerating}
               className="flex-1"
             >
               {isGenerating ? (

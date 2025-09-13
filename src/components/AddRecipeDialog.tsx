@@ -21,6 +21,14 @@ interface RecipeFormData {
   servings: string;
   total_time_minutes: string;
   ingredients: Array<Omit<RecipeIngredient, 'quantity'> & { quantity: string }>;
+  ingredient_list: string[]; // AI-generated ingredient strings
+  nutrition_source: 'calculated' | 'ai_generated' | 'manual';
+  nutrition?: {
+    calories_per_serving: number;
+    protein_per_serving: number;
+    carbs_per_serving: number;
+    fat_per_serving: number;
+  };
   notes: string;
   selectedTagIds: string[];
 }
@@ -43,6 +51,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     servings: '1',
     total_time_minutes: '',
     ingredients: [],
+    ingredient_list: [],
+    nutrition_source: 'calculated',
     notes: '',
     selectedTagIds: [],
   });
@@ -56,12 +66,15 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         name: editingRecipe.name,
         instructions: editingRecipe.instructions,
         servings: editingRecipe.servings.toString(),
-        total_time_minutes: editingRecipe.total_time_minutes.toString(),
+        total_time_minutes: editingRecipe.total_time_minutes?.toString() || '',
         ingredients: editingRecipe.ingredients,
+        ingredient_list: editingRecipe.ingredient_list || [],
+        nutrition_source: editingRecipe.nutrition_source || 'calculated',
+        nutrition: editingRecipe.nutrition,
         notes: editingRecipe.notes || '',
-        selectedTagIds: editingRecipe.tags?.map(tag => tag.id) || [],
+        selectedTagIds: editingRecipe.tags?.map(tag => tag.id.toString()) || [],
       });
-      setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id));
+      setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id.toString()));
     } else if (open) {
       // Reset form when opening for new recipe
       setFormData({
@@ -70,6 +83,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         servings: '1',
         total_time_minutes: '',
         ingredients: [],
+        ingredient_list: [],
+        nutrition_source: 'calculated',
         notes: '',
         selectedTagIds: [],
       });
@@ -77,14 +92,34 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     }
   }, [editingRecipe, open]);
 
-  // Calculate nutrition based on ingredients using the reusable utility
+  // Calculate nutrition based on nutrition source priority
   const calculateNutrition = () => {
-    // Convert string quantities to numbers for the calculation
-    const ingredientsWithNumbers = formData.ingredients.map(ing => ({
-      ...ing,
-      quantity: parseFloat(ing.quantity) || 0
-    }));
-    return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
+    // If recipe has ingredient_list (AI-imported), use stored nutrition
+    if (formData.nutrition_source === 'ai_generated' && formData.nutrition) {
+      return formData.nutrition;
+    }
+    
+    // If recipe has manual nutrition, use stored nutrition
+    if (formData.nutrition_source === 'manual' && formData.nutrition) {
+      return formData.nutrition;
+    }
+    
+    // If recipe has linked ingredients (manual), calculate from ingredients  
+    if (formData.nutrition_source === 'calculated' && formData.ingredients.length > 0) {
+      const ingredientsWithNumbers = formData.ingredients.map(ing => ({
+        ...ing,
+        quantity: parseFloat(ing.quantity) || 0
+      }));
+      return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
+    }
+    
+    // Fallback to stored nutrition or defaults
+    return formData.nutrition || {
+      calories_per_serving: 0,
+      protein_per_serving: 0,
+      carbs_per_serving: 0,
+      fat_per_serving: 0,
+    };
   };
 
   // Convert allItems to options for MultiSelect (in-stock items only)
@@ -150,10 +185,11 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       return;
     }
 
-    if (formData.ingredients.length === 0) {
+    // Require either linked ingredients OR ingredient list
+    if (formData.ingredients.length === 0 && formData.ingredient_list.length === 0) {
       toast({
         title: "No ingredients",
-        description: "Please add at least one ingredient.",
+        description: "Please add at least one ingredient or ingredient string.",
         variant: "destructive",
       });
       return;
@@ -167,6 +203,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         ...ing,
         quantity: parseFloat(ing.quantity) || 0
       })),
+      ingredient_list: formData.ingredient_list,
+      nutrition_source: formData.nutrition_source,
       nutrition: calculateNutrition(),
       // Pass selected tag IDs for the parent to handle
       selectedTagIds: formData.selectedTagIds,
@@ -181,6 +219,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       servings: '1',
       total_time_minutes: '',
       ingredients: [],
+      ingredient_list: [],
+      nutrition_source: 'calculated',
       notes: '',
       selectedTagIds: [],
     });
@@ -356,6 +396,155 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
               </div>
             )}
           </div>
+
+          {/* Nutrition Source Selection */}
+          <div className="space-y-3">
+            <Label>Nutrition Source</Label>
+            <Select
+              value={formData.nutrition_source}
+              onValueChange={(value: 'calculated' | 'ai_generated' | 'manual') => 
+                setFormData(prev => ({ ...prev, nutrition_source: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select nutrition source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="calculated">Calculated from linked ingredients</SelectItem>
+                <SelectItem value="ai_generated">AI-generated (with ingredient list)</SelectItem>
+                <SelectItem value="manual">Manual entry</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* AI Ingredient List */}
+          {formData.nutrition_source === 'ai_generated' && (
+            <div className="space-y-3">
+              <Label>AI Ingredient List</Label>
+              <div className="space-y-2">
+                {formData.ingredient_list.map((ingredient, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={ingredient}
+                      onChange={(e) => {
+                        const newList = [...formData.ingredient_list];
+                        newList[index] = e.target.value;
+                        setFormData(prev => ({ ...prev, ingredient_list: newList }));
+                      }}
+                      placeholder="e.g., 2 cups flour"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newList = formData.ingredient_list.filter((_, i) => i !== index);
+                        setFormData(prev => ({ ...prev, ingredient_list: newList }));
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      ingredient_list: [...prev.ingredient_list, ''] 
+                    }));
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Ingredient
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Manual Nutrition Entry */}
+          {formData.nutrition_source === 'manual' && (
+            <div className="space-y-3">
+              <Label>Manual Nutrition (per serving)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Calories</Label>
+                  <Input
+                    type="number"
+                    value={formData.nutrition?.calories_per_serving || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      nutrition: {
+                        ...prev.nutrition,
+                        calories_per_serving: parseFloat(e.target.value) || 0,
+                        protein_per_serving: prev.nutrition?.protein_per_serving || 0,
+                        carbs_per_serving: prev.nutrition?.carbs_per_serving || 0,
+                        fat_per_serving: prev.nutrition?.fat_per_serving || 0,
+                      }
+                    }))}
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Protein (g)</Label>
+                  <Input
+                    type="number"
+                    value={formData.nutrition?.protein_per_serving || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      nutrition: {
+                        calories_per_serving: prev.nutrition?.calories_per_serving || 0,
+                        protein_per_serving: parseFloat(e.target.value) || 0,
+                        carbs_per_serving: prev.nutrition?.carbs_per_serving || 0,
+                        fat_per_serving: prev.nutrition?.fat_per_serving || 0,
+                      }
+                    }))}
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Carbs (g)</Label>
+                  <Input
+                    type="number"
+                    value={formData.nutrition?.carbs_per_serving || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      nutrition: {
+                        calories_per_serving: prev.nutrition?.calories_per_serving || 0,
+                        protein_per_serving: prev.nutrition?.protein_per_serving || 0,
+                        carbs_per_serving: parseFloat(e.target.value) || 0,
+                        fat_per_serving: prev.nutrition?.fat_per_serving || 0,
+                      }
+                    }))}
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Fat (g)</Label>
+                  <Input
+                    type="number"
+                    value={formData.nutrition?.fat_per_serving || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      nutrition: {
+                        calories_per_serving: prev.nutrition?.calories_per_serving || 0,
+                        protein_per_serving: prev.nutrition?.protein_per_serving || 0,
+                        carbs_per_serving: prev.nutrition?.carbs_per_serving || 0,
+                        fat_per_serving: parseFloat(e.target.value) || 0,
+                      }
+                    }))}
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Calculated Nutrition Preview */}
           <div className="space-y-3 bg-muted/50 p-3 rounded-md">

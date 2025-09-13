@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
@@ -16,8 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useInventorySearch } from '@/hooks/useInventorySearch';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useTags } from '@/hooks/useTags';
-import { FoodItem, Recipe, RecipeIngredient } from '@/types';
-import { calculateRecipeNutrition } from '@/lib/servingUnitUtils';
+import { FoodItem, Recipe } from '@/types';
+import { parseFirstJsonObject } from '@/lib/aiJson';
 import { DIETARY_RESTRICTIONS } from '@/lib/constants';
 
 // Diet types now come from tags system
@@ -50,7 +51,7 @@ interface GeneratedRecipe {
 }
 
 interface MeatRecipeOptions {
-  meat: FoodItem;
+  meat: FoodItem | string;
   recipes: GeneratedRecipe[];
   selectedRecipeId?: string;
 }
@@ -107,6 +108,11 @@ const MealPrepGenerator = () => {
   const [selectedDairyIds, setSelectedDairyIds] = useState<string[]>([]);
   const [selectedGrains, setSelectedGrains] = useState<FoodItem[]>([]);
   const [selectedGrainIds, setSelectedGrainIds] = useState<string[]>([]);
+  const [customMeats, setCustomMeats] = useState('');
+  const [customSeasonings, setCustomSeasonings] = useState('');
+  const [customVegetables, setCustomVegetables] = useState('');
+  const [customDairy, setCustomDairy] = useState('');
+  const [customGrains, setCustomGrains] = useState('');
   const [dietaryRestrictions, setDietaryRestrictions] = useState('paleo');
   const [selectedCookingMethods, setSelectedCookingMethods] = useState<string[]>(['oven', 'air-fryer']);
   const [inspiration, setInspiration] = useState('');
@@ -227,9 +233,20 @@ const MealPrepGenerator = () => {
     setSelectedCookingMethods(selectedMethods);
   };
 
-  const generateThreeRecipes = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
+  const generateThreeRecipes = async (meat: FoodItem | string): Promise<GeneratedRecipe[]> => {
+    // Combine selected items with custom entries
     const allIngredients = [meat, ...selectedSeasonings, ...selectedVegetables, ...selectedDairy, ...selectedGrains];
     const ingredientNames = allIngredients.map(item => item.name);
+    
+    // Add custom ingredients to the list
+    const customIngredientsList = [
+      ...customSeasonings.split(',').map(s => s.trim()).filter(Boolean),
+      ...customVegetables.split(',').map(v => v.trim()).filter(Boolean),
+      ...customDairy.split(',').map(d => d.trim()).filter(Boolean),
+      ...customGrains.split(',').map(g => g.trim()).filter(Boolean)
+    ];
+    
+    const allIngredientNames = [...ingredientNames, ...customIngredientsList];
     
     // Create user prompt with specific ingredients and batch cooking considerations
     const cookingMethodsText = selectedCookingMethods.map(method => 
@@ -241,9 +258,9 @@ const MealPrepGenerator = () => {
     const dietPreference = DIETARY_RESTRICTIONS.find(restriction => restriction.value === dietaryRestrictions)?.label || 'Healthy';
     
     const userPrompt = `Create 3 different ${dietPreference} MEAL PREP recipes using these ingredients:
-${ingredientNames.map(name => `- ${name}`).join('\n')}
+${allIngredientNames.map(name => `- ${name}`).join('\n')}
 
-Main protein: ${meat.name} (2 lbs)
+Main protein: ${typeof meat === 'string' ? meat : meat.name} (2 lbs)
 Diet preference: ${dietPreference}
 Cooking methods available: ${cookingMethodsText}
 Target: serves 4 (designed for meal prep - food will be cooked in batch for multiple days)
@@ -257,12 +274,16 @@ IMPORTANT: These recipes are for MEAL PREP, so:
 - Optimize cooking methods for batch preparation
 - Include storage and reheating tips in the notes field
 - Focus on flavors and textures that improve or maintain well when reheated
+- Calculate accurate nutrition values based on the specific ingredients and quantities used
+- Make each recipe nutritionally distinct based on different ingredients and cooking methods
+- CRITICAL: Use specific measurements in both ingredients AND instructions (e.g., "2 tsp oregano", "3 tbsp olive oil", "1 cup diced zucchini")
 
-Return a single JSON object with exactly 3 recipes.`;
+Return a single JSON object with exactly 3 recipes with realistic nutrition data and precise measurements.`;
 
     try {
       // Debug: Log the user prompt being sent (no-op in prod)
-      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI User Prompt for ${meat.name} 3 recipes:`, userPrompt));
+      const meatName = typeof meat === 'string' ? meat : meat.name;
+      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI User Prompt for ${meatName} 3 recipes:`, userPrompt));
       
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -292,6 +313,13 @@ Schema:
     "servings": 4,
     "instructions": ["step1", "step2"],
     "ingredients": ["ingredient1", "ingredient2"],
+    "nutrition": {
+      "calories_per_serving": "integer",
+      "protein_per_serving": "integer",
+      "carbs_per_serving": "integer",
+      "fat_per_serving": "integer",
+      "fiber_per_serving": "integer"
+    },
     "notes": "string with storage and reheating tips",
     "tags": ["tag1", "tag2", "tag3"]
   },
@@ -299,11 +327,14 @@ Schema:
   "Recipe 3": { /* same structure */ }
 }
 Rules:
-- Output JSON only. No prose, no markdown.
-- Use exact ingredient names provided.
+- Output JSON only. No prose, no markdown, no code fences.
+- Only include ingredients in the recipe that you actually use in the instructions.
+- Don't feel obligated to use every ingredient provided - only use what makes sense for each specific recipe.
+- CRITICAL: Ingredient quantities must match exactly what's used in instructions. If instructions say "1 tsp oregano", ingredients must list "1 tsp oregano", not "As needed oregano".
 - Each recipe should be different in cooking method or flavor profile.
-- Instructions as array of clear steps for BATCH COOKING.
+- Instructions as array of clear steps for BATCH COOKING with specific measurements.
 - Include cooking times and prep times.
+- REQUIRED: Calculate realistic nutrition values based on the specific ingredients and quantities used.
 - REQUIRED: Include detailed notes with storage tips (refrigerator life) and reheating instructions.
 - Consider meal prep: how ingredients hold up as leftovers, best reheating methods, texture preservation.
 - Optimize for the available cooking methods provided by user.`
@@ -324,98 +355,25 @@ Rules:
       const generatedText = data.choices[0]?.message?.content;
       
       // Debug: Log the AI response (no-op in prod)
-      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI Response for ${meat.name} 3 recipes:`, generatedText));
+      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI Response for ${meatName} 3 recipes:`, generatedText));
       
       let parsedRecipes: ParsedRecipeResponse;
       try {
-        // Try multiple JSON extraction methods
-        let jsonText = '';
-        
-        // Method 1: Look for complete JSON block
-        const completeJsonMatch = generatedText.match(/\{[\s\S]*?\}(?=\s*$)/);
-        if (completeJsonMatch) {
-          jsonText = completeJsonMatch[0];
-        } else {
-          // Method 2: Look for any JSON block and try to complete it
-          const partialJsonMatch = generatedText.match(/\{[\s\S]*$/);
-          if (partialJsonMatch) {
-            jsonText = partialJsonMatch[0];
-            // If it's incomplete, try to close it
-            if (!jsonText.endsWith('}')) {
-              const openBraces = (jsonText.match(/\{/g) || []).length;
-              const closeBraces = (jsonText.match(/\}/g) || []).length;
-              const missingBraces = openBraces - closeBraces;
-              jsonText += '}'.repeat(missingBraces);
-            }
-          } else {
-            throw new Error('No JSON structure found in response');
-          }
-        }
-        
-        parsedRecipes = JSON.parse(jsonText);
-        import('@/lib/logger').then(({ logger }) => logger.debug(`✅ Parsed recipes for ${meat.name}:`, parsedRecipes));
+        parsedRecipes = parseFirstJsonObject<ParsedRecipeResponse>(generatedText);
+        import('@/lib/logger').then(({ logger }) => logger.debug(`✅ Parsed recipes for ${meatName}:`, parsedRecipes));
         
         // Validate that we have the expected structure
         if (!parsedRecipes['Recipe 1'] || !parsedRecipes['Recipe 2'] || !parsedRecipes['Recipe 3']) {
           throw new Error('Missing required recipe keys (Recipe 1, Recipe 2, Recipe 3)');
         }
-        
       } catch (parseError) {
-        console.error(`❌ Failed to parse AI response for ${meat.name}:`, parseError);
+        console.error(`❌ Failed to parse AI response for ${meatName}:`, parseError);
         console.error('Raw response:', generatedText);
         throw new Error('Failed to parse AI response');
       }
 
       // Convert the parsed recipes object to an array of GeneratedRecipe objects
       const recipes: GeneratedRecipe[] = [];
-      
-      // Calculate nutrition using actual ingredient mapping
-      const recipeIngredients: RecipeIngredient[] = [];
-      
-      // Add the main meat
-      recipeIngredients.push({
-        item_id: meat.id,
-        quantity: 2,
-        unit: 'lbs'
-      });
-      
-      // Add selected seasonings
-      selectedSeasonings.slice(0, 3).forEach(seasoning => {
-        recipeIngredients.push({
-          item_id: seasoning.id,
-          quantity: 1,
-          unit: 'tsp'
-        });
-      });
-      
-      // Add selected vegetables
-      selectedVegetables.slice(0, 3).forEach(vegetable => {
-        recipeIngredients.push({
-          item_id: vegetable.id,
-          quantity: 1,
-          unit: 'cup'
-        });
-      });
-      
-      // Add selected dairy
-      selectedDairy.slice(0, 2).forEach(dairyItem => {
-        recipeIngredients.push({
-          item_id: dairyItem.id,
-          quantity: 0.5,
-          unit: 'cup'
-        });
-      });
-      
-      // Add selected grains
-      selectedGrains.slice(0, 2).forEach(grainItem => {
-        recipeIngredients.push({
-          item_id: grainItem.id,
-          quantity: 1,
-          unit: 'cup'
-        });
-      });
-
-      const nutrition = calculateRecipeNutrition(recipeIngredients, 4, allItems);
 
       // Process each recipe
       ['Recipe 1', 'Recipe 2', 'Recipe 3'].forEach((recipeKey, index) => {
@@ -435,9 +393,9 @@ Rules:
           }
           
           recipes.push({
-            id: `${meat.id}-recipe-${index + 1}-${Date.now()}`,
-            name: parsedRecipe.name || `${meat.name} Recipe ${index + 1}`,
-            description: parsedRecipe.description || `Delicious ${meat.name.toLowerCase()} recipe`,
+            id: `${typeof meat === 'string' ? meat.replace(/\s+/g, '-') : meat.id}-recipe-${index + 1}-${Date.now()}`,
+            name: parsedRecipe.name || `${meatName} Recipe ${index + 1}`,
+            description: parsedRecipe.description || `Delicious ${meatName.toLowerCase()} recipe`,
             prepTime: parsedRecipe.prepTime || 20,
             cookTime: parsedRecipe.cookTime || 25,
             servings: 4,
@@ -445,21 +403,17 @@ Rules:
               ? parsedRecipe.instructions 
               : (parsedRecipe.instructions || '').split('\n').filter(Boolean),
             ingredients: parsedRecipe.ingredients || [
-              `2 lbs ${meat.name.toLowerCase()}`,
-              ...selectedSeasonings.slice(0, 3).map(s => `1 tsp ${s.name}`),
-              ...selectedGrains.slice(0, 2).map(g => `1 cup ${g.name}`),
-              ...selectedVegetables.slice(0, 3).map(v => `1 cup ${v.name}`),
-              ...selectedDairy.slice(0, 2).map(d => `1/2 cup ${d.name}`),
-              "2 tbsp cooking oil",
+              `2 lbs ${typeof meat === 'string' ? meat.toLowerCase() : meat.name.toLowerCase()}`,
+              "2 tbsp olive oil",
               "Salt and pepper to taste"
             ],
             notes: parsedRecipe.notes || `Storage: Refrigerate for up to 4 days. Reheat gently in microwave or oven at 350°F until heated through.`,
             nutrition: {
-              calories: Math.round(nutrition.calories_per_serving),
-              protein: Math.round(nutrition.protein_per_serving),
-              carbs: Math.round(nutrition.carbs_per_serving),
-              fat: Math.round(nutrition.fat_per_serving),
-              fiber: 2 // Default fiber value since calculateRecipeNutrition doesn't calculate it
+              calories: Math.round(parsedRecipe.nutrition?.calories_per_serving || 400),
+              protein: Math.round(parsedRecipe.nutrition?.protein_per_serving || 30),
+              carbs: Math.round(parsedRecipe.nutrition?.carbs_per_serving || 25),
+              fat: Math.round(parsedRecipe.nutrition?.fat_per_serving || 15),
+              fiber: Math.round(parsedRecipe.nutrition?.fiber_per_serving || 5)
             },
             tagIds: suggestedTagIds
           });
@@ -469,12 +423,12 @@ Rules:
       return recipes;
 
     } catch (error) {
-      console.warn(`AI generation failed for ${meat.name}:`, error);
+      console.warn(`AI generation failed for ${meatName}:`, error);
       
       // Notify user about the API failure
       toastHook({
         title: 'AI Generation Failed',
-        description: `Failed to generate AI recipes for ${meat.name}. Please try again or check your API configuration.`,
+        description: `Failed to generate AI recipes for ${meatName}. Please try again or check your API configuration.`,
         variant: 'destructive',
       });
       
@@ -483,23 +437,33 @@ Rules:
     }
   };
 
-  const generateRecipesForMeat = async (meat: FoodItem): Promise<GeneratedRecipe[]> => {
+  const generateRecipesForMeat = async (meat: FoodItem | string): Promise<GeneratedRecipe[]> => {
     try {
       return await generateThreeRecipes(meat);
     } catch (error) {
-      console.error(`Failed to generate recipes for ${meat.name}:`, error);
+      const meatName = typeof meat === 'string' ? meat : meat.name;
+      console.error(`Failed to generate recipes for ${meatName}:`, error);
       return [];
     }
   };
 
   const handleGenerate = async () => {
-    if (selectedMeats.length !== 2) {
-      toast.error('Please select exactly 2 meats');
+    // Check for meats (either selected or custom)
+    const hasSelectedMeats = selectedMeats.length > 0;
+    const hasCustomMeats = customMeats.trim().length > 0;
+    const totalMeats = selectedMeats.length + (hasCustomMeats ? customMeats.split(',').filter(m => m.trim()).length : 0);
+    
+    if (totalMeats !== 2) {
+      toast.error('Please select or enter exactly 2 meats total');
       return;
     }
 
-    if (selectedSeasonings.length === 0) {
-      toast.error('Please select some seasonings or sauces');
+    // Check for seasonings (either selected or custom)
+    const hasSelectedSeasonings = selectedSeasonings.length > 0;
+    const hasCustomSeasonings = customSeasonings.trim().length > 0;
+    
+    if (!hasSelectedSeasonings && !hasCustomSeasonings) {
+      toast.error('Please select or enter some seasonings');
       return;
     }
 
@@ -508,8 +472,15 @@ Rules:
     try {
       toast.info('Generating personalized recipes with AI...', { duration: 2000 });
       
-      // Generate recipes for both meats concurrently
-      const recipeGenerationPromises = selectedMeats.map(async (meat) => {
+      // Combine selected and custom meats
+      const allMeats: (FoodItem | string)[] = [...selectedMeats];
+      if (customMeats.trim()) {
+        const customMeatsList = customMeats.split(',').map(m => m.trim()).filter(Boolean);
+        allMeats.push(...customMeatsList);
+      }
+      
+      // Generate recipes for all meats concurrently
+      const recipeGenerationPromises = allMeats.map(async (meat) => {
         const recipes = await generateRecipesForMeat(meat);
         return { meat, recipes };
       });
@@ -528,7 +499,7 @@ Rules:
         setMeatRecipeOptions(successfulOptions);
         toastHook({
           title: 'Partial Generation Success',
-          description: `Generated recipes for ${successfulOptions.length} out of ${selectedMeats.length} meats. Some failed due to API issues.`,
+          description: `Generated recipes for ${successfulOptions.length} out of ${allMeats.length} meats. Some failed due to API issues.`,
           variant: 'destructive',
         });
       } else {
@@ -561,11 +532,12 @@ Rules:
 
   const handleRecipeSelect = (meatId: string, recipeId: string) => {
     setMeatRecipeOptions(prev => 
-      prev.map(option => 
-        option.meat.id === meatId 
+      prev.map(option => {
+        const optionMeatId = typeof option.meat === 'string' ? option.meat.replace(/\s+/g, '-') : option.meat.id;
+        return optionMeatId === meatId 
           ? { ...option, selectedRecipeId: recipeId }
-          : option
-      )
+          : option;
+      })
     );
   };
 
@@ -582,63 +554,15 @@ Rules:
   };
 
   const convertToRecipeFormat = (generatedRecipe: GeneratedRecipe): Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] } => {
-    // Create recipe ingredients by mapping to actual items in inventory
-    const recipeIngredients: RecipeIngredient[] = [];
-    
-    // Add the main meat
-    const meatOption = meatRecipeOptions.find(option => 
-      option.recipes.some(r => r.id === generatedRecipe.id)
-    );
-    if (meatOption) {
-      recipeIngredients.push({
-        item_id: meatOption.meat.id,
-        quantity: 2,
-        unit: 'lbs'
-      });
-    }
-    
-    // Add selected seasonings
-    selectedSeasonings.slice(0, 3).forEach(seasoning => {
-      recipeIngredients.push({
-        item_id: seasoning.id,
-        quantity: 1,
-        unit: 'tsp'
-      });
-    });
-    
-    // Add selected vegetables
-    selectedVegetables.slice(0, 3).forEach(vegetable => {
-      recipeIngredients.push({
-        item_id: vegetable.id,
-        quantity: 1,
-        unit: 'cup'
-      });
-    });
-    
-    // Add selected grains
-    selectedGrains.slice(0, 2).forEach(grainItem => {
-      recipeIngredients.push({
-        item_id: grainItem.id,
-        quantity: 1,
-        unit: 'cup'
-      });
-    });
-    
-    // Add selected dairy
-    selectedDairy.slice(0, 2).forEach(dairyItem => {
-      recipeIngredients.push({
-        item_id: dairyItem.id,
-        quantity: 0.5,
-        unit: 'cup'
-      });
-    });
 
     return {
       name: generatedRecipe.name,
       instructions: generatedRecipe.instructions.join('\n'),
       servings: generatedRecipe.servings,
       total_time_minutes: generatedRecipe.prepTime + generatedRecipe.cookTime,
-      ingredients: recipeIngredients,
+      ingredients: [], // Empty for AI recipes
+      ingredient_list: generatedRecipe.ingredients, // Use AI ingredient strings
+      nutrition_source: 'ai_generated' as const,
       notes: generatedRecipe.notes,
       nutrition: {
         calories_per_serving: generatedRecipe.nutrition.calories,
@@ -683,6 +607,11 @@ Rules:
       setSelectedDairyIds([]);
       setSelectedGrains([]);
       setSelectedGrainIds([]);
+      setCustomMeats('');
+      setCustomSeasonings('');
+      setCustomVegetables('');
+      setCustomDairy('');
+      setCustomGrains('');
       setDietaryRestrictions('paleo');
       setSelectedCookingMethods(['oven', 'air-fryer']);
       setInspiration('');
@@ -773,62 +702,107 @@ Return a single JSON object with exactly 3 recipes.`;
           <CardContent className="space-y-6">
             {/* Meat Selection */}
             <div className="space-y-3">
-              <Label>Select 2 Meats* ({selectedMeats.length}/2) - in-stock only</Label>
+              <Label>Select 2 Meats* ({selectedMeats.length + (customMeats.split(',').filter(m => m.trim()).length)}/2)</Label>
               <MultiSelect
                 options={meatOptions}
                 onValueChange={handleMeatSelectionChange}
                 defaultValue={selectedMeatIds}
-                placeholder="Select up to 2 meats..."
+                placeholder="Select meats from inventory..."
                 maxCount={2}
               />
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Or add custom meats:</Label>
+                <Input
+                  placeholder="(comma-separated): chicken breast, salmon fillet"
+                  value={customMeats}
+                  onChange={(e) => setCustomMeats(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             {/* Seasonings & Sauces */}
             <div className="space-y-3">
-              <Label>Seasonings & Sauces* (in-stock only)</Label>
+              <Label>Seasonings & Sauces*</Label>
               <GroupedMultiSelect
                 optionGroups={groupedSeasoningsAndSauces}
                 onValueChange={handleSeasoningSelectionChange}
                 defaultValue={selectedSeasoningIds}
-                placeholder="Select seasonings..."
+                placeholder="Select seasonings from inventory..."
                 maxCount={3}
               />
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Or add custom seasonings:</Label>
+                <Input
+                  placeholder="garlic powder, paprika, soy sauce"
+                  value={customSeasonings}
+                  onChange={(e) => setCustomSeasonings(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             {/* Grains & Starches */}
             <div className="space-y-3">
-              <Label>Grains & Starches (Optional) - in-stock only</Label>
+              <Label>Grains & Starches (Optional)</Label>
               <MultiSelect
                 options={grainOptions}
                 onValueChange={handleGrainSelectionChange}
                 defaultValue={selectedGrainIds}
-                placeholder="Select grains..."
+                placeholder="Select grains from inventory..."
                 maxCount={3}
               />
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Or add custom grains:</Label>
+                <Input
+                  placeholder="quinoa, brown rice, sweet potato"
+                  value={customGrains}
+                  onChange={(e) => setCustomGrains(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             {/* Vegetables */}
             <div className="space-y-3">
-              <Label>Vegetables (Optional) - in-stock only</Label>
+              <Label>Vegetables (Optional)</Label>
               <MultiSelect
                 options={vegetableOptions}
                 onValueChange={handleVegetableSelectionChange}
                 defaultValue={selectedVegetableIds}
-                placeholder="Select vegetables..."
+                placeholder="Select vegetables from inventory..."
                 maxCount={4}
               />
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Or add custom vegetables:</Label>
+                <Input
+                  placeholder="broccoli, spinach, carrots"
+                  value={customVegetables}
+                  onChange={(e) => setCustomVegetables(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             {/* Dairy & Eggs */}
             <div className="space-y-3">
-              <Label>Dairy & Eggs (Optional) - in-stock only</Label>
+              <Label>Dairy & Eggs (Optional)</Label>
               <MultiSelect
                 options={dairyOptions}
                 onValueChange={handleDairySelectionChange}
                 defaultValue={selectedDairyIds}
-                placeholder="Select dairy & eggs..."
+                placeholder="Select dairy & eggs from inventory..."
                 maxCount={3}
               />
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Or add custom dairy:</Label>
+                <Input
+                  placeholder="cheddar cheese, greek yogurt, eggs"
+                  value={customDairy}
+                  onChange={(e) => setCustomDairy(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             {/* Kitchen Tools Selection */}
@@ -947,10 +921,13 @@ Return a single JSON object with exactly 3 recipes.`;
               )}
             </div>
 
-            {meatRecipeOptions.map((meatOption) => (
-              <div key={meatOption.meat.id} className="space-y-4">
+            {meatRecipeOptions.map((meatOption) => {
+              const meatName = typeof meatOption.meat === 'string' ? meatOption.meat : meatOption.meat.name;
+              const meatKey = typeof meatOption.meat === 'string' ? meatOption.meat.replace(/\s+/g, '-') : meatOption.meat.id;
+              return (
+              <div key={meatKey} className="space-y-4">
                 <h3 className="text-xl font-semibold text-primary">
-                  {meatOption.meat.name} Recipes
+                  {meatName} Recipes
                 </h3>
                 
                 <div className="space-y-4">
@@ -1085,7 +1062,7 @@ Return a single JSON object with exactly 3 recipes.`;
 
                         {/* Select Button */}
                         <Button
-                          onClick={() => handleRecipeSelect(meatOption.meat.id, recipe.id)}
+                          onClick={() => handleRecipeSelect(meatKey, recipe.id)}
                           variant={meatOption.selectedRecipeId === recipe.id ? "default" : "outline"}
                           className="w-full"
                         >
@@ -1103,7 +1080,8 @@ Return a single JSON object with exactly 3 recipes.`;
                   ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {!canSaveRecipes && meatRecipeOptions.length === 2 && (
               <div className="text-center p-4 bg-muted/50 rounded-lg">

@@ -91,19 +91,14 @@ export interface Database {
         Row: {
           id: number
           name: string
-          cuisine_type: string | null
-          difficulty: string | null
-          prep_time: number | null
-          cook_time: number | null
           total_time: number | null
           servings: number | null
           instructions: string | null
           nutrition_per_serving: Record<string, unknown> | null
+          ingredient_list: string[] | null
+          nutrition_source: string | null
           is_favorite: boolean | null
           source_link: string | null
-          cost_per_serving: number | null
-          total_cost: number | null
-          cost_last_calculated: string | null
           notes: string | null
           times_cooked: number | null
           last_cooked: string | null
@@ -113,19 +108,14 @@ export interface Database {
         Insert: {
           id?: never
           name: string
-          cuisine_type?: string | null
-          difficulty?: string | null
-          prep_time?: number | null
-          cook_time?: number | null
           total_time?: number | null
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
+          ingredient_list?: string[] | null
+          nutrition_source?: string | null
           is_favorite?: boolean | null
           source_link?: string | null
-          cost_per_serving?: number | null
-          total_cost?: number | null
-          cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
           last_cooked?: string | null
@@ -135,19 +125,14 @@ export interface Database {
         Update: {
           id?: never
           name?: string
-          cuisine_type?: string | null
-          difficulty?: string | null
-          prep_time?: number | null
-          cook_time?: number | null
           total_time?: number | null
           servings?: number | null
           instructions?: string | null
           nutrition_per_serving?: Record<string, unknown> | null
+          ingredient_list?: string[] | null
+          nutrition_source?: string | null
           is_favorite?: boolean | null
           source_link?: string | null
-          cost_per_serving?: number | null
-          total_cost?: number | null
-          cost_last_calculated?: string | null
           notes?: string | null
           times_cooked?: number | null
           last_cooked?: string | null

@@ -16,11 +16,11 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Bananas, 3 lb', 'Chiquita / Member''s Mark Organic', 'Fruits', true, 1.97, 22.8, 0.3, 1.1, 97.5, 12, 118, 1, 'piece', 'package', NULL, 'Bananas', NULL, 'manual', '1234567890134', '2025-01-13', 9, '2025-01-15 10:00:00'),
 ('Simple Truth Organic Shredded Romaine Lettuce, 8 oz', 'Simple Truth', 'Vegetables', true, 2.79, 1.5, 0.1, 0.5, 8.9, 4, 72, 1, 'cup', 'volume', NULL, 'Organic romaine lettuce', NULL, 'manual', '1234567890135', '2025-01-12', 4, '2025-01-15 10:00:00'),
 ('Plain Nonfat Greek Yogurt, 40 oz', 'Member''s Mark', 'Dairy & Eggs', true, 4.28, 6.1, 0.66, 17.3, 98.74, 1, 170, 1, 'container', 'package', NULL, 'Nonfat Greek yogurt', NULL, 'manual', '1234567890136', '2025-01-11', 5, '2025-01-15 10:00:00'),
-('Himalayan Pink Salt, Fine Ground, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.00, 0, 0, 0, 0, 200, 5, 1, 'tsp', 'volume', NULL, 'Pink Himalayan salt', NULL, 'manual', '1234567890137', '2025-01-10', 2, '2025-01-15 10:00:00'),
-('Black Pepper, Fine, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 8.50, 1, 0, 0, 4, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground black pepper', NULL, 'manual', '1234567890138', '2025-01-09', 3, '2025-01-15 10:00:00'),
-('Garlic Powder, Fine, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 8.00, 2.3, 0.02, 0.51, 11.5, 200, 3, 1, 'tsp', 'volume', NULL, 'Ground garlic', NULL, 'manual', '1234567890139', '2025-01-08', 4, '2025-01-15 10:00:00'),
-('Organic Ground Ginger, 16 oz', 'Member''s Mark Organic', 'Seasonings & Spices', true, 8.50, 1.3, 0.1, 0.2, 6.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Organic ground ginger', NULL, 'manual', '1234567890140', '2025-01-07', 2, '2025-01-15 10:00:00'),
-('Organic Ground Turmeric, 16 oz', 'Member''s Mark Organic', 'Seasonings & Spices', true, 8.50, 1.43, 0.22, 0.17, 7.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Organic ground turmeric', NULL, 'manual', '1234567890141', '2025-01-06', 3, '2025-01-15 10:00:00'),
+('Himalayan Pink Salt, Fine Ground, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 7.00, 0, 0, 0, 0, 200, 5, 1, 'tsp', 'volume', NULL, 'Pink Himalayan salt', NULL, 'manual', '1234567890137', '2025-01-10', 2, '2025-01-15 10:00:00'),
+('Black Pepper, Fine, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 8.50, 1, 0, 0, 4, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground black pepper', NULL, 'manual', '1234567890138', '2025-01-09', 3, '2025-01-15 10:00:00'),
+('Garlic Powder, Fine, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 8.00, 2.3, 0.02, 0.51, 11.5, 200, 3, 1, 'tsp', 'volume', NULL, 'Ground garlic', NULL, 'manual', '1234567890139', '2025-01-08', 4, '2025-01-15 10:00:00'),
+('Organic Ground Ginger, 16 oz', 'Member''s Mark Organic', 'Single-Ingredient Spices/Herbs', true, 8.50, 1.3, 0.1, 0.2, 6.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Organic ground ginger', NULL, 'manual', '1234567890140', '2025-01-07', 2, '2025-01-15 10:00:00'),
+('Organic Ground Turmeric, 16 oz', 'Member''s Mark Organic', 'Single-Ingredient Spices/Herbs', true, 8.50, 1.43, 0.22, 0.17, 7.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Organic ground turmeric', NULL, 'manual', '1234567890141', '2025-01-06', 3, '2025-01-15 10:00:00'),
 ('Multi Bell Sweet Peppers, 6 ct', 'Member''s Mark', 'Vegetables', true, 6.72, 9, 0.5, 1.5, 44.5, 6, 149, 1, 'cup', 'volume', NULL, 'Bell peppers', NULL, 'manual', '1234567890142', '2025-01-05', 4, '2025-01-15 10:00:00'),
 ('Taylor Farms Brussels Sprouts, 2 lb', 'Taylor Farms', 'Vegetables', true, 4.18, 11, 0.8, 4, 67.2, 8, 156, 1, 'cup', 'volume', NULL, 'Brussels sprouts', NULL, 'manual', '1234567890143', '2025-01-04', 3, '2025-01-15 10:00:00'),
 ('Anjou Pears, 5 lb', 'Member''s Mark', 'Fruits', true, 8.44, 27, 0.3, 0.6, 112.2, 10, 178, 1, 'piece', 'package', NULL, 'Pears', NULL, 'manual', '1234567890144', '2025-01-03', 5, '2025-01-15 10:00:00'),
@@ -41,33 +41,33 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Gold Kiwi, 2 lb', 'Member''s Mark', 'Fruits', true, 7.97, 10.1, 0.4, 0.8, 45.6, 8, 75, 1, 'piece', 'package', NULL, 'Kiwifruit', NULL, 'manual', '1234567890159', '2024-12-18', 5, '2025-01-15 10:00:00'),
 ('Green Kiwi, 3 lb', 'Member''s Mark', 'Fruits', true, 8.47, 10.1, 0.4, 0.8, 45.6, 12, 75, 1, 'piece', 'package', NULL, 'Kiwifruit', NULL, 'manual', '1234567890160', '2024-12-17', 4, '2025-01-15 10:00:00'),
 ('Clementine Mandarins, 5 lb', 'Member''s Mark', 'Fruits', true, 7.62, 9, 0, 1, 40, 15, 74, 1, 'piece', 'package', NULL, 'Clementines', NULL, 'manual', '1234567890161', '2024-12-16', 7, '2025-01-15 10:00:00'),
-('Onion Powder, Ground, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 8.00, 1.9, 0.02, 0.25, 8.7, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground onion', NULL, 'manual', '1234567890162', '2024-12-15', 3, '2025-01-15 10:00:00'),
-('Parsley Flakes, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.00, 0.25, 0.03, 0.13, 1.8, 200, 1, 1, 'tsp', 'volume', NULL, 'Dried parsley', NULL, 'manual', '1234567890163', '2024-12-14', 2, '2025-01-15 10:00:00'),
-('Cumin, Ground, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.00, 0.93, 0.47, 0.37, 8.1, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground cumin seeds', NULL, 'manual', '1234567890164', '2024-12-13', 4, '2025-01-15 10:00:00'),
-('Beef Fajita Seasoning, 1 Oz', 'Siete', 'Seasonings & Spices', true, 2.99, 0, 0, 0, 0, 8, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/c/o/copy-of-810091781128_siete-1oz-beef-fajita-seasoning_front_1_1.jpg?w=1227&jpg_quality=90', 'Smoked Sea Salt, Garlic, Black Pepper, Onions, Paprika, Sea Salt, Hatch Red Chiles, Ground Dates.', NULL, 'manual', '1234567890165', '2024-12-12', 1, '2025-01-15 10:00:00'),
-('Chicken Fajita Seasoning, 1 Oz', 'Siete', 'Seasonings & Spices', true, 2.99, 0, 0, 0, 0, 8, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/assets/domains/product-image/file/large_509357c6-e962-4854-b779-0cd33a935350.png', 'Smoked sea salt, garlic, ground dates, onions, sea salt, black pepper, paprika, cumin, red bell peppers, chile flakes, green bell peppers, lime oil.', NULL, 'manual', '1234567890166', '2024-12-11', 2, '2025-01-15 10:00:00'),
+('Onion Powder, Ground, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 8.00, 1.9, 0.02, 0.25, 8.7, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground onion', NULL, 'manual', '1234567890162', '2024-12-15', 3, '2025-01-15 10:00:00'),
+('Parsley Flakes, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 7.00, 0.25, 0.03, 0.13, 1.8, 200, 1, 1, 'tsp', 'volume', NULL, 'Dried parsley', NULL, 'manual', '1234567890163', '2024-12-14', 2, '2025-01-15 10:00:00'),
+('Cumin, Ground, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 7.00, 0.93, 0.47, 0.37, 8.1, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground cumin seeds', NULL, 'manual', '1234567890164', '2024-12-13', 4, '2025-01-15 10:00:00'),
+('Beef Fajita Seasoning, 1 Oz', 'Siete', 'Seasoning Blends/Mixes', true, 2.99, 0, 0, 0, 0, 8, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/c/o/copy-of-810091781128_siete-1oz-beef-fajita-seasoning_front_1_1.jpg?w=1227&jpg_quality=90', 'Smoked Sea Salt, Garlic, Black Pepper, Onions, Paprika, Sea Salt, Hatch Red Chiles, Ground Dates.', NULL, 'manual', '1234567890165', '2024-12-12', 1, '2025-01-15 10:00:00'),
+('Chicken Fajita Seasoning, 1 Oz', 'Siete', 'Seasoning Blends/Mixes', true, 2.99, 0, 0, 0, 0, 8, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/assets/domains/product-image/file/large_509357c6-e962-4854-b779-0cd33a935350.png', 'Smoked sea salt, garlic, ground dates, onions, sea salt, black pepper, paprika, cumin, red bell peppers, chile flakes, green bell peppers, lime oil.', NULL, 'manual', '1234567890166', '2024-12-11', 2, '2025-01-15 10:00:00'),
 ('Cilantro Lime Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 4, 7, 1, 71, 7, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-cilantro-lime-sauce-1126626285_279x.jpg?v=1738777602', 'Water, High Oleic Sunflower Oil, Roasted Poblano Chilies, Cilantro, Parsley, Dehydrated Garlic, Lime Juice Concentrate, Jalapeño, Sea Salt, Lemon Juice Concentrate, Dehydrated Roasted Garlic, Tapioca Starch, Spices, Black Pepper, Xanthan Gum, Sunflower Lecithin, Monkfruit Extract, Citric Acid.', NULL, 'manual', '1234567890167', '2024-12-10', 3, '2025-01-15 10:00:00'),
 ('Classic Taco Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 17, 1.5, 0, 75, 3.5, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-classic-taco-sauce-1126626287_1800x1800.jpg?v=1738777608', 'Water, Fire Roasted Tomatoes (Fire Roasted Tomatoes, Tomato Juice, Salt, Citric Acid, Calcium Chloride), Chicken Stock (Chicken Stock, Salt), Roasted Poblano Chilies, Chicken Fat, Cilantro, Spices, Tapioca Starch, Tamarind Puree (Tamarind Pulp, Water), Lime Juice Concentrate, Smoked Granulated Onion, Sea Salt, Yeast Extract, Smoked Paprika, Dehydrated Garlic, Xanthan Gum, Citric Acid, Monk Fruit Extract.', NULL, 'manual', '1234567890168', '2024-12-09', 2, '2025-01-15 10:00:00'),
 ('Honey Garlic Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 16, 0, 1, 68, 3.5, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-honey-garlic-sauce-1126626289_1800x1800.jpg?v=1738777800', 'Water, Coconut Aminos (Coconut Nectar, Water, Sea Salt), Distilled Vinegar, Roasted Garlic, Honey, Orange Juice Concentrate, Yeast Extract, Tapioca Starch, Dehydrated Garlic, Xanthan Gum, Spices, Granulated Onion, Citric Acid, Monk Fruit Extract, Orange Oil.', NULL, 'manual', '1234567890169', '2024-12-08', 4, '2025-01-15 10:00:00'),
 ('Lemongrass Basil Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 6, 6, 1, 69, 3.5, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-lemongrass-basil-sauce-1126626297_279x.jpg?v=1738777080', 'Coconut Milk (Coconut Cream, Water), Water, Coconut Aminos (Coconut Nectar, Water, Sea Salt), Coconut Sugar, Lemongrass Puree (Lemongrass, Water), Basil, Lime Juice Concentrate, Tapioca Starch, Dehydrated Onion, Dehydrated Garlic, Sea Salt, Jalapeño, Spices, Apple Cider Vinegar, Shiitake Mushroom, Paprika, Yeast Extract, Ground Ginger, Xanthan Gum, Citric Acid, Monkfruit Extract.', NULL, 'manual', '1234567890170', '2024-12-07', 2, '2025-01-15 10:00:00'),
 ('Orange Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 13, 0, 0, 52, 3.5, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-orange-sauce-1126626298_279x.jpg?v=1738777081', 'Water, Coconut Aminos (Coconut Nectar, Water, Sea Salt), Orange Juice Concentrate, Coconut Sugar, Distilled Vinegar, Sherry Wine, Tapioca Starch, Yeast Extract, Xanthan Gum, Sea Salt, Spices, Granulated Onion, Granulated Garlic, Citric Acid, Monk Fruit Extract, Orange Oil.', NULL, 'manual', '1234567890171', '2024-12-06', 3, '2025-01-15 10:00:00'),
-('Organic Adobo Seasoning, 2.9 Oz', 'Loisa', 'Seasonings & Spices', true, 7.79, 0, 0, 0, 0, 82, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/image-server/466x466/filters:fill(FFF,true):format(webp)/www.instacart.com/assets/domains/product-image/file/large_0b9bbfc0-eb6f-4f56-967c-bfca1f5491fd.png', 'Sea salt, organic garlic, organic turmeric, organic oregano, organic black pepper.', NULL, 'manual', '1234567890172', '2024-12-05', 1, '2025-01-15 10:00:00'),
-('Organic Sazón Seasoning, 2.3 Oz', 'Loisa', 'Seasonings & Spices', true, 7.79, 0, 0, 0, 0, 65, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/5/856633007073_front_1_1.jpg?w=1227&jpg_quality=90', 'Sea salt, organic achiote, organic cumin, organic coriander, organic garlic, organic oregano, organic black pepper.', NULL, 'manual', '1234567890173', '2024-12-04', 2, '2025-01-15 10:00:00'),
-('Sea Salt Flakes, 8.5 Oz', 'Maldon', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 0, 160, 2, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/4/847972000009_1_1.jpg?w=1167&jpg_quality=90', 'Sea Salt Flakes.', NULL, 'manual', '1234567890174', '2024-12-03', 3, '2025-01-15 10:00:00'),
-('Seasoning Mix, Garden Ranch, 0.81 Oz Pouch', 'Primal Palate', 'Seasonings & Spices', true, 1.79, 0, 0, 0, 0, 23, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/GardenRanchPacket.jpg?v=1604055766&width=1158', 'Onion, Garlic, Himalayan Pink Salt, Dillweed, Parsley, Chives, Black Pepper.', NULL, 'manual', '1234567890175', '2024-12-02', 4, '2025-01-15 10:00:00'),
-('Seasoning, Barbecue Rub, 3.1 Oz', 'Primal Palate', 'Seasonings & Spices', true, 8.99, 0, 0, 0, 0, 88, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/BarbecueRub.jpg?v=1603741835&width=1200', 'Pink Himalayan Salt, Onion, Garlic, Paprika, Oregano, Turmeric, Black Pepper, Ginger, Cumin, Cayenne, Coriander.', NULL, 'manual', '1234567890176', '2024-12-01', 2, '2025-01-15 10:00:00'),
-('Seasoning, Seafood, 2.1 Oz', 'Primal Palate', 'Seasonings & Spices', true, 8.99, 0, 0, 0, 0, 60, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/SeafoodSeasoning.jpg?v=1603737594&width=1200', 'Pink Himalayan Salt, Onion, Black Pepper, Lemon Peel, Garlic, Bay Leaves, Parsley, Chives.', NULL, 'manual', '1234567890177', '2024-11-30', 3, '2025-01-15 10:00:00'),
-('Taco Seasoning, Mild, 1.3 Oz', 'Siete', 'Seasonings & Spices', true, 2.99, 0, 0, 0, 0, 7, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/assets/domains/product-image/file/large_6482e1c5-1a88-4037-a345-9958061765af.png', 'Chile powder, sea salt, ground dates, tomato powder, garlic powder, nutritional yeast, cumin, onion flakes, cassava flour, cream of tartar, black pepper, and paprika.', NULL, 'manual', '1234567890178', '2024-11-29', 5, '2025-01-15 10:00:00'),
+('Organic Adobo Seasoning, 2.9 Oz', 'Loisa', 'Seasoning Blends/Mixes', true, 7.79, 0, 0, 0, 0, 82, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/image-server/466x466/filters:fill(FFF,true):format(webp)/www.instacart.com/assets/domains/product-image/file/large_0b9bbfc0-eb6f-4f56-967c-bfca1f5491fd.png', 'Sea salt, organic garlic, organic turmeric, organic oregano, organic black pepper.', NULL, 'manual', '1234567890172', '2024-12-05', 1, '2025-01-15 10:00:00'),
+('Organic Sazón Seasoning, 2.3 Oz', 'Loisa', 'Seasoning Blends/Mixes', true, 7.79, 0, 0, 0, 0, 65, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/5/856633007073_front_1_1.jpg?w=1227&jpg_quality=90', 'Sea salt, organic achiote, organic cumin, organic coriander, organic garlic, organic oregano, organic black pepper.', NULL, 'manual', '1234567890173', '2024-12-04', 2, '2025-01-15 10:00:00'),
+('Sea Salt Flakes, 8.5 Oz', 'Maldon', 'Seasoning Blends/Mixes', true, 6.99, 0, 0, 0, 0, 160, 2, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/4/847972000009_1_1.jpg?w=1167&jpg_quality=90', 'Sea Salt Flakes.', NULL, 'manual', '1234567890174', '2024-12-03', 3, '2025-01-15 10:00:00'),
+('Seasoning Mix, Garden Ranch, 0.81 Oz Pouch', 'Primal Palate', 'Seasoning Blends/Mixes', true, 1.79, 0, 0, 0, 0, 23, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/GardenRanchPacket.jpg?v=1604055766&width=1158', 'Onion, Garlic, Himalayan Pink Salt, Dillweed, Parsley, Chives, Black Pepper.', NULL, 'manual', '1234567890175', '2024-12-02', 4, '2025-01-15 10:00:00'),
+('Seasoning, Barbecue Rub, 3.1 Oz', 'Primal Palate', 'Seasoning Blends/Mixes', true, 8.99, 0, 0, 0, 0, 88, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/BarbecueRub.jpg?v=1603741835&width=1200', 'Pink Himalayan Salt, Onion, Garlic, Paprika, Oregano, Turmeric, Black Pepper, Ginger, Cumin, Cayenne, Coriander.', NULL, 'manual', '1234567890176', '2024-12-01', 2, '2025-01-15 10:00:00'),
+('Seasoning, Seafood, 2.1 Oz', 'Primal Palate', 'Seasoning Blends/Mixes', true, 8.99, 0, 0, 0, 0, 60, 5, 1, 'tsp', 'volume', 'https://shop.primalpalate.com/cdn/shop/products/SeafoodSeasoning.jpg?v=1603737594&width=1200', 'Pink Himalayan Salt, Onion, Black Pepper, Lemon Peel, Garlic, Bay Leaves, Parsley, Chives.', NULL, 'manual', '1234567890177', '2024-11-30', 3, '2025-01-15 10:00:00'),
+('Taco Seasoning, Mild, 1.3 Oz', 'Siete', 'Seasoning Blends/Mixes', true, 2.99, 0, 0, 0, 0, 7, 5, 1, 'tsp', 'volume', 'https://www.instacart.com/assets/domains/product-image/file/large_6482e1c5-1a88-4037-a345-9958061765af.png', 'Chile powder, sea salt, ground dates, tomato powder, garlic powder, nutritional yeast, cumin, onion flakes, cassava flour, cream of tartar, black pepper, and paprika.', NULL, 'manual', '1234567890178', '2024-11-29', 5, '2025-01-15 10:00:00'),
 ('Thai Coconut Sauce, 7 Oz', 'Kevin''s Natural Foods', 'Condiments & Sauces', true, 3.79, 7, 7, 1, 71, 3.5, 60, 2, 'tbsp', 'volume', 'https://www.kevinsnaturalfoods.com/cdn/shop/files/kevin-s-natural-foods-sauce-thai-coconut-sauce-1126626298_279x.jpg?v=1738776726', 'Coconut Milk (Coconut Cream, Water), Water, Coconut Sugar, Lime Juice Concentrate, Spices, Tapioca Starch, Basil, Yeast Extract, Dehydrated Onion, Basil, Dehydrated Garlic, Sea Salt, Lemongrass Puree (Lemongrass, Water), Turmeric, Xanthan Gum, Dehydrated Ginger, Citric Acid, Black Pepper, Monkfruit Extract.', NULL, 'manual', '1234567890179', '2024-11-28', 3, '2025-01-15 10:00:00'),
-('The New Primal, Noble Made Organic All-Purpose Seasoning, 2 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 0, 81, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_724cd215-3482-4ba7-9d67-65c893a7e642.jpg', 'Organic Dehydrated Garlic, Sea Salt, Organic Ground Mustard Seed, Organic Black Pepper, Organic Lemon Peel, Organic Apple Cider Vinegar Powder (Organic Apple Cider Vinegar, Organic Acacia Gum), Organic Rosemary, Organic Basil, Citric Acid, Organic Lemon Juice Powder.', NULL, 'manual', '1234567890180', '2024-11-27', 2, '2025-01-15 10:00:00'),
-('The New Primal, Noble Made Poultry Seasoning, 2.6 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 0, 82, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_03aa38c4-213d-4a6f-a695-c35bff5b7b56.jpg', 'Organic Dehydrated Garlic, Organic Dehydrated Onion, Sea Salt, Organic Cracked Black Pepper, Organic Orange Peel, Organic Cayenne, Organic Sage, Organic Parsley, Organic Dehydrated Green Bell Pepper.', NULL, 'manual', '1234567890181', '2024-11-26', 4, '2025-01-15 10:00:00'),
-('The New Primal, Noble Made Steak Seasoning, 2.5 oz', 'The New Primal (Noble Made)', 'Seasonings & Spices', true, 6.99, 0, 0, 0, 0, 89, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/5/850000398412_front_1__1_1.jpg', 'Sea salt, organic cracked black pepper, organic dehydrated garlic, organic dehydrated onion, organic coriander, organic dill seed powder, organic coriander seed, organic dill seed.', NULL, 'manual', '1234567890182', '2024-11-25', 2, '2025-01-15 10:00:00'),
+('The New Primal, Noble Made Organic All-Purpose Seasoning, 2 oz', 'The New Primal (Noble Made)', 'Seasoning Blends/Mixes', true, 6.99, 0, 0, 0, 0, 81, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_724cd215-3482-4ba7-9d67-65c893a7e642.jpg', 'Organic Dehydrated Garlic, Sea Salt, Organic Ground Mustard Seed, Organic Black Pepper, Organic Lemon Peel, Organic Apple Cider Vinegar Powder (Organic Apple Cider Vinegar, Organic Acacia Gum), Organic Rosemary, Organic Basil, Citric Acid, Organic Lemon Juice Powder.', NULL, 'manual', '1234567890180', '2024-11-27', 2, '2025-01-15 10:00:00'),
+('The New Primal, Noble Made Poultry Seasoning, 2.6 oz', 'The New Primal (Noble Made)', 'Seasoning Blends/Mixes', true, 6.99, 0, 0, 0, 0, 82, 5, 1, 'tsp', 'volume', 'https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_03aa38c4-213d-4a6f-a695-c35bff5b7b56.jpg', 'Organic Dehydrated Garlic, Organic Dehydrated Onion, Sea Salt, Organic Cracked Black Pepper, Organic Orange Peel, Organic Cayenne, Organic Sage, Organic Parsley, Organic Dehydrated Green Bell Pepper.', NULL, 'manual', '1234567890181', '2024-11-26', 4, '2025-01-15 10:00:00'),
+('The New Primal, Noble Made Steak Seasoning, 2.5 oz', 'The New Primal (Noble Made)', 'Seasoning Blends/Mixes', true, 6.99, 0, 0, 0, 0, 89, 5, 1, 'tsp', 'volume', 'https://img.thrivemarket.com/store/full/8/5/850000398412_front_1__1_1.jpg', 'Sea salt, organic cracked black pepper, organic dehydrated garlic, organic dehydrated onion, organic coriander, organic dill seed powder, organic coriander seed, organic dill seed.', NULL, 'manual', '1234567890182', '2024-11-25', 2, '2025-01-15 10:00:00'),
 -- Additional items needed for recipes
 ('Fresh Cucumber, 1 lb', 'Member''s Mark', 'Vegetables', true, 1.99, 3.6, 0.1, 0.7, 17.9, 4, 100, 1, 'piece', 'package', NULL, 'Fresh cucumber', NULL, 'manual', '1234567890183', '2024-11-24', 3, '2025-01-15 10:00:00'),
 ('Fresh Lemon Juice, 32 fl oz', 'Member''s Mark', 'Condiments & Sauces', true, 4.98, 2.5, 0, 0.2, 10.8, 64, 15, 1, 'tbsp', 'volume', NULL, 'Fresh lemon juice', NULL, 'manual', '1234567890184', '2024-11-23', 2, '2025-01-15 10:00:00'),
 ('Fresh Dill, 1 oz', 'Member''s Mark', 'Vegetables', true, 2.49, 1.1, 0.1, 0.4, 6.8, 8, 3.5, 1, 'tbsp', 'volume', NULL, 'Fresh dill', NULL, 'manual', '1234567890185', '2024-11-22', 1, '2025-01-15 10:00:00'),
 ('Coconut Aminos, 16 fl oz', 'Coconut Secret', 'Condiments & Sauces', true, 8.99, 0, 0, 0, 0, 32, 15, 1, 'tbsp', 'volume', NULL, 'Coconut aminos', NULL, 'manual', '1234567890186', '2024-11-21', 2, '2025-01-15 10:00:00'),
-('Red Pepper Flakes, 2 oz', 'Member''s Mark', 'Seasonings & Spices', true, 3.99, 0, 0, 0, 0, 100, 2, 1, 'tsp', 'volume', NULL, 'Red pepper flakes', NULL, 'manual', '1234567890187', '2024-11-20', 1, '2025-01-15 10:00:00'),
+('Red Pepper Flakes, 2 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 3.99, 0, 0, 0, 0, 100, 2, 1, 'tsp', 'volume', NULL, 'Red pepper flakes', NULL, 'manual', '1234567890187', '2024-11-20', 1, '2025-01-15 10:00:00'),
 ('Fresh Cauliflower, 1 head', 'Member''s Mark', 'Vegetables', true, 3.99, 5.3, 0.3, 2.0, 31.2, 6, 100, 1, 'cup', 'volume', NULL, 'Fresh cauliflower', NULL, 'manual', '1234567890188', '2024-11-19', 2, '2025-01-15 10:00:00'),
 ('Fresh Pineapple, 1 piece', 'Member''s Mark', 'Fruits', true, 4.99, 22.0, 0.1, 0.9, 94.9, 8, 100, 1, 'cup', 'volume', NULL, 'Fresh pineapple', NULL, 'manual', '1234567890189', '2024-11-18', 1, '2025-01-15 10:00:00'),
 ('Fresh Red Bell Pepper, 1 piece', 'Member''s Mark', 'Vegetables', true, 1.49, 6.0, 0.3, 1.0, 30.7, 1, 100, 1, 'piece', 'package', NULL, 'Fresh red bell pepper', NULL, 'manual', '1234567890190', '2024-11-17', 2, '2025-01-15 10:00:00'),
@@ -75,7 +75,7 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Raw Cashews, 16 oz', 'Member''s Mark', 'Snacks', true, 8.99, 8.6, 12.4, 5.2, 157.6, 16, 28, 0.25, 'cup', 'volume', NULL, 'Raw cashews', NULL, 'manual', '1234567890192', '2024-11-15', 2, '2025-01-15 10:00:00'),
 ('Almond Flour, 16 oz', 'Member''s Mark', 'Baking Supplies', true, 12.99, 6.0, 14.0, 6.0, 134.0, 32, 28, 0.25, 'cup', 'volume', NULL, 'Almond flour', NULL, 'manual', '1234567890193', '2024-11-14', 1, '2025-01-15 10:00:00'),
 ('Vanilla Protein Powder, 1 lb', 'Member''s Mark', 'Proteins', true, 24.99, 3.0, 1.5, 24.0, 121.5, 30, 30, 1, 'scoop', 'volume', NULL, 'Vanilla protein powder', NULL, 'manual', '1234567890194', '2024-11-13', 2, '2025-01-15 10:00:00'),
-('Ground Cinnamon, 16 oz', 'Member''s Mark', 'Seasonings & Spices', true, 7.99, 1.8, 0.1, 0.2, 8.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground cinnamon', NULL, 'manual', '1234567890195', '2024-11-12', 1, '2025-01-15 10:00:00'),
+('Ground Cinnamon, 16 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 7.99, 1.8, 0.1, 0.2, 8.5, 200, 2, 1, 'tsp', 'volume', NULL, 'Ground cinnamon', NULL, 'manual', '1234567890195', '2024-11-12', 1, '2025-01-15 10:00:00'),
 ('Pure Vanilla Extract, 8 fl oz', 'Member''s Mark', 'Baking Supplies', true, 9.99, 0, 0, 0, 0, 96, 5, 1, 'tsp', 'volume', NULL, 'Pure vanilla extract', NULL, 'manual', '1234567890196', '2024-11-11', 2, '2025-01-15 10:00:00'),
 
 -- New items for additional recipes from All-Apple Recipes.txt
@@ -90,11 +90,11 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Butternut Squash, 2 lb', 'Member''s Mark', 'Vegetables', true, 3.99, 16.4, 0.2, 1.4, 67.2, 4, 140, 1, 'cup', 'volume', NULL, 'Fresh butternut squash', NULL, 'manual', '1234567890205', '2025-01-15', 1, '2025-01-15 10:00:00'),
 ('Avocado Oil, 16.9 fl oz', 'Primal Kitchen', 'Oils & Fats', true, 12.99, 0, 14, 0, 124, 34, 14, 1, 'tbsp', 'volume', NULL, 'Pure avocado oil', NULL, 'manual', '1234567890206', '2025-01-15', 2, '2025-01-15 10:00:00'),
 ('Beef Short Ribs, 3 lb', 'Member''s Mark', 'Proteins', true, 28.99, 0, 22, 18, 256, 6, 113, 4, 'oz', 'weight', NULL, 'Beef short ribs', NULL, 'manual', '1234567890207', '2025-01-15', 1, '2025-01-15 10:00:00'),
-('Chili Powder, 2.5 oz', 'Member''s Mark', 'Seasonings & Spices', true, 2.99, 1.4, 0.7, 0.6, 8.1, 50, 2, 1, 'tsp', 'volume', NULL, 'Ground chili powder', NULL, 'manual', '1234567890208', '2025-01-15', 2, '2025-01-15 10:00:00'),
-('Dried Oregano, 1 oz', 'Member''s Mark', 'Seasonings & Spices', true, 2.49, 1.0, 0.2, 0.4, 5.2, 30, 1, 1, 'tsp', 'volume', NULL, 'Dried oregano leaves', NULL, 'manual', '1234567890209', '2025-01-15', 1, '2025-01-15 10:00:00'),
-('Paprika, 2.4 oz', 'Member''s Mark', 'Seasonings & Spices', true, 2.99, 1.2, 0.3, 0.5, 6.0, 60, 2, 1, 'tsp', 'volume', NULL, 'Ground paprika', NULL, 'manual', '1234567890210', '2025-01-15', 2, '2025-01-15 10:00:00'),
-('Dried Thyme, 0.75 oz', 'Member''s Mark', 'Seasonings & Spices', true, 2.99, 1.4, 0.2, 0.3, 7.6, 22, 1, 1, 'tsp', 'volume', NULL, 'Dried thyme leaves', NULL, 'manual', '1234567890211', '2025-01-15', 1, '2025-01-15 10:00:00'),
-('Cayenne Pepper, 2.6 oz', 'Member''s Mark', 'Seasonings & Spices', true, 3.49, 1.0, 0.3, 0.2, 6.0, 75, 1, 1, 'tsp', 'volume', NULL, 'Ground cayenne pepper', NULL, 'manual', '1234567890212', '2025-01-15', 1, '2025-01-15 10:00:00'),
+('Chili Powder, 2.5 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 2.99, 1.4, 0.7, 0.6, 8.1, 50, 2, 1, 'tsp', 'volume', NULL, 'Ground chili powder', NULL, 'manual', '1234567890208', '2025-01-15', 2, '2025-01-15 10:00:00'),
+('Dried Oregano, 1 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 2.49, 1.0, 0.2, 0.4, 5.2, 30, 1, 1, 'tsp', 'volume', NULL, 'Dried oregano leaves', NULL, 'manual', '1234567890209', '2025-01-15', 1, '2025-01-15 10:00:00'),
+('Paprika, 2.4 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 2.99, 1.2, 0.3, 0.5, 6.0, 60, 2, 1, 'tsp', 'volume', NULL, 'Ground paprika', NULL, 'manual', '1234567890210', '2025-01-15', 2, '2025-01-15 10:00:00'),
+('Dried Thyme, 0.75 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 2.99, 1.4, 0.2, 0.3, 7.6, 22, 1, 1, 'tsp', 'volume', NULL, 'Dried thyme leaves', NULL, 'manual', '1234567890211', '2025-01-15', 1, '2025-01-15 10:00:00'),
+('Cayenne Pepper, 2.6 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 3.49, 1.0, 0.3, 0.2, 6.0, 75, 1, 1, 'tsp', 'volume', NULL, 'Ground cayenne pepper', NULL, 'manual', '1234567890212', '2025-01-15', 1, '2025-01-15 10:00:00'),
 ('Whole Milk, 1 gallon', 'Member''s Mark', 'Dairy & Eggs', true, 3.99, 12, 8, 8, 150, 16, 240, 1, 'cup', 'volume', NULL, 'Whole milk', NULL, 'manual', '1234567890213', '2025-01-15', 3, '2025-01-15 10:00:00'),
 ('Heavy Cream, 32 fl oz', 'Member''s Mark', 'Dairy & Eggs', true, 4.99, 1, 11, 1, 103, 32, 30, 2, 'tbsp', 'volume', NULL, 'Heavy whipping cream', NULL, 'manual', '1234567890214', '2025-01-15', 2, '2025-01-15 10:00:00'),
 ('Unsweetened Almond Milk, 64 fl oz', 'Member''s Mark', 'Beverages', true, 2.99, 1, 2.5, 1, 37.5, 8, 240, 1, 'cup', 'volume', NULL, 'Unsweetened almond milk', NULL, 'manual', '1234567890215', '2025-01-15', 2, '2025-01-15 10:00:00'),
@@ -103,8 +103,8 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 ('Dark Chocolate Chips, 12 oz', 'Member''s Mark', 'Snacks', true, 4.99, 8, 8, 2, 70, 24, 15, 1, 'tbsp', 'volume', NULL, 'Dark chocolate chips (70% cocoa)', NULL, 'manual', '1234567890218', '2025-01-15', 1, '2025-01-15 10:00:00'),
 ('Coconut Milk, Full Fat, 13.5 fl oz', 'Member''s Mark Organic', 'Beverages', true, 1.99, 3, 20, 2, 185, 6, 60, 0.25, 'cup', 'volume', NULL, 'Organic coconut milk', NULL, 'manual', '1234567890219', '2025-01-15', 3, '2025-01-15 10:00:00'),
 ('Organic Ketchup, 32 oz', 'Member''s Mark Organic', 'Condiments & Sauces', true, 3.99, 4, 0, 0, 15, 32, 17, 1, 'tbsp', 'volume', NULL, 'Organic tomato ketchup', NULL, 'manual', '1234567890220', '2025-01-15', 2, '2025-01-15 10:00:00'),
-('Dried Basil, 0.62 oz', 'Member''s Mark', 'Seasonings & Spices', true, 2.99, 0.6, 0.2, 0.8, 5.5, 18, 1, 1, 'tsp', 'volume', NULL, 'Dried basil leaves', NULL, 'manual', '1234567890221', '2025-01-15', 1, '2025-01-15 10:00:00'),
-('Smoked Paprika, 2.3 oz', 'Member''s Mark', 'Seasonings & Spices', true, 3.99, 1.2, 0.3, 0.5, 6.0, 65, 2, 1, 'tsp', 'volume', NULL, 'Smoked paprika', NULL, 'manual', '1234567890222', '2025-01-15', 1, '2025-01-15 10:00:00');
+('Dried Basil, 0.62 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 2.99, 0.6, 0.2, 0.8, 5.5, 18, 1, 1, 'tsp', 'volume', NULL, 'Dried basil leaves', NULL, 'manual', '1234567890221', '2025-01-15', 1, '2025-01-15 10:00:00'),
+('Smoked Paprika, 2.3 oz', 'Member''s Mark', 'Single-Ingredient Spices/Herbs', true, 3.99, 1.2, 0.3, 0.5, 6.0, 65, 2, 1, 'tsp', 'volume', NULL, 'Smoked paprika', NULL, 'manual', '1234567890222', '2025-01-15', 1, '2025-01-15 10:00:00');
 
 -- Insert initial tags
 INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
@@ -131,8 +131,8 @@ INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
 ('stir-fry', '#f97316', 'Stir-fry dishes', NOW(), NOW());
 
 -- Insert recipes from Recipes.md
-INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total_time, servings, instructions, notes, nutrition_per_serving, is_favorite, created_at, updated_at) VALUES
-('Tzatziki', 'Greek', 'easy', 15, 0, 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
+INSERT INTO recipes (name, total_time, servings, instructions, notes, nutrition_per_serving, is_favorite, created_at, updated_at) VALUES
+('Tzatziki', 15, 8, '1. Prepare the cucumber: Peel the cucumber (optional, based on your preference). Cut it into chunks and place it in the food processor. Pulse briefly until finely chopped (but not pureed). Transfer the chopped cucumber to a fine-mesh sieve or cheesecloth. Press or squeeze out excess water thoroughly.
 
 2. Combine ingredients: Return the drained cucumber to the food processor. Add the Greek yogurt, minced garlic, olive oil, lemon juice, dill, and a pinch of salt and black pepper.
 
@@ -140,13 +140,13 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 4. Taste and adjust: Taste the mixture and adjust seasoning as needed. Add more lemon juice, dill, or salt to suit your preferences.
 
-5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', true, NOW(), NOW()),
-('Coconut Aminos Sauce', 'Asian', 'easy', 5, 3, 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
+5. Chill: Transfer the tzatziki to a serving bowl. Cover and refrigerate for at least 30 minutes to allow the flavors to meld.', 'Perfect as a dip for fresh vegetables, crackers, or pita bread. Excellent alongside grilled meats, fish, or roasted vegetables. Great as a sauce for wraps, bowls, or salads. Can be made dairy-free by using coconut yogurt. Best when chilled for at least 30 minutes before serving.', '{"calories": 45, "protein": 2, "carbs": 3, "fat": 3}', false, NOW(), NOW()),
+('Coconut Aminos Sauce', 8, 4, '1. Combine ingredients: In a small saucepan, whisk together the coconut aminos, water, apple cider vinegar, honey or maple syrup (if using), red pepper flakes (if using), powdered ginger, and granulated garlic.
 
 2. Heat and simmer: Bring the mixture to a simmer over medium heat. Let it simmer for 2-3 minutes, or until the flavors have combined and the sauce has thickened slightly.
 
-3. Cool and use: Remove from heat and let cool slightly before using.', 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', true, NOW(), NOW()),
-('Paleo Pineapple Fried Rice with Chicken Breast', 'Asian', 'medium', 15, 20, 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
+3. Cool and use: Remove from heat and let cool slightly before using.', 'Versatile sauce perfect for drizzling over grilled or roasted meats. Excellent tossed with stir-fries or salads. Works great as a marinade for chicken or tofu. Perfect dipping sauce for spring rolls or dumplings. Store in refrigerator for up to a week. Can be made sweeter with honey or spicier with extra red pepper flakes.', '{"calories": 25, "protein": 0, "carbs": 5, "fat": 0}', false, NOW(), NOW()),
+('Paleo Pineapple Fried Rice with Chicken Breast', 35, 4, '1. Prepare the cauliflower rice: In a large skillet or wok, heat the avocado oil over medium heat. Add the riced cauliflower and salt. Cook, stirring occasionally, for 5-7 minutes, or until the cauliflower rice is softened slightly. Remove from the pan and set aside.
 
 2. Cook the chicken: Heat the remaining avocado oil in the same skillet over medium-high heat. Add the diced chicken and cook for 5-7 minutes, or until golden brown and cooked through. Remove the chicken from the pan and set aside.
 
@@ -158,8 +158,8 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Combine everything: Add the cooked cauliflower rice, chicken, coconut aminos, and cashews (if using) back to the pan. Stir-fry for 2-3 minutes, or until everything is heated through.
 
-7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', '{"calories": 285, "protein": 24, "carbs": 18, "fat": 12}', true, NOW(), NOW()),
-('Bacon Brussels Sprouts', 'American', 'easy', 10, 30, 40, 4, '1. Preheat oven to 400°F (200°C).
+7. Season and serve: Season with salt and black pepper to taste. Garnish with the green parts of the green onion and serve immediately.', 'Great meal prep option - stores well for up to 3 days in refrigerator. Add extra vegetables like broccoli, carrots, or snap peas for more nutrition. Can substitute soy sauce for coconut aminos if not following paleo diet. Cashews are optional but add great crunch. Best served immediately while hot, but reheats well in skillet or microwave.', '{"calories": 285, "protein": 24, "carbs": 18, "fat": 12}', false, NOW(), NOW()),
+('Bacon Brussels Sprouts', 40, 4, '1. Preheat oven to 400°F (200°C).
 
 2. Prepare sprouts: Trim the stem end of each Brussels sprout. Remove loose or yellow leaves. Cut each sprout in half lengthwise (through the stem). Quarter large ones.
 
@@ -167,8 +167,8 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 4. Roast: Spread on a parchment-lined baking sheet in a single layer, cut side down. Roast for 25–30 minutes, flipping halfway, until Brussels are golden and bacon is crisp.
 
-5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', '{"calories": 165, "protein": 8, "carbs": 12, "fat": 11}', true, NOW(), NOW()),
-('Paleo Banana Almond Flour Protein Waffles', 'American', 'medium', 15, 20, 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
+5. Optional Glaze: Drizzle with balsamic vinegar or raw honey. Roast for an additional 2 minutes to lightly caramelize.', 'Perfect side dish for any protein. Add sliced garlic or red pepper flakes for extra flavor. Use two baking sheets if needed to avoid overcrowding for maximum crispiness. Optional balsamic glaze adds sweet-tangy finish. Great for meal prep - can be made ahead and reheated. Pairs excellently with roasted meats or as part of a hearty salad.', '{"calories": 165, "protein": 8, "carbs": 12, "fat": 11}', false, NOW(), NOW()),
+('Paleo Banana Almond Flour Protein Waffles', 35, 12, '1. Preheat your waffle iron and lightly grease with coconut oil or spray.
 
 2. In a large bowl, mash the bananas or blend them until smooth.
 
@@ -180,10 +180,10 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Pour ~1/3–1/2 cup of batter per waffle and cook for 3–5 min or until golden brown.
 
-7. Serve hot or store for later!', 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', true, NOW(), NOW()),
+7. Serve hot or store for later!', 'Excellent meal prep breakfast - makes 12 waffles that freeze beautifully for up to a month. Let cool completely before storing to maintain crispiness. Reheat in toaster or waffle iron for best texture (avoid microwave). Great topped with almond butter, berries, or maple syrup. High protein content makes them very filling. Can be made ahead for busy mornings.', '{"calories": 195, "protein": 12, "carbs": 14, "fat": 9}', false, NOW(), NOW()),
 
 -- Additional recipes from All-Apple Recipes.txt
-('Reverse Sear Steak', 'American', 'medium', 5, 35, 40, 1, '1. Preheat oven to 275°F (135°C). Place a wire rack on a baking sheet.
+('Reverse Sear Steak', 40, 1, '1. Preheat oven to 275°F (135°C). Place a wire rack on a baking sheet.
 
 2. Season the steak generously with salt and pepper on both sides.
 
@@ -197,9 +197,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Sear the steak for 1 minute on each side, or until desired crust forms.
 
-8. Serve immediately.', 'Perfect method for thick steaks (1.5+ inches). Results in even cooking throughout with a beautiful crust. Rest time is crucial for even temperature. Can finish with butter, garlic, and herbs in the pan for extra flavor.', '{"calories": 280, "protein": 26, "carbs": 0, "fat": 18}', true, NOW(), NOW()),
+8. Serve immediately.', 'Perfect method for thick steaks (1.5+ inches). Results in even cooking throughout with a beautiful crust. Rest time is crucial for even temperature. Can finish with butter, garlic, and herbs in the pan for extra flavor.', '{"calories": 280, "protein": 26, "carbs": 0, "fat": 18}', false, NOW(), NOW()),
 
-('Jasmine Rice', 'Asian', 'easy', 2, 15, 17, 4, '1. In a 4-quart saucepan over high heat, bring 1½ cups room temperature water to a boil.
+('Jasmine Rice', 17, 4, '1. In a 4-quart saucepan over high heat, bring 1½ cups room temperature water to a boil.
 
 2. Add 1 cup jasmine rice, 1 tablespoon oil, and ½ teaspoon kosher salt. Stir once.
 
@@ -207,9 +207,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 4. Reduce heat to low/simmer and cook for 15 minutes or until all water has been absorbed.
 
-5. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Perfect ratio for fluffy jasmine rice. Do not lift lid during cooking. Can substitute coconut oil for olive oil. Doubles easily for 8 servings using 2 cups rice and 3 cups water.', '{"calories": 180, "protein": 3, "carbs": 42, "fat": 3.5}', true, NOW(), NOW()),
+5. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Perfect ratio for fluffy jasmine rice. Do not lift lid during cooking. Can substitute coconut oil for olive oil. Doubles easily for 8 servings using 2 cups rice and 3 cups water.', '{"calories": 180, "protein": 3, "carbs": 42, "fat": 3.5}', false, NOW(), NOW()),
 
-('Basmati Rice', 'Asian', 'easy', 2, 20, 22, 4, '1. In a 4-quart saucepan over high heat, bring 2 cups room temperature water to a boil.
+('Basmati Rice', 22, 4, '1. In a 4-quart saucepan over high heat, bring 2 cups room temperature water to a boil.
 
 2. Add 1 cup basmati rice, 1 tablespoon oil, and ½ teaspoon kosher salt. Stir once.
 
@@ -219,9 +219,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 5. Cook for 15 minutes or until all water has been absorbed.
 
-6. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Key is to boil uncovered until water level matches rice level, then cover. This prevents mushy rice. Basmati needs more water than jasmine rice due to longer grains.', '{"calories": 200, "protein": 4, "carbs": 45, "fat": 3.5}', true, NOW(), NOW()),
+6. Remove from heat and let stand 5 minutes before fluffing with a fork.', 'Key is to boil uncovered until water level matches rice level, then cover. This prevents mushy rice. Basmati needs more water than jasmine rice due to longer grains.', '{"calories": 200, "protein": 4, "carbs": 45, "fat": 3.5}', false, NOW(), NOW()),
 
-('Coconut Almond Flour Waffles', 'American', 'medium', 15, 15, 30, 4, '1. Preheat waffle iron according to manufacturer''s instructions.
+('Coconut Almond Flour Waffles', 30, 4, '1. Preheat waffle iron according to manufacturer''s instructions.
 
 2. In a large bowl, mash 1 medium banana until almost smooth. Whisk in 3 eggs (at room temperature), 1 teaspoon vanilla extract, and 1 tablespoon melted coconut oil.
 
@@ -235,9 +235,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Pour about ¼ cup batter per waffle. Cook for 3-5 minutes until golden brown and firm.
 
-8. Serve warm with favorite toppings.', 'Start with 2 tbsp coconut flour and add more if needed - it absorbs liquid differently than regular flour. Resting the batter is crucial for proper texture. Waffles should be fully set before removing to prevent crumbling.', '{"calories": 165, "protein": 8, "carbs": 8, "fat": 12}', true, NOW(), NOW()),
+8. Serve warm with favorite toppings.', 'Start with 2 tbsp coconut flour and add more if needed - it absorbs liquid differently than regular flour. Resting the batter is crucial for proper texture. Waffles should be fully set before removing to prevent crumbling.', '{"calories": 165, "protein": 8, "carbs": 8, "fat": 12}', false, NOW(), NOW()),
 
-('Paleo Vanilla Loaf', 'American', 'medium', 15, 45, 60, 8, '1. Preheat oven to 350°F (175°C). Grease an 8x4-inch loaf pan with coconut oil or line with parchment paper.
+('Paleo Vanilla Loaf', 60, 8, '1. Preheat oven to 350°F (175°C). Grease an 8x4-inch loaf pan with coconut oil or line with parchment paper.
 
 2. In a large bowl, whisk together 2 cups almond flour, ½ cup tapioca starch, ½ teaspoon baking soda, ¼ teaspoon sea salt, 2 tablespoons coconut sugar (optional), and ½ teaspoon vanilla powder.
 
@@ -249,9 +249,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Bake for 40-50 minutes, until top is golden brown and toothpick inserted in center comes out clean.
 
-7. Cool in pan for 10 minutes, then transfer to wire rack to cool completely.', 'Check at 40 minutes as ovens vary. Cover with foil if top browns too quickly. Extra egg adds structure for loaf format. Can add nuts, chocolate chips, or berries. Store covered for up to 3 days.', '{"calories": 195, "protein": 7, "carbs": 12, "fat": 14}', true, NOW(), NOW()),
+7. Cool in pan for 10 minutes, then transfer to wire rack to cool completely.', 'Check at 40 minutes as ovens vary. Cover with foil if top browns too quickly. Extra egg adds structure for loaf format. Can add nuts, chocolate chips, or berries. Store covered for up to 3 days.', '{"calories": 195, "protein": 7, "carbs": 12, "fat": 14}', false, NOW(), NOW()),
 
-('Paleo Fried Chicken', 'American', 'hard', 20, 15, 35, 8, '1. Pat 3.48 lbs boneless, skinless chicken thighs dry with paper towels. Optional: pound slightly for even thickness.
+('Paleo Fried Chicken', 35, 8, '1. Pat 3.48 lbs boneless, skinless chicken thighs dry with paper towels. Optional: pound slightly for even thickness.
 
 2. In a large bowl, whisk together 2 cups almond flour, 1 tablespoon garlic powder, 1 tablespoon onion powder, 1 teaspoon smoked paprika, 1 teaspoon dried thyme, ½ teaspoon cayenne pepper, 1 teaspoon kosher salt, and ½ teaspoon black pepper.
 
@@ -263,9 +263,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Carefully add breaded chicken to hot oil. Don''t overcrowd. Cook 5-7 minutes per side until golden brown and internal temperature reaches 165°F (74°C).
 
-7. Transfer to paper towel-lined plate to drain. Let rest few minutes before serving.', 'Without tapioca flour, press almond flour coating firmly for better adhesion. Double dredging (egg-flour-egg-flour) creates extra crispy coating. Monitor oil temperature carefully. May take slightly longer to cook through than traditional breaded chicken.', '{"calories": 285, "protein": 28, "carbs": 6, "fat": 16}', true, NOW(), NOW()),
+7. Transfer to paper towel-lined plate to drain. Let rest few minutes before serving.', 'Without tapioca flour, press almond flour coating firmly for better adhesion. Double dredging (egg-flour-egg-flour) creates extra crispy coating. Monitor oil temperature carefully. May take slightly longer to cook through than traditional breaded chicken.', '{"calories": 285, "protein": 28, "carbs": 6, "fat": 16}', false, NOW(), NOW()),
 
-('Paleo Meatloaf', 'American', 'medium', 20, 50, 70, 8, '1. Preheat oven to 375°F (190°C).
+('Paleo Meatloaf', 70, 8, '1. Preheat oven to 375°F (190°C).
 
 2. In a large mixing bowl, combine 3 pounds 80/20 ground beef, ¾ cup almond flour, 1½ tablespoons Dijon mustard, 3 tablespoons ketchup, 3 tablespoons coconut aminos, 1 cooked and cooled diced medium onion, 3 minced garlic cloves, 3 beaten large eggs, salt, and black pepper.
 
@@ -279,9 +279,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Bake for 45-50 minutes or until internal temperature reaches 160°F (71°C).
 
-8. Let rest 15-20 minutes before slicing. Garnish with minced parsley.', 'Cooking the onion first prevents raw onion taste and excess moisture. Taste testing ensures proper seasoning. Resting time allows juices to redistribute for better slicing. Can make ahead and refrigerate before baking.', '{"calories": 295, "protein": 25, "carbs": 4, "fat": 19}', true, NOW(), NOW()),
+8. Let rest 15-20 minutes before slicing. Garnish with minced parsley.', 'Cooking the onion first prevents raw onion taste and excess moisture. Taste testing ensures proper seasoning. Resting time allows juices to redistribute for better slicing. Can make ahead and refrigerate before baking.', '{"calories": 295, "protein": 25, "carbs": 4, "fat": 19}', false, NOW(), NOW()),
 
-('Simple Paleo Waffles', 'American', 'easy', 10, 15, 25, 6, '1. Preheat waffle iron and lightly grease with coconut oil.
+('Simple Paleo Waffles', 25, 6, '1. Preheat waffle iron and lightly grease with coconut oil.
 
 2. In a large bowl, mash 2 ripe bananas until smooth.
 
@@ -295,9 +295,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Pour ⅓-½ cup batter per waffle and cook for 3-5 minutes until golden brown and crispy.
 
-8. Serve immediately with paleo-friendly toppings.', 'For fluffier waffles, separate eggs and beat whites to stiff peaks before folding in. Leftover waffles freeze well - reheat in toaster. Full-fat coconut milk gives richest texture. Can add vanilla extract or spices for variation.', '{"calories": 175, "protein": 7, "carbs": 12, "fat": 12}', true, NOW(), NOW()),
+8. Serve immediately with paleo-friendly toppings.', 'For fluffier waffles, separate eggs and beat whites to stiff peaks before folding in. Leftover waffles freeze well - reheat in toaster. Full-fat coconut milk gives richest texture. Can add vanilla extract or spices for variation.', '{"calories": 175, "protein": 7, "carbs": 12, "fat": 12}', false, NOW(), NOW()),
 
-('Baked BBQ Beef Ribs', 'American', 'medium', 15, 210, 225, 6, '1. Preheat oven to 250°F (120°C).
+('Baked BBQ Beef Ribs', 225, 6, '1. Preheat oven to 250°F (120°C).
 
 2. In a bowl, combine 2 tablespoons chili powder, 1 tablespoon garlic powder, 1 tablespoon onion powder, 1 teaspoon paprika, ½ teaspoon dried oregano, salt, and black pepper.
 
@@ -313,9 +313,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 8. Broil 4-5 minutes per side until sauce caramelizes.
 
-9. Serve with additional sauce on side.', 'Low and slow cooking ensures tender ribs. Water prevents drying out. Can make more complex sauce by sautéing onions, adding tomatoes and apple. Sauce should be thick enough to coat ribs. Great with roasted vegetables or salad.', '{"calories": 385, "protein": 24, "carbs": 6, "fat": 28}', true, NOW(), NOW()),
+9. Serve with additional sauce on side.', 'Low and slow cooking ensures tender ribs. Water prevents drying out. Can make more complex sauce by sautéing onions, adding tomatoes and apple. Sauce should be thick enough to coat ribs. Great with roasted vegetables or salad.', '{"calories": 385, "protein": 24, "carbs": 6, "fat": 28}', false, NOW(), NOW()),
 
-('Cinnamon Roasted Butternut Squash', 'American', 'easy', 15, 30, 45, 8, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
+('Cinnamon Roasted Butternut Squash', 45, 8, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
 
 2. Peel and cube 2 pounds butternut squash into 1-inch pieces.
 
@@ -327,9 +327,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Optional: Garnish with fresh rosemary sprigs.
 
-7. Serve immediately.', 'Don''t overcrowd pan for even browning. Can drizzle with maple syrup after roasting for extra sweetness (not strictly paleo). Try different spice blends like Italian seasoning. Stores well in fridge for 4 days - great for meal prep or adding to salads.', '{"calories": 65, "protein": 1, "carbs": 16, "fat": 3.5}', true, NOW(), NOW()),
+7. Serve immediately.', 'Don''t overcrowd pan for even browning. Can drizzle with maple syrup after roasting for extra sweetness (not strictly paleo). Try different spice blends like Italian seasoning. Stores well in fridge for 4 days - great for meal prep or adding to salads.', '{"calories": 65, "protein": 1, "carbs": 16, "fat": 3.5}', false, NOW(), NOW()),
 
-('Fried Boneless Chicken Thighs', 'American', 'medium', 15, 8, 23, 4, '1. Pat 4 boneless, skinless chicken thighs dry and season lightly with salt.
+('Fried Boneless Chicken Thighs', 23, 4, '1. Pat 4 boneless, skinless chicken thighs dry and season lightly with salt.
 
 2. In a shallow bowl, whisk 2 large eggs. In another bowl, combine 1 cup almond flour, ½ teaspoon garlic powder, ½ teaspoon onion powder, 1 teaspoon paprika, ½ teaspoon dried thyme, ¼ teaspoon black pepper, and salt to taste.
 
@@ -339,9 +339,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 5. Carefully place in hot oil. Cook 3-4 minutes per side until golden brown and internal temperature reaches 165°F (74°C).
 
-6. Transfer to paper towel-lined plate to drain. Season with additional salt if desired.', 'Thighs stay juicier than breasts. For thicker coating, double dredge (egg-flour-egg-flour). Can bake at 400°F for 20-25 minutes per side instead of frying. Use high smoke point oil for frying. Don''t use olive oil due to low smoke point.', '{"calories": 245, "protein": 26, "carbs": 5, "fat": 13}', true, NOW(), NOW()),
+6. Transfer to paper towel-lined plate to drain. Season with additional salt if desired.', 'Thighs stay juicier than breasts. For thicker coating, double dredge (egg-flour-egg-flour). Can bake at 400°F for 20-25 minutes per side instead of frying. Use high smoke point oil for frying. Don''t use olive oil due to low smoke point.', '{"calories": 245, "protein": 26, "carbs": 5, "fat": 13}', false, NOW(), NOW()),
 
-('Classic Guacamole', 'Mexican', 'easy', 10, 0, 10, 6, '1. Cut 2-3 ripe avocados in half, remove pits, and scoop flesh into bowl.
+('Classic Guacamole', 10, 6, '1. Cut 2-3 ripe avocados in half, remove pits, and scoop flesh into bowl.
 
 2. Mash avocado with fork to desired consistency (chunky or smooth).
 
@@ -351,9 +351,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 5. Taste and adjust seasonings - add more lime juice, salt, or pepper as needed.
 
-6. Serve immediately with tortilla chips.', 'To prevent browning, press plastic wrap directly onto surface if not serving immediately. Adding avocado pits to guacamole is a myth. Can add diced tomato for extra flavor. Ground coriander can substitute for fresh cilantro (¼ tsp). Best served fresh.', '{"calories": 95, "protein": 2, "carbs": 6, "fat": 8}', true, NOW(), NOW()),
+6. Serve immediately with tortilla chips.', 'To prevent browning, press plastic wrap directly onto surface if not serving immediately. Adding avocado pits to guacamole is a myth. Can add diced tomato for extra flavor. Ground coriander can substitute for fresh cilantro (¼ tsp). Best served fresh.', '{"calories": 95, "protein": 2, "carbs": 6, "fat": 8}', false, NOW(), NOW()),
 
-('Banana Coconut Flour Cookies', 'American', 'medium', 15, 13, 28, 18, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
+('Banana Coconut Flour Cookies', 28, 18, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
 
 2. In large bowl, whisk together ⅓ cup + 3 tablespoons coconut flour, 2 tablespoons tapioca flour (optional), 1 teaspoon ground cinnamon, ½ teaspoon baking soda, and ¼ teaspoon sea salt.
 
@@ -367,9 +367,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Bake 11-13 minutes until edges and bottoms are golden brown.
 
-8. Let cool completely on baking sheet before serving.', 'Start with 2 tbsp coconut flour and add more if batter is too loose. Omit tapioca flour for keto version. Cookies will be fragile when warm - cooling completely is essential. Can substitute any chocolate chips or omit entirely.', '{"calories": 55, "protein": 2, "carbs": 5, "fat": 3}', true, NOW(), NOW()),
+8. Let cool completely on baking sheet before serving.', 'Start with 2 tbsp coconut flour and add more if batter is too loose. Omit tapioca flour for keto version. Cookies will be fragile when warm - cooling completely is essential. Can substitute any chocolate chips or omit entirely.', '{"calories": 55, "protein": 2, "carbs": 5, "fat": 3}', false, NOW(), NOW()),
 
-('Banana Chocolate Chip Cookies', 'American', 'easy', 10, 24, 34, 24, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
+('Banana Chocolate Chip Cookies', 34, 24, '1. Preheat oven to 350°F (175°C). Line baking sheet with parchment paper.
 
 2. In a bowl, mash 2 ripe bananas until creamy (about ⅔ cup).
 
@@ -383,9 +383,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 7. Bake 20-28 minutes until edges are golden brown and centers are set.
 
-8. Let cool on baking sheet for few minutes before transferring to wire rack.', 'Simple 5-ingredient base recipe. Dough will be stickier than traditional cookie dough - this is normal. Don''t overbake or cookies will be dry. Can add vanilla extract, nuts, or different spices for variation.', '{"calories": 65, "protein": 2, "carbs": 8, "fat": 3}', true, NOW(), NOW()),
+8. Let cool on baking sheet for few minutes before transferring to wire rack.', 'Simple 5-ingredient base recipe. Dough will be stickier than traditional cookie dough - this is normal. Don''t overbake or cookies will be dry. Can add vanilla extract, nuts, or different spices for variation.', '{"calories": 65, "protein": 2, "carbs": 8, "fat": 3}', false, NOW(), NOW()),
 
-('Simple Paleo Meatballs', 'American', 'easy', 10, 15, 25, 4, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
+('Simple Paleo Meatballs', 25, 4, '1. Preheat oven to 400°F (200°C). Line baking sheet with parchment paper.
 
 2. In a bowl, combine 1 pound ground beef, 1 beaten egg, ½ cup almond flour, and any desired paleo seasonings (salt, pepper, garlic powder, onion powder, Italian herbs).
 
@@ -395,9 +395,9 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 5. Bake for 12-15 minutes until browned and cooked through (internal temperature 160°F/71°C).
 
-6. Serve with your favorite paleo-friendly sauce or over vegetables.', 'Simple base recipe that can be customized with any paleo seasonings. Can pan-fry in olive oil instead of baking. Great for meal prep - freeze cooked meatballs for quick meals. Don''t overmix or meatballs will be tough.', '{"calories": 185, "protein": 18, "carbs": 2, "fat": 11}', true, NOW(), NOW()),
+6. Serve with your favorite paleo-friendly sauce or over vegetables.', 'Simple base recipe that can be customized with any paleo seasonings. Can pan-fry in olive oil instead of baking. Great for meal prep - freeze cooked meatballs for quick meals. Don''t overmix or meatballs will be tough.', '{"calories": 185, "protein": 18, "carbs": 2, "fat": 11}', false, NOW(), NOW()),
 
-('Perfect Chicken Breast', 'American', 'easy', 10, 7, 17, 1, '1. Tenderize chicken breast with meat mallet to even thickness (about ¾ inch).
+('Perfect Chicken Breast', 17, 1, '1. Tenderize chicken breast with meat mallet to even thickness (about ¾ inch).
 
 2. Season both sides with salt and pepper.
 
@@ -409,7 +409,7 @@ INSERT INTO recipes (name, cuisine_type, difficulty, prep_time, cook_time, total
 
 6. Remove from heat and let rest for 5 minutes before slicing.
 
-7. Internal temperature should reach 165°F (74°C).', 'Tenderizing ensures even cooking. Don''t move chicken during cooking to get good sear. Resting allows juices to redistribute. Can finish with butter, garlic, and herbs in pan. Adjust timing based on thickness of chicken.', '{"calories": 185, "protein": 31, "carbs": 0, "fat": 6}', true, NOW(), NOW());
+7. Internal temperature should reach 165°F (74°C).', 'Tenderizing ensures even cooking. Don''t move chicken during cooking to get good sear. Resting allows juices to redistribute. Can finish with butter, garlic, and herbs in pan. Adjust timing based on thickness of chicken.', '{"calories": 185, "protein": 31, "carbs": 0, "fat": 6}', false, NOW(), NOW());
 
 -- Insert recipe_tags relationships
 INSERT INTO recipe_tags (recipe_id, tag_id, created_at) VALUES

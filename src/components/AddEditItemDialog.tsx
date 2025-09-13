@@ -40,7 +40,7 @@ interface AddEditItemDialogProps {
   onSave: (item: Omit<FoodItem, 'id' | 'last_edited'>) => Promise<void>;
 }
 
-const categories = ['Fruits', 'Vegetables', 'Proteins', 'Dairy & Eggs', 'Grains & Starches', 'Snacks', 'Beverages', 'Oils & Fats', 'Seasonings & Spices', 'Condiments & Sauces', 'Baking Supplies'];
+const categories = ['Fruits', 'Vegetables', 'Proteins', 'Dairy & Eggs', 'Grains & Starches', 'Snacks', 'Beverages', 'Oils & Fats', 'Single-Ingredient Spices/Herbs', 'Seasoning Blends/Mixes', 'Seasonings & Spices', 'Condiments & Sauces', 'Baking Supplies'];
 
 export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditItemDialogProps) {
   const { toast } = useToast();

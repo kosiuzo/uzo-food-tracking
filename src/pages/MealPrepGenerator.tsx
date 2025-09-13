@@ -122,6 +122,36 @@ const MealPrepGenerator = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showDebugPrompt, setShowDebugPrompt] = useState(false);
 
+  // Helper function to get ingredient count for both regular and AI-generated recipes
+  const getIngredientCount = (recipe: Recipe | GeneratedRecipe): number => {
+    // Check if it's a Recipe object first (stored recipes)
+    const recipeObj = recipe as Recipe;
+
+    // Prioritize ingredient_list for AI-generated recipes (stored)
+    if (recipeObj.ingredient_list && recipeObj.ingredient_list.length > 0) {
+      return recipeObj.ingredient_list.length;
+    }
+
+    // Check for GeneratedRecipe (from AI generation dialog)
+    if ('ingredients' in recipe && Array.isArray(recipe.ingredients) &&
+        recipe.ingredients.length > 0 && typeof recipe.ingredients[0] === 'string') {
+      return recipe.ingredients.length;
+    }
+
+    // If recipe has linked ingredients (regular recipe), use those
+    if (recipeObj.ingredients && recipeObj.ingredients.length > 0) {
+      return recipeObj.ingredients.length;
+    }
+
+    // Handle empty GeneratedRecipe
+    if ('ingredients' in recipe && Array.isArray(recipe.ingredients)) {
+      return recipe.ingredients.length;
+    }
+
+    // Fallback to 0 if no ingredients found
+    return 0;
+  };
+
   // Filter items by exact database categories (in-stock items only)
   const meats = allItems.filter(item => 
     item.in_stock && item.category === 'Proteins'
@@ -1008,7 +1038,7 @@ Return a single JSON object with exactly 3 recipes.`;
                             <div>
                               <h4 className="font-semibold mb-3 flex items-center gap-2">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                Ingredients ({recipe.ingredients.length})
+                                Ingredients ({getIngredientCount(recipe)})
                               </h4>
                               <div className="space-y-2">
                                 {recipe.ingredients.map((ingredient, idx) => (

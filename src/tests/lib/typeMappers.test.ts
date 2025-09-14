@@ -258,6 +258,7 @@ describe('typeMappers', () => {
         is_favorite: true,
         source_link: null,
         notes: null,
+        feedback: null,
       });
     });
 

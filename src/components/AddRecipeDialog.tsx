@@ -138,7 +138,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     .filter(item => item.in_stock)
     .map(item => ({
       label: item.name,
-      value: item.id,
+      value: item.id.toString(),
     }));
 
   // Handle ingredient selection from MultiSelect
@@ -146,10 +146,16 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     setSelectedIngredientIds(selectedIds);
     
     // Update ingredients array based on selection
-    const newIngredients: RecipeIngredient[] = selectedIds.map(itemId => {
+    const newIngredients = selectedIds.map(itemId => {
       // Check if this ingredient already exists
-      const existingIngredient = formData.ingredients.find(ing => ing.item_id === itemId);
-      return existingIngredient || { item_id: itemId, quantity: '1', unit: 'cup' };
+      const existingIngredient = formData.ingredients.find(ing => ing.item_id.toString() === itemId);
+      return existingIngredient || {
+        item_id: parseInt(itemId),
+        quantity: '1',
+        unit: 'cup',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
     });
     
     setFormData(prev => ({
@@ -328,7 +334,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           <div className="space-y-2">
             <Label>Tags</Label>
             <MultiSelect
-              options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+              options={allTags.map(tag => ({ label: tag.name, value: tag.id.toString() }))}
               onValueChange={(values) => setFormData(prev => ({ ...prev, selectedTagIds: values }))}
               defaultValue={formData.selectedTagIds}
               placeholder="Select tags..."

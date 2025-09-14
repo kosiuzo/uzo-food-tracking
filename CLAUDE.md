@@ -97,3 +97,21 @@ The app uses a sophisticated PostgreSQL schema with the following key tables:
 - Meal planning supports flexible day ranges and recipe rotations within blocks
 - **Always test responsive behavior across different screen sizes during development**
 - **Use the existing mobile utilities and hooks for consistent mobile behavior**
+
+### Common Issues and Debugging
+- **MultiSelect Components:** Always ensure database numeric IDs are converted to strings for UI components to prevent "black blobs" or pre-selection failures
+- **Type Consistency:** Database types (numbers) must be consistently converted to UI component expected types (strings) at component boundaries
+- **Form Edit Mode:** Test both add and edit modes when implementing forms with MultiSelect or complex components
+- **Troubleshooting Reference:** See `docs/troubleshooting-guide.md` for detailed solutions to common issues
+
+### Documentation Maintenance
+- **Update `docs/troubleshooting-guide.md` when:**
+  - The same issue occurs multiple times across different features
+  - A bug requires more than 30 minutes to debug and has a non-obvious solution
+  - Issues involve component integration, data flow, or type mismatches
+  - Solutions require understanding of multiple files or architectural patterns
+- **Update this CLAUDE.md when:**
+  - New architectural patterns are established
+  - New development conventions are adopted
+  - New tools or libraries are added to the project
+  - Breaking changes affect multiple components or workflows

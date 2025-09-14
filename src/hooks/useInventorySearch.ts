@@ -272,7 +272,8 @@ export function useInventorySearch(): UseInventorySearchResult {
       if (updates.serving_unit !== undefined) updateData.serving_unit = updates.serving_unit || null;
       if (updates.serving_unit_type !== undefined) updateData.serving_unit_type = updates.serving_unit_type || null;
       if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
-      
+      if (updates.notes !== undefined) updateData.notes = updates.notes || null;
+
       if (updates.nutrition) {
         if (updates.nutrition.calories_per_serving !== undefined) updateData.calories_per_serving = updates.nutrition.calories_per_serving || null;
         if (updates.nutrition.carbs_per_serving !== undefined) updateData.carbs_per_serving = updates.nutrition.carbs_per_serving || null;

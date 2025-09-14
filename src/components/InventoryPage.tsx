@@ -125,6 +125,7 @@ export function InventoryPage() {
                 onEdit={() => setEditingItem(item.id)}
                 onDelete={() => deleteItem(item.id)}
                 onRatingChange={(rating) => updateItem(item.id, { rating })}
+                onUpdateItem={(updates) => updateItem(item.id, updates)}
               />
             ))}
           </div>

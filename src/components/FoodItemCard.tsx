@@ -1,10 +1,11 @@
-import { MoreVertical, Edit, Trash2, MessageSquare } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
+import { QuickNoteDialog } from './QuickNoteDialog';
 import { getFoodItemImage, getDefaultImageByCategory } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
@@ -13,10 +14,12 @@ interface FoodItemCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onRatingChange?: (rating: number) => void;
+  onUpdateItem?: (updates: Partial<FoodItem>) => void;
 }
 
-export function FoodItemCard({ item, onEdit, onDelete, onRatingChange }: FoodItemCardProps) {
+export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateItem }: FoodItemCardProps) {
   const [hasTriedFallback, setHasTriedFallback] = useState(false);
+  const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
 
   // Reset error state when item.image_url changes
   useEffect(() => {
@@ -113,9 +116,21 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange }: FoodIte
           {/* Notes display */}
           {item.notes && item.notes.length > 0 && (
             <div className="space-y-1">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <MessageSquare className="h-3 w-3" />
-                <span>{item.notes.length} note{item.notes.length !== 1 ? 's' : ''}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{item.notes.length} note{item.notes.length !== 1 ? 's' : ''}</span>
+                </div>
+                {onUpdateItem && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsQuickNoteOpen(true)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
               <div className="space-y-1 max-h-20 overflow-y-auto">
                 {item.notes
@@ -143,8 +158,33 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange }: FoodIte
               </div>
             </div>
           )}
+
+          {/* Quick note button when no notes exist */}
+          {(!item.notes || item.notes.length === 0) && onUpdateItem && (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setIsQuickNoteOpen(true)}
+              >
+                <Plus className="mr-1 h-3 w-3" />
+                Add note
+              </Button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Quick Note Dialog */}
+      {onUpdateItem && (
+        <QuickNoteDialog
+          open={isQuickNoteOpen}
+          onOpenChange={setIsQuickNoteOpen}
+          item={item}
+          onSave={onUpdateItem}
+        />
+      )}
     </Card>
   );
 }

@@ -6,6 +6,7 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isCIOrTest = process.env.CI === 'true' || process.env.NODE_ENV === 'test';
   
   return {
     server: {
@@ -17,7 +18,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      VitePWA({
+      ...(isCIOrTest ? [] : [VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
@@ -77,7 +78,7 @@ export default defineConfig(({ mode }) => {
             }
           ]
         }
-      })
+      })])
     ],
     resolve: {
       alias: {

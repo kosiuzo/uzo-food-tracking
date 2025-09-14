@@ -99,7 +99,9 @@ export function dbRecipeToRecipe(
     tags: tags,
     created_at: dbRecipe.created_at || new Date().toISOString(),
     updated_at: dbRecipe.updated_at || new Date().toISOString(),
-    ...((dbRecipe as any).feedback ? { feedback: (dbRecipe as any).feedback } : {}),
+    ...(dbRecipe.feedback
+      ? { feedback: dbRecipe.feedback as NonNullable<DbRecipeRow['feedback']> }
+      : {}),
   };
 }
 

@@ -1,3 +1,8 @@
+export interface ItemNote {
+  text: string;
+  date: string;
+}
+
 export interface FoodItem {
   id: number; // Changed from string to match database
   name: string;
@@ -10,6 +15,7 @@ export interface FoodItem {
   serving_unit_type?: 'volume' | 'weight' | 'package';
   image_url?: string;
   ingredients?: string;
+  notes?: ItemNote[];
   nutrition: {
     calories_per_serving: number;
     protein_per_serving: number;
@@ -41,6 +47,7 @@ export interface DbItem {
   serving_unit_type?: 'volume' | 'weight' | 'package' | null;
   image_url?: string | null;
   ingredients?: string | null;
+  notes?: ItemNote[] | null;
   nutrition_source?: string | null;
   barcode?: string | null;
   last_purchased?: string | null;

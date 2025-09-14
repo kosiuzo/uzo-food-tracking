@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FoodItem } from '../types';
+import { FoodItem, ItemNote } from '../types';
 import { StarRating } from './StarRating';
+import { ItemNotes } from './ItemNotes';
 
 // Form-specific type that allows string values during editing
 interface FoodItemFormData {
@@ -16,6 +17,7 @@ interface FoodItemFormData {
   image_url: string;
   ingredients: string;
   rating: number;
+  notes: ItemNote[];
 }
 
 interface AddEditItemDialogProps {
@@ -38,6 +40,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
     image_url: '',
     ingredients: '',
     rating: 0,
+    notes: [],
   });
 
   useEffect(() => {
@@ -49,6 +52,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         image_url: item.image_url || '',
         ingredients: item.ingredients || '',
         rating: item.rating || 0,
+        notes: item.notes || [],
       });
     } else {
       setFormData({
@@ -58,6 +62,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
         image_url: '',
         ingredients: '',
         rating: 0,
+        notes: [],
       });
     }
   }, [item, open]);
@@ -99,6 +104,7 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
           fat_per_serving: 0,
           fiber_per_serving: 0,
         },
+        notes: formData.notes,
       };
 
       await onSave(dataToSave);
@@ -238,6 +244,12 @@ export function AddEditItemDialog({ open, onOpenChange, item, onSave }: AddEditI
               rows={4}
             />
           </div>
+
+          {/* Notes */}
+          <ItemNotes
+            notes={formData.notes}
+            onNotesChange={(notes) => setFormData(prev => ({ ...prev, notes }))}
+          />
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">

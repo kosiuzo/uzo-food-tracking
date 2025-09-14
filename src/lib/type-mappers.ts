@@ -27,6 +27,7 @@ export function dbItemToFoodItem(dbItem: DbItemRow): FoodItem {
     serving_unit_type: dbItem.serving_unit_type || undefined,
     image_url: dbItem.image_url || undefined,
     ingredients: dbItem.ingredients || undefined,
+    notes: (dbItem.notes as { text: string; date: string }[]) || [],
     nutrition: {
       calories_per_serving: dbItem.calories_per_serving || 0,
       protein_per_serving: dbItem.protein_per_serving || 0,
@@ -64,6 +65,7 @@ export function foodItemToDbInsert(item: Partial<FoodItem>): Database['public'][
     fat_per_serving: item.nutrition?.fat_per_serving || null,
     rating: item.rating || null,
     last_purchased: item.last_purchased || null,
+    notes: item.notes || null,
   };
 }
 

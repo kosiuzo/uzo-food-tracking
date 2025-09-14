@@ -27,6 +27,7 @@ export interface Database {
           last_edited: string | null
           normalized_name: string | null
           ingredients: string | null
+          notes: { text: string; date: string }[] | null
           created_at: string
           updated_at: string
         }
@@ -55,6 +56,7 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          notes?: { text: string; date: string }[] | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -83,6 +85,7 @@ export interface Database {
           last_edited?: string | null
           normalized_name?: never
           ingredients?: string | null
+          notes?: { text: string; date: string }[] | null
           created_at?: string | null
           updated_at?: string | null
         }

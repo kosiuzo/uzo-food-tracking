@@ -1,4 +1,4 @@
-import { MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -107,6 +107,40 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange }: FoodIte
               <p className="text-sm text-muted-foreground leading-relaxed">
                 <span className="font-medium">Ingredients:</span> {item.ingredients}
               </p>
+            </div>
+          )}
+
+          {/* Notes display */}
+          {item.notes && item.notes.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MessageSquare className="h-3 w-3" />
+                <span>{item.notes.length} note{item.notes.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="space-y-1 max-h-20 overflow-y-auto">
+                {item.notes
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 2)
+                  .map((note, index) => (
+                    <div key={`${note.date}-${index}`} className="text-xs bg-muted/50 rounded px-2 py-1">
+                      <p className="text-foreground text-xs leading-tight">{note.text}</p>
+                      <p className="text-muted-foreground text-[10px] mt-0.5">
+                        {new Date(note.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  ))
+                }
+                {item.notes.length > 2 && (
+                  <p className="text-[10px] text-muted-foreground pl-2">
+                    +{item.notes.length - 2} more note{item.notes.length - 2 !== 1 ? 's' : ''}...
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

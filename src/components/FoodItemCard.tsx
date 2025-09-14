@@ -26,32 +26,36 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateI
     setHasTriedFallback(false);
   }, [item.image_url, item.id]);
 
+  // Only show image if the item has a real image_url (not empty/null)
+  const hasRealImage = item.image_url && item.image_url.trim() !== '';
   const currentImageUrl = getFoodItemImage(item.image_url, item.category);
 
   return (
     <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="flex gap-3">
-        {/* Image */}
-        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-          <img
-            src={currentImageUrl}
-            alt={item.name}
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              // Only fallback if we haven't tried yet and it's not already the default
-              const target = e.target as HTMLImageElement;
-              if (!hasTriedFallback && item.image_url && item.image_url.trim() !== '') {
-                setHasTriedFallback(true);
-                target.src = getDefaultImageByCategory(item.category);
-              }
-            }}
-            onLoad={() => {
-              // Reset error states when image loads successfully
-              setHasTriedFallback(false);
-            }}
-            key={item.image_url || 'default'} // Force re-render when image URL changes
-          />
-        </div>
+        {/* Image - only show if item has a real image */}
+        {hasRealImage && (
+          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+            <img
+              src={currentImageUrl}
+              alt={item.name}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                // Only fallback if we haven't tried yet and it's not already the default
+                const target = e.target as HTMLImageElement;
+                if (!hasTriedFallback && item.image_url && item.image_url.trim() !== '') {
+                  setHasTriedFallback(true);
+                  target.src = getDefaultImageByCategory(item.category);
+                }
+              }}
+              onLoad={() => {
+                // Reset error states when image loads successfully
+                setHasTriedFallback(false);
+              }}
+              key={item.image_url || 'default'} // Force re-render when image URL changes
+            />
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-2">

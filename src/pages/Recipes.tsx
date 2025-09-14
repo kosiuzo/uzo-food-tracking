@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, Heart, Trash2, Bot, Utensils, Tag } from 'lucide-react';
+import { Plus, Search, Clock, Users, Edit, Heart, Trash2, Bot, Utensils, Tag, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { useRecipes } from '../hooks/useRecipes';
 import { useRecipeTagManagement, useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { Recipe } from '../types';
+import { QuickFeedbackDialog } from '../components/QuickFeedbackDialog';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
@@ -31,6 +32,7 @@ export default function Recipes() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
+  const [feedbackForRecipe, setFeedbackForRecipe] = useState<Recipe | null>(null);
 
   // Helper function to get ingredient count for both regular and AI-generated recipes
   const getIngredientCount = (recipe: Recipe): number => {
@@ -329,6 +331,51 @@ export default function Recipes() {
                       </div>
                     )}
                   </div>
+
+                  {/* Quick Feedback (comments) */}
+                  <div className="rounded-lg border bg-card p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MessageSquare className="h-3 w-3" />
+                        <span>{(recipe.feedback?.length || 0)} comment{(recipe.feedback?.length || 0) !== 1 ? 's' : ''}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => setFeedbackForRecipe(recipe)}
+                        aria-label="Add comment"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {(recipe.feedback && recipe.feedback.length > 0) ? (
+                      <div className="space-y-1 mt-2 max-h-20 overflow-y-auto">
+                        {recipe.feedback
+                          ?.slice()
+                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .slice(0, 2)
+                          .map((fb, idx) => (
+                            <div key={`${fb.date}-${idx}`} className="text-xs bg-muted/50 rounded px-2 py-1">
+                              <p className="text-foreground text-xs leading-tight">{fb.text}</p>
+                              <p className="text-muted-foreground text-[10px] mt-0.5">
+                                {new Date(fb.date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          ))}
+                        {(recipe.feedback?.length || 0) > 2 && (
+                          <p className="text-[10px] text-muted-foreground pl-2">+{(recipe.feedback!.length - 2)} more comment{(recipe.feedback!.length - 2) !== 1 ? 's' : ''}...</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-2">No comments yet. Be the first to add one.</p>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))
@@ -387,6 +434,21 @@ export default function Recipes() {
           open={isTagDialogOpen}
           onOpenChange={setIsTagDialogOpen}
         />
+
+        {/* Quick Feedback Dialog */}
+        {feedbackForRecipe && (
+          <QuickFeedbackDialog
+            open={!!feedbackForRecipe}
+            onOpenChange={(open) => {
+              if (!open) setFeedbackForRecipe(null);
+            }}
+            recipe={feedbackForRecipe}
+            onSave={async (updates) => {
+              await updateRecipe(feedbackForRecipe.id, updates);
+              setFeedbackForRecipe(null);
+            }}
+          />
+        )}
       </div>
     </Layout>
   );

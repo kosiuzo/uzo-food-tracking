@@ -83,6 +83,7 @@ export function dbRecipeToRecipe(dbRecipe: DbRecipe, ingredients: RecipeIngredie
     tags,
     created_at: dbRecipe.created_at || new Date().toISOString(),
     updated_at: dbRecipe.updated_at || new Date().toISOString(),
+    ...(dbRecipe.feedback ? { feedback: dbRecipe.feedback } : {}),
   };
 }
 
@@ -102,6 +103,7 @@ export function recipeToDbInsert(recipe: Omit<Recipe, 'id'>): Omit<DbRecipe, 'id
     is_favorite: recipe.is_favorite || false,
     source_link: null,
     notes: recipe.notes || null,
+    feedback: recipe.feedback || null,
   };
 }
 

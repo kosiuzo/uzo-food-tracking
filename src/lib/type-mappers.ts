@@ -99,6 +99,7 @@ export function dbRecipeToRecipe(
     tags: tags,
     created_at: dbRecipe.created_at || new Date().toISOString(),
     updated_at: dbRecipe.updated_at || new Date().toISOString(),
+    ...((dbRecipe as any).feedback ? { feedback: (dbRecipe as any).feedback } : {}),
   };
 }
 
@@ -121,6 +122,7 @@ export function recipeToDbInsert(recipe: Partial<Recipe>): Database['public']['T
     } : null,
     is_favorite: recipe.is_favorite || false,
     notes: recipe.notes || null,
+    feedback: recipe.feedback || null,
   };
 }
 

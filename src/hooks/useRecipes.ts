@@ -218,6 +218,7 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
       if (updatesWithoutTags.nutrition_source !== undefined) updateData.nutrition_source = updatesWithoutTags.nutrition_source;
       if (updatesWithoutTags.is_favorite !== undefined) updateData.is_favorite = updatesWithoutTags.is_favorite;
       if (updatesWithoutTags.notes !== undefined) updateData.notes = updatesWithoutTags.notes;
+      if (updatesWithoutTags.feedback !== undefined) updateData.feedback = updatesWithoutTags.feedback as unknown as Record<string, unknown>[];
 
       // Update recipe
       const { error: recipeError } = await supabase

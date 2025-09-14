@@ -103,6 +103,7 @@ export interface Database {
           is_favorite: boolean | null
           source_link: string | null
           notes: string | null
+          feedback: { text: string; date: string }[] | null
           times_cooked: number | null
           last_cooked: string | null
           created_at: string | null
@@ -120,6 +121,7 @@ export interface Database {
           is_favorite?: boolean | null
           source_link?: string | null
           notes?: string | null
+          feedback?: { text: string; date: string }[] | null
           times_cooked?: number | null
           last_cooked?: string | null
           created_at?: string | null
@@ -137,6 +139,7 @@ export interface Database {
           is_favorite?: boolean | null
           source_link?: string | null
           notes?: string | null
+          feedback?: { text: string; date: string }[] | null
           times_cooked?: number | null
           last_cooked?: string | null
           created_at?: string | null

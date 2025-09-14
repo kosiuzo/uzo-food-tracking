@@ -78,6 +78,8 @@ export interface Recipe {
   };
   is_favorite?: boolean;
   notes?: string;
+  // New: user feedback entries (quick comments with timestamp)
+  feedback?: ItemNote[];
   tags?: Tag[]; // Normalized tags
   created_at: string; // Added for consistency
   updated_at: string; // Added for consistency
@@ -96,6 +98,7 @@ export interface DbRecipe {
   is_favorite?: boolean | null;
   source_link?: string | null;
   notes?: string | null;
+  feedback?: ItemNote[] | null;
   times_cooked?: number | null;
   last_cooked?: string | null;
   created_at?: string | null;

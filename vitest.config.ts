@@ -11,6 +11,8 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      // Exclude Playwright E2E tests living under root `tests/`
+      'tests/**',
       '**/tests/e2e/**',
       '**/*.e2e.spec.{js,ts}',
       '**/*.e2e.test.{js,ts}',

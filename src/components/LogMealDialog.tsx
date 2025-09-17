@@ -17,6 +17,8 @@ interface LogMealDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave?: (mealLog: Omit<MealLog, 'id'>) => void;
   editingMealLog?: MealLog;
+  addMealLogFromItems?: (items: string[], notes?: string, rating?: number) => Promise<MealLog>;
+  addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>) => Promise<MealLog[]>;
 }
 
 interface MealEntry {
@@ -36,9 +38,20 @@ interface MealEntry {
   isProcessing?: boolean;
 }
 
-export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: LogMealDialogProps) {
+export function LogMealDialog({
+  open,
+  onOpenChange,
+  onSave,
+  editingMealLog,
+  addMealLogFromItems: propAddMealLogFromItems,
+  addBatchMealLogsFromItems: propAddBatchMealLogsFromItems
+}: LogMealDialogProps) {
   const { toast } = useToast();
-  const { addMealLogFromItems, addBatchMealLogsFromItems } = useMealLogs();
+
+  // Use props if provided, otherwise fall back to hook (for backward compatibility)
+  const fallbackHook = useMealLogs();
+  const addMealLogFromItems = propAddMealLogFromItems || fallbackHook.addMealLogFromItems;
+  const addBatchMealLogsFromItems = propAddBatchMealLogsFromItems || fallbackHook.addBatchMealLogsFromItems;
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -124,6 +137,24 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
     ));
   };
 
+  const resetEntry = (entryId: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId
+        ? { ...entry, items: [], notes: '', rating: undefined, aiResult: undefined, isProcessing: false }
+        : entry
+    ));
+    setItemInputs(prev => ({ ...prev, [entryId]: '' }));
+  };
+
+  const resetAllEntries = () => {
+    const newEntryId = Date.now().toString();
+    setMealEntries([{
+      id: newEntryId,
+      items: [],
+    }]);
+    setItemInputs({ [newEntryId]: '' });
+  };
+
   const processEntryWithAI = async (entryId: string) => {
     const entry = mealEntries.find(e => e.id === entryId);
     if (!entry || entry.items.length === 0) {
@@ -161,11 +192,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         title: "Success!",
         description: `Meal "${result.meal_name}" has been logged successfully.`,
       });
-
-      // Close dialog after successful processing
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 1500);
 
     } catch (error) {
       setMealEntries(prev => prev.map(e =>
@@ -222,11 +248,6 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         title: "Success!",
         description: `${results.length} meal${results.length !== 1 ? 's' : ''} logged successfully.`,
       });
-
-      // Close dialog after successful batch processing
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 1500);
 
     } catch (error) {
       toast({
@@ -356,11 +377,19 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
 
               {/* AI Result Display */}
               {entry.aiResult && (
-                <div className="bg-muted/50 p-3 rounded-md space-y-2">
+                <div className="bg-green-50 border border-green-200 p-3 rounded-md space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-800">Meal Logged Successfully!</span>
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-2">
                     <Utensils className="h-4 w-4 text-primary" />
                     <span className="font-medium">{entry.aiResult.meal_name}</span>
                   </div>
+
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                     <div>
                       <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
@@ -374,6 +403,18 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                     <div>
                       <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
                     </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => resetEntry(entry.id)}
+                      className="flex items-center gap-1"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Log Another Meal
+                    </Button>
                   </div>
                 </div>
               )}
@@ -425,22 +466,13 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-
+          <div className="flex flex-col gap-3 pt-4">
             {!editingMealLog && hasMultipleEntries && (
               <Button
                 type="button"
                 onClick={processBatchWithAI}
                 disabled={!canProcessBatch}
-                className="flex-1 flex items-center gap-2"
+                className="w-full flex items-center gap-2"
               >
                 {isProcessing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -450,6 +482,29 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
                 {isProcessing ? 'Processing...' : `Process All ${mealEntries.length} Meals`}
               </Button>
             )}
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+
+              {!editingMealLog && mealEntries.some(entry => entry.aiResult) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetAllEntries}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Start Fresh
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

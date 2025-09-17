@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
 
 export default function Meals() {
-  const { mealLogs, addMealLog, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
+  const { mealLogs, addMealLog, addMealLogFromItems, addBatchMealLogsFromItems, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
@@ -489,6 +489,8 @@ export default function Meals() {
             }
           }}
           editingMealLog={editingMealLog}
+          addMealLogFromItems={addMealLogFromItems}
+          addBatchMealLogsFromItems={addBatchMealLogsFromItems}
         />
 
         {/* Delete Confirmation Dialog */}

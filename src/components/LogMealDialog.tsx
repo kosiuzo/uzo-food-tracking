@@ -19,6 +19,7 @@ interface LogMealDialogProps {
   editingMealLog?: MealLog;
   addMealLogFromItems?: (items: string[], notes?: string, rating?: number) => Promise<MealLog>;
   addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>) => Promise<MealLog[]>;
+  updateMealLog?: (id: number, updatedData: Omit<MealLog, 'id'>) => Promise<void>;
 }
 
 interface MealEntry {
@@ -44,7 +45,8 @@ export function LogMealDialog({
   onSave,
   editingMealLog,
   addMealLogFromItems: propAddMealLogFromItems,
-  addBatchMealLogsFromItems: propAddBatchMealLogsFromItems
+  addBatchMealLogsFromItems: propAddBatchMealLogsFromItems,
+  updateMealLog: propUpdateMealLog
 }: LogMealDialogProps) {
   const { toast } = useToast();
 
@@ -52,6 +54,7 @@ export function LogMealDialog({
   const fallbackHook = useMealLogs();
   const addMealLogFromItems = propAddMealLogFromItems || fallbackHook.addMealLogFromItems;
   const addBatchMealLogsFromItems = propAddBatchMealLogsFromItems || fallbackHook.addBatchMealLogsFromItems;
+  const updateMealLog = propUpdateMealLog || fallbackHook.updateMealLog;
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -137,6 +140,37 @@ export function LogMealDialog({
     ));
   };
 
+  const updateEntryMacros = (entryId: string, field: keyof MealEntry['aiResult']['macros'], value: number) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId && entry.aiResult
+        ? {
+            ...entry,
+            aiResult: {
+              ...entry.aiResult,
+              macros: {
+                ...entry.aiResult.macros,
+                [field]: value
+              }
+            }
+          }
+        : entry
+    ));
+  };
+
+  const updateEntryMealName = (entryId: string, mealName: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId && entry.aiResult
+        ? {
+            ...entry,
+            aiResult: {
+              ...entry.aiResult,
+              meal_name: mealName
+            }
+          }
+        : entry
+    ));
+  };
+
   const resetEntry = (entryId: string) => {
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId
@@ -201,6 +235,39 @@ export function LogMealDialog({
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to process meal with AI",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveEditedMeal = async () => {
+    if (!editingMealLog || mealEntries.length === 0) return;
+
+    const entry = mealEntries[0];
+    if (!entry.aiResult) return;
+
+    try {
+      const updatedMealLog: Omit<MealLog, 'id'> = {
+        items: entry.items,
+        meal_name: entry.aiResult.meal_name,
+        notes: entry.notes,
+        rating: entry.rating,
+        macros: entry.aiResult.macros,
+        created_at: editingMealLog.created_at,
+      };
+
+      await updateMealLog(editingMealLog.id, updatedMealLog);
+
+      toast({
+        title: "Success!",
+        description: "Meal log updated successfully.",
+      });
+
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update meal log",
         variant: "destructive",
       });
     }
@@ -381,41 +448,105 @@ export function LogMealDialog({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-600" />
-                      <span className="font-medium text-green-800">Meal Logged Successfully!</span>
+                      <span className="font-medium text-green-800">
+                        {editingMealLog ? 'Meal Details' : 'Meal Logged Successfully!'}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4 text-primary" />
-                    <span className="font-medium">{entry.aiResult.meal_name}</span>
+                  {/* Meal Name - Editable in edit mode */}
+                  <div className="space-y-2">
+                    <Label>Meal Name</Label>
+                    {editingMealLog ? (
+                      <Input
+                        value={entry.aiResult.meal_name}
+                        onChange={(e) => updateEntryMealName(entry.id, e.target.value)}
+                        className="font-medium"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Utensils className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{entry.aiResult.meal_name}</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
-                    </div>
-                    <div>
-                      <span className="font-medium">Protein:</span> {entry.aiResult.macros.protein}g
-                    </div>
-                    <div>
-                      <span className="font-medium">Carbs:</span> {entry.aiResult.macros.carbs}g
-                    </div>
-                    <div>
-                      <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
-                    </div>
+                  {/* Macros - Editable in edit mode */}
+                  <div className="space-y-3">
+                    <Label>Nutritional Information</Label>
+                    {editingMealLog ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Calories</Label>
+                          <Input
+                            type="number"
+                            value={entry.aiResult.macros.calories}
+                            onChange={(e) => updateEntryMacros(entry.id, 'calories', parseInt(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Protein (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.protein}
+                            onChange={(e) => updateEntryMacros(entry.id, 'protein', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Carbs (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.carbs}
+                            onChange={(e) => updateEntryMacros(entry.id, 'carbs', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Fat (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.fat}
+                            onChange={(e) => updateEntryMacros(entry.id, 'fat', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
+                        </div>
+                        <div>
+                          <span className="font-medium">Protein:</span> {entry.aiResult.macros.protein}g
+                        </div>
+                        <div>
+                          <span className="font-medium">Carbs:</span> {entry.aiResult.macros.carbs}g
+                        </div>
+                        <div>
+                          <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => resetEntry(entry.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus className="h-3 w-3" />
-                      Log Another Meal
-                    </Button>
-                  </div>
+                  {!editingMealLog && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => resetEntry(entry.id)}
+                        className="flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Log Another Meal
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -490,19 +621,29 @@ export function LogMealDialog({
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
               >
-                Close
+                {editingMealLog ? 'Cancel' : 'Close'}
               </Button>
 
-              {!editingMealLog && mealEntries.some(entry => entry.aiResult) && (
+              {editingMealLog ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={resetAllEntries}
-                  className="flex-1 flex items-center gap-2"
+                  onClick={saveEditedMeal}
+                  className="flex-1"
                 >
-                  <Plus className="h-4 w-4" />
-                  Start Fresh
+                  Save Changes
                 </Button>
+              ) : (
+                mealEntries.some(entry => entry.aiResult) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetAllEntries}
+                    className="flex-1 flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Start Fresh
+                  </Button>
+                )
               )}
             </div>
           </div>

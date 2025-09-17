@@ -495,6 +495,7 @@ export default function Meals() {
           editingMealLog={editingMealLog}
           addMealLogFromItems={addMealLogFromItems}
           addBatchMealLogsFromItems={addBatchMealLogsFromItems}
+          updateMealLog={updateMealLog}
         />
 
         {/* Delete Confirmation Dialog */}

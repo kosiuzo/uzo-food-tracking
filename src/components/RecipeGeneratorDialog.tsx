@@ -15,6 +15,7 @@ import { useTags } from '../hooks/useTags';
 import { RecipePreviewDialog } from './RecipePreviewDialog';
 // calculateRecipeNutrition not used here; parsing uses aiJson utilities
 import { parseFirstJsonObject } from '../lib/aiJson';
+import { openRouterClient, OpenRouterError, OpenRouterErrorType } from '../lib/openrouter';
 import { CUISINE_STYLES, DIETARY_RESTRICTIONS } from '../lib/constants';
 
 interface RecipeGeneratorDialogProps {
@@ -118,26 +119,17 @@ IMPORTANT:
 
 Output: Return a single JSON object ONLY. No explanations, no markdown, no code fences.`;
 
-      // Call OpenRouter API with streamlined approach
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUTER_API_KEY}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "FoodTracker Recipe Generator",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "microsoft/mai-ds-r1:free",
-          "temperature": 0.3,
-          "top_p": 0.9,
-          "max_tokens": 2000,
-          // Prefer JSON mode if the route honors it
-          "response_format": { "type": "json_object" },
-          "messages": [
-            {
-              "role": "system",
-              "content": `Return only valid JSON. Output a single JSON object, with no code fences and no extra text. Use this exact schema:
+      // Use the shared OpenRouter client
+      const response = await openRouterClient.makeRequestWithRetry({
+        model: "microsoft/mai-ds-r1:free",
+        temperature: 0.3,
+        top_p: 0.9,
+        max_tokens: 2000,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `Return only valid JSON. Output a single JSON object, with no code fences and no extra text. Use this exact schema:
 {
   "name": "Recipe Name",
   "instructions": "Step by step cooking instructions as one paragraph.",
@@ -160,25 +152,15 @@ Rules:
 - Calculate realistic nutrition values based on the specific ingredients and quantities used.
 - Select relevant tags from the available tags list provided by the user.
 - Do not add any commentary before or after the JSON.`
-            },
-            {
-              "role": "user",
-              "content": userPrompt
-            }
-          ]
-        })
-      });
+          },
+          {
+            role: "user",
+            content: userPrompt
+          }
+        ]
+      }, 'Recipe Generation', 1); // Allow 1 retry
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const generatedText = data.choices?.[0]?.message?.content as string | undefined;
-      if (!generatedText || typeof generatedText !== 'string') {
-        console.error('AI returned empty or invalid content:', generatedText);
-        throw new Error('Failed to parse AI response');
-      }
+      const generatedText = response.choices[0].message.content;
 
       // Try to extract JSON from the response (robust)
       let parsedRecipe: {
@@ -198,18 +180,20 @@ Rules:
       try {
         parsedRecipe = parseFirstJsonObject(generatedText);
       } catch (parseError) {
-        console.warn('Failed to parse AI response as JSON:', parseError);
-        console.warn('Raw AI response:', generatedText);
-        
-        // Notify user about the failure
+        const error: OpenRouterError = {
+          type: OpenRouterErrorType.JSON_PARSE_ERROR,
+          message: 'Failed to parse recipe generation AI response',
+          details: { parseError, rawResponse: generatedText },
+          shouldRetry: false
+        };
+
         toast({
           title: 'AI Generation Failed',
           description: 'Failed to generate recipe. Please try again or check your API configuration.',
           variant: 'destructive',
         });
-        
-        // Don't create fallback recipe - just throw the error
-        throw new Error('Failed to parse AI response');
+
+        throw error;
       }
 
       // Validate nutrition data
@@ -282,17 +266,50 @@ Rules:
       
     } catch (error) {
       console.error('Recipe generation failed:', error);
-      
-      // More specific error handling
-      if (error instanceof Error && error.message.includes('API request failed')) {
-        toast({
-          title: 'API Connection Failed',
-          description: 'Unable to connect to AI service. Please check your internet connection and API configuration.',
-          variant: 'destructive',
-        });
-      } else if (error instanceof Error && error.message.includes('Failed to parse')) {
-        // Parsing error notification already shown above
+
+      // Handle OpenRouterError with detailed messaging
+      if (error instanceof Error && 'type' in error) {
+        const openRouterError = error as OpenRouterError;
+
+        // Provide specific error messages based on error type
+        switch (openRouterError.type) {
+          case OpenRouterErrorType.AUTH_ERROR:
+            toast({
+              title: 'Authentication Error',
+              description: 'Invalid API key. Please check your OpenRouter configuration.',
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.RATE_LIMIT:
+            toast({
+              title: 'Rate Limit Exceeded',
+              description: `Too many requests. Please wait ${openRouterError.retryAfter || 60} seconds before trying again.`,
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.QUOTA_EXCEEDED:
+            toast({
+              title: 'Quota Exceeded',
+              description: 'API quota exceeded. Please check your OpenRouter account balance.',
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.JSON_PARSE_ERROR:
+            // Error notification already shown above
+            break;
+
+          default:
+            toast({
+              title: 'AI Generation Failed',
+              description: openRouterError.message,
+              variant: 'destructive',
+            });
+        }
       } else {
+        // Fallback for non-OpenRouter errors
         toast({
           title: 'Generation Failed',
           description: 'Unable to generate recipe. Please try again with different ingredients.',

@@ -240,54 +240,75 @@ export default function Meals() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedDate 
-                    ? 'Meals on ' + formatDateStringForDisplay(selectedDate)
-                    : dateRange
-                    ? `Meals ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
-                    : 'Total Meals'
-                  }
-                </div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.macros.calories, 0).toFixed(1)}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedDate
-                    ? 'Calories on ' + formatDateStringForDisplay(selectedDate)
-                    : dateRange
-                    ? `Calories ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
-                    : 'Total Calories'
-                  }
-                </div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.macros.protein, 0).toFixed(1)}g
-                </div>
-                <div className="text-sm text-muted-foreground">Protein</div>
-              </Card>
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.macros.carbs, 0).toFixed(1)}g
-                </div>
-                <div className="text-sm text-muted-foreground">Carbs</div>
-              </Card>
-            </div>
+            {(() => {
+              const totalProtein = filteredMeals.reduce((sum, log) => sum + log.macros.protein, 0);
+              const totalCarbs = filteredMeals.reduce((sum, log) => sum + log.macros.carbs, 0);
+              const totalFat = filteredMeals.reduce((sum, log) => sum + log.macros.fat, 0);
+              const totalMacros = totalProtein + totalCarbs + totalFat;
 
-            {/* Additional Stats Row */}
-            <div className="grid grid-cols-1 gap-4">
-              <Card className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.macros.fat, 0).toFixed(1)}g
-                </div>
-                <div className="text-sm text-muted-foreground">Fat</div>
-              </Card>
-            </div>
+              const proteinPercentage = totalMacros > 0 ? (totalProtein / totalMacros * 100) : 0;
+              const carbsPercentage = totalMacros > 0 ? (totalCarbs / totalMacros * 100) : 0;
+              const fatPercentage = totalMacros > 0 ? (totalFat / totalMacros * 100) : 0;
+
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <Card className="p-4 text-center">
+                      <div className="text-2xl font-bold text-primary">{filteredMeals.length}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {selectedDate
+                          ? 'Meals on ' + formatDateStringForDisplay(selectedDate)
+                          : dateRange
+                          ? `Meals ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
+                          : 'Total Meals'
+                        }
+                      </div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {filteredMeals.reduce((sum, log) => sum + log.macros.calories, 0).toFixed(1)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {selectedDate
+                          ? 'Calories on ' + formatDateStringForDisplay(selectedDate)
+                          : dateRange
+                          ? `Calories ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
+                          : 'Total Calories'
+                        }
+                      </div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {totalProtein.toFixed(1)}g
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Protein ({proteinPercentage.toFixed(1)}%)
+                      </div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {totalCarbs.toFixed(1)}g
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Carbs ({carbsPercentage.toFixed(1)}%)
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* Additional Stats Row */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <Card className="p-4 text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {totalFat.toFixed(1)}g
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Fat ({fatPercentage.toFixed(1)}%)
+                      </div>
+                    </Card>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Recent Meals */}
             <div className="space-y-3">

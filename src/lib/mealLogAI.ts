@@ -12,7 +12,7 @@ interface MealLogAIResponse {
     fat: number;
   };
 }
-
+ 
 /**
  * Generate system and user prompts for meal log processing
  * @param items Array of food item strings
@@ -40,12 +40,16 @@ Rules:
 - Calculate realistic total macronutrients for all items combined
 - Base calculations on typical nutritional values for the specified quantities
 - IMPORTANT: When user says "1 sirloin steak" or "1 chicken breast", interpret as the ENTIRE item, not a serving size
-  - "1 sirloin steak" = whole steak (8-12 oz)
-  - "1 chicken breast" = whole breast (6-8 oz)
+  - "1 sirloin steak" = whole steak (8-12 oz) = ~600-900 calories, 50-75g protein
+  - "1 chicken breast" = whole breast (6-8 oz) = ~350-500 calories, 50-70g protein
+  - "16 oz sirloin steak" = full pound = ~1000+ calories, 80-100g protein
   - "1 apple" = whole medium apple
   - "1 banana" = whole medium banana
+  - "1 air fried potato" = medium russet potato (~200g) = ~200-250 calories, 4-5g protein
 - If quantities aren't specified, assume reasonable whole item portions
-- Be conservative with calculations - it's better to slightly underestimate than overestimate
+- For cooking methods that add fat (fried, air fried with oil), add appropriate calories from oil/fat
+- Use accurate nutritional values based on USDA data and standard serving sizes
+- Do not underestimate - provide realistic and accurate macro calculations
 - All macro values should be integers (round to nearest whole number)
 - Meal name should be concise but descriptive (e.g., "Scrambled Eggs with Toast", "Greek Yogurt Bowl")`;
 
@@ -108,7 +112,7 @@ export async function processMealLogWithAI(items: string[]): Promise<MealLogAIRe
       },
       body: JSON.stringify({
         "model": "meta-llama/llama-3.2-3b-instruct:free",
-        "temperature": 0.3,
+        "temperature": 0.1,
         "top_p": 0.9,
         "max_tokens": 1000,
         // Prefer JSON mode if the route honors it
@@ -134,12 +138,16 @@ Rules:
 - Calculate realistic total macronutrients for all items combined
 - Base calculations on typical nutritional values for the specified quantities
 - IMPORTANT: When user says "1 sirloin steak" or "1 chicken breast", interpret as the ENTIRE item, not a serving size
-  - "1 sirloin steak" = whole steak (8-12 oz)
-  - "1 chicken breast" = whole breast (6-8 oz)
+  - "1 sirloin steak" = whole steak (8-12 oz) = ~600-900 calories, 50-75g protein
+  - "1 chicken breast" = whole breast (6-8 oz) = ~350-500 calories, 50-70g protein
+  - "16 oz sirloin steak" = full pound = ~1000+ calories, 80-100g protein
   - "1 apple" = whole medium apple
   - "1 banana" = whole medium banana
+  - "1 air fried potato" = medium russet potato (~200g) = ~200-250 calories, 4-5g protein
 - If quantities aren't specified, assume reasonable whole item portions
-- Be conservative with calculations - it's better to slightly underestimate than overestimate
+- For cooking methods that add fat (fried, air fried with oil), add appropriate calories from oil/fat
+- Use accurate nutritional values based on USDA data and standard serving sizes
+- Do not underestimate - provide realistic and accurate macro calculations
 - All macro values should be integers (round to nearest whole number)
 - Meal name should be concise but descriptive (e.g., "Scrambled Eggs with Toast", "Greek Yogurt Bowl")`
           },

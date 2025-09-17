@@ -162,6 +162,11 @@ export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: Lo
         description: `Meal "${result.meal_name}" has been logged successfully.`,
       });
 
+      // Close dialog after successful processing
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+
     } catch (error) {
       setMealEntries(prev => prev.map(e =>
         e.id === entryId ? { ...e, isProcessing: false } : e

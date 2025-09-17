@@ -157,7 +157,7 @@ export function LogMealDialog({
 
   const processEntryWithAI = async (entryId: string) => {
     const entry = mealEntries.find(e => e.id === entryId);
-    if (!entry || entry.items.length === 0) {
+    if (!entry || !entry.items?.length) {
       toast({
         title: "Error",
         description: "Please add some food items before processing with AI",
@@ -207,7 +207,7 @@ export function LogMealDialog({
   };
 
   const processBatchWithAI = async () => {
-    const validEntries = mealEntries.filter(entry => entry.items.length > 0);
+    const validEntries = mealEntries.filter(entry => entry.items?.length > 0);
 
     if (validEntries.length === 0) {
       toast({
@@ -267,7 +267,7 @@ export function LogMealDialog({
     }
   };
 
-  const canProcessBatch = mealEntries.some(entry => entry.items.length > 0) && !isProcessing;
+  const canProcessBatch = mealEntries.some(entry => entry.items?.length > 0) && !isProcessing;
   const hasMultipleEntries = mealEntries.length > 1;
 
   return (
@@ -307,7 +307,7 @@ export function LogMealDialog({
                       size="sm"
                       variant="outline"
                       onClick={() => processEntryWithAI(entry.id)}
-                      disabled={entry.items.length === 0 || entry.isProcessing}
+                      disabled={!entry.items?.length || entry.isProcessing}
                       className="flex items-center gap-1"
                     >
                       {entry.isProcessing ? (
@@ -354,9 +354,9 @@ export function LogMealDialog({
                 </div>
 
                 {/* Display Added Items */}
-                {entry.items.length > 0 && (
+                {entry.items?.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {entry.items.map((item, itemIndex) => (
+                    {entry.items?.map((item, itemIndex) => (
                       <Badge
                         key={itemIndex}
                         variant="secondary"

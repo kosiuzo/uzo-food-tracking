@@ -47,6 +47,7 @@ export default function Meals() {
   const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
 
   const formatDate = (createdAt: string) => {
+    if (!createdAt) return 'Unknown Date';
     const logDate = createdAt.split('T')[0]; // Extract date from created_at
     const todayLocal = getTodayLocalDate();
     const yesterdayLocal = getYesterdayLocalDate();
@@ -110,13 +111,16 @@ export default function Meals() {
   const isMealLoggedToday = (mealLog: MealLog) => {
     const today = getTodayLocalDate();
     return safeMealLogs.some(log => {
-      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+      if (!log.created_at && !log.date) return false;
+      const logDate = (log.created_at || log.date).split('T')[0]; // Extract date from created_at or date
       if (logDate !== today) return false;
 
       // Check if items arrays match
-      const itemsMatch = log.items.length === mealLog.items.length &&
-        log.items.every(item => mealLog.items.includes(item)) &&
-        mealLog.items.every(item => log.items.includes(item));
+      const logItems = log.items || [];
+      const mealLogItems = mealLog.items || [];
+      const itemsMatch = logItems.length === mealLogItems.length &&
+        logItems.every(item => mealLogItems.includes(item)) &&
+        mealLogItems.every(item => logItems.includes(item));
 
       return itemsMatch;
     });
@@ -241,9 +245,9 @@ export default function Meals() {
 
             {/* Quick Stats */}
             {(() => {
-              const totalProtein = filteredMeals.reduce((sum, log) => sum + log.macros.protein, 0);
-              const totalCarbs = filteredMeals.reduce((sum, log) => sum + log.macros.carbs, 0);
-              const totalFat = filteredMeals.reduce((sum, log) => sum + log.macros.fat, 0);
+              const totalProtein = filteredMeals.reduce((sum, log) => sum + (log.macros?.protein || 0), 0);
+              const totalCarbs = filteredMeals.reduce((sum, log) => sum + (log.macros?.carbs || 0), 0);
+              const totalFat = filteredMeals.reduce((sum, log) => sum + (log.macros?.fat || 0), 0);
               const totalMacros = totalProtein + totalCarbs + totalFat;
 
               const proteinPercentage = totalMacros > 0 ? (totalProtein / totalMacros * 100) : 0;
@@ -266,7 +270,7 @@ export default function Meals() {
                     </Card>
                     <Card className="p-4 text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {filteredMeals.reduce((sum, log) => sum + log.macros.calories, 0).toFixed(1)}
+                        {filteredMeals.reduce((sum, log) => sum + (log.macros?.calories || 0), 0).toFixed(1)}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {selectedDate
@@ -359,7 +363,7 @@ export default function Meals() {
                               <h3 className="font-medium">{log.meal_name}</h3>
                               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                                {formatDate(log.created_at)}
+                                {formatDate(log.created_at || log.date)}
                               </div>
                               {log.rating && (
                                 <div className="flex items-center gap-1 mt-1">
@@ -446,16 +450,16 @@ export default function Meals() {
                         {/* Nutrition */}
                         <div className="flex gap-4 text-xs flex-wrap">
                           <span className="font-medium">
-                            {log.macros.calories.toFixed(1)} cal
+                            {log.macros?.calories?.toFixed(1) || 0} cal
                           </span>
                           <span className="text-muted-foreground">
-                            P: {log.macros.protein.toFixed(1)}g
+                            P: {log.macros?.protein?.toFixed(1) || 0}g
                           </span>
                           <span className="text-muted-foreground">
-                            C: {log.macros.carbs.toFixed(1)}g
+                            C: {log.macros?.carbs?.toFixed(1) || 0}g
                           </span>
                           <span className="text-muted-foreground">
-                            F: {log.macros.fat.toFixed(1)}g
+                            F: {log.macros?.fat?.toFixed(1) || 0}g
                           </span>
                         </div>
 

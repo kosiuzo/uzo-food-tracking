@@ -6,6 +6,34 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
+// Mock OpenRouter client before other imports
+vi.mock('../lib/openrouter', () => ({
+  openRouterClient: {
+    makeRequest: vi.fn(),
+    makeRequestWithRetry: vi.fn(),
+    getDebugInfo: vi.fn(() => ({
+      message: 'Debug info only available in development mode',
+      errors: [],
+      successfulCalls: [],
+      apiKeyConfigured: true,
+      environment: 'test'
+    })),
+    clearDebugLogs: vi.fn()
+  },
+  OpenRouterErrorType: {
+    NETWORK_ERROR: 'NETWORK_ERROR',
+    AUTH_ERROR: 'AUTH_ERROR',
+    RATE_LIMIT: 'RATE_LIMIT',
+    JSON_PARSE_ERROR: 'JSON_PARSE_ERROR',
+    RESPONSE_VALIDATION_ERROR: 'RESPONSE_VALIDATION_ERROR',
+    QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+    MODEL_ERROR: 'MODEL_ERROR',
+    TIMEOUT_ERROR: 'TIMEOUT_ERROR',
+    API_ERROR: 'API_ERROR',
+    UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+  }
+}));
+
 // Create a custom render function that includes providers
 export function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({

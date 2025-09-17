@@ -7,18 +7,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Plus, Utensils, Loader2, Sparkles, Check } from 'lucide-react';
+import { X, Plus, Utensils, Loader2, Sparkles, Check, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { useMealLogs } from '../hooks/useMealLogs';
+import { getTodayLocalDate } from '@/lib/utils';
 
 interface LogMealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave?: (mealLog: Omit<MealLog, 'id'>) => void;
   editingMealLog?: MealLog;
-  addMealLogFromItems?: (items: string[], notes?: string, rating?: number) => Promise<MealLog>;
-  addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>) => Promise<MealLog[]>;
+  addMealLogFromItems?: (items: string[], notes?: string, rating?: number, eatenOn?: string) => Promise<MealLog>;
+  addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number; eatenOn?: string }>) => Promise<MealLog[]>;
+  updateMealLog?: (id: number, updatedData: Omit<MealLog, 'id'>) => Promise<void>;
 }
 
 interface MealEntry {
@@ -26,6 +28,7 @@ interface MealEntry {
   items: string[];
   notes?: string;
   rating?: number;
+  eatenOn?: string; // YYYY-MM-DD format
   aiResult?: {
     meal_name: string;
     macros: {
@@ -44,7 +47,8 @@ export function LogMealDialog({
   onSave,
   editingMealLog,
   addMealLogFromItems: propAddMealLogFromItems,
-  addBatchMealLogsFromItems: propAddBatchMealLogsFromItems
+  addBatchMealLogsFromItems: propAddBatchMealLogsFromItems,
+  updateMealLog: propUpdateMealLog
 }: LogMealDialogProps) {
   const { toast } = useToast();
 
@@ -52,31 +56,48 @@ export function LogMealDialog({
   const fallbackHook = useMealLogs();
   const addMealLogFromItems = propAddMealLogFromItems || fallbackHook.addMealLogFromItems;
   const addBatchMealLogsFromItems = propAddBatchMealLogsFromItems || fallbackHook.addBatchMealLogsFromItems;
+  const updateMealLog = propUpdateMealLog || fallbackHook.updateMealLog;
 
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [itemInputs, setItemInputs] = useState<Record<string, string>>({});
 
+  // Helper function to ensure items are properly split
+  const processItems = (items: string[]) => {
+    const processed: string[] = [];
+    items.forEach(item => {
+      // Split each item by comma in case it contains multiple items
+      const splitItems = item.split(',')
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+      processed.push(...splitItems);
+    });
+    return processed;
+  };
+
   // Initialize form when dialog opens or editing meal log changes
   useEffect(() => {
     if (editingMealLog) {
-      // Editing mode - populate with existing meal log
+      // Editing mode - populate with existing meal log and process items
+      const processedItems = processItems(editingMealLog.items || []);
       setMealEntries([{
         id: '1',
-        items: editingMealLog.items,
+        items: processedItems,
         notes: editingMealLog.notes,
         rating: editingMealLog.rating,
+        eatenOn: editingMealLog.eaten_on, // Use the eaten_on date from existing log
         aiResult: {
           meal_name: editingMealLog.meal_name,
           macros: editingMealLog.macros,
         },
       }]);
     } else if (open) {
-      // New meal log - start with one empty entry
+      // New meal log - start with one empty entry defaulting to today
       const newEntryId = Date.now().toString();
       setMealEntries([{
         id: newEntryId,
         items: [],
+        eatenOn: getTodayLocalDate(), // Default to today for new entries
       }]);
       setItemInputs({ [newEntryId]: '' });
     }
@@ -87,6 +108,7 @@ export function LogMealDialog({
     setMealEntries(prev => [...prev, {
       id: newEntryId,
       items: [],
+      eatenOn: getTodayLocalDate(), // Default to today for new entries
     }]);
     setItemInputs(prev => ({ ...prev, [newEntryId]: '' }));
   };
@@ -103,9 +125,14 @@ export function LogMealDialog({
   const addItemToEntry = (entryId: string, item: string) => {
     if (!item.trim()) return;
 
+    // Split comma-separated items and clean them up
+    const newItems = item.split(',')
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId
-        ? { ...entry, items: [...entry.items, item.trim()], aiResult: undefined }
+        ? { ...entry, items: [...entry.items, ...newItems], aiResult: undefined }
         : entry
     ));
 
@@ -137,10 +164,47 @@ export function LogMealDialog({
     ));
   };
 
+  const updateEntryEatenOn = (entryId: string, eatenOn: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, eatenOn } : entry
+    ));
+  };
+
+  const updateEntryMacros = (entryId: string, field: keyof MealEntry['aiResult']['macros'], value: number) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId && entry.aiResult
+        ? {
+            ...entry,
+            aiResult: {
+              ...entry.aiResult,
+              macros: {
+                ...entry.aiResult.macros,
+                [field]: value
+              }
+            }
+          }
+        : entry
+    ));
+  };
+
+  const updateEntryMealName = (entryId: string, mealName: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId && entry.aiResult
+        ? {
+            ...entry,
+            aiResult: {
+              ...entry.aiResult,
+              meal_name: mealName
+            }
+          }
+        : entry
+    ));
+  };
+
   const resetEntry = (entryId: string) => {
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId
-        ? { ...entry, items: [], notes: '', rating: undefined, aiResult: undefined, isProcessing: false }
+        ? { ...entry, items: [], notes: '', rating: undefined, aiResult: undefined, isProcessing: false, eatenOn: getTodayLocalDate() }
         : entry
     ));
     setItemInputs(prev => ({ ...prev, [entryId]: '' }));
@@ -151,6 +215,7 @@ export function LogMealDialog({
     setMealEntries([{
       id: newEntryId,
       items: [],
+      eatenOn: getTodayLocalDate(),
     }]);
     setItemInputs({ [newEntryId]: '' });
   };
@@ -172,7 +237,7 @@ export function LogMealDialog({
     ));
 
     try {
-      const result = await addMealLogFromItems(entry.items, entry.notes, entry.rating);
+      const result = await addMealLogFromItems(entry.items, entry.notes, entry.rating, entry.eatenOn);
 
       // Update the entry with AI result
       setMealEntries(prev => prev.map(e =>
@@ -206,6 +271,40 @@ export function LogMealDialog({
     }
   };
 
+  const saveEditedMeal = async () => {
+    if (!editingMealLog || mealEntries.length === 0) return;
+
+    const entry = mealEntries[0];
+    if (!entry.aiResult) return;
+
+    try {
+      const updatedMealLog: Omit<MealLog, 'id'> = {
+        items: entry.items,
+        meal_name: entry.aiResult.meal_name,
+        notes: entry.notes,
+        rating: entry.rating,
+        macros: entry.aiResult.macros,
+        eaten_on: entry.eatenOn || getTodayLocalDate(), // Use the edited date
+        created_at: editingMealLog.created_at, // Keep original creation timestamp
+      };
+
+      await updateMealLog(editingMealLog.id, updatedMealLog);
+
+      toast({
+        title: "Success!",
+        description: "Meal log updated successfully.",
+      });
+
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update meal log",
+        variant: "destructive",
+      });
+    }
+  };
+
   const processBatchWithAI = async () => {
     const validEntries = mealEntries.filter(entry => entry.items?.length > 0);
 
@@ -225,6 +324,7 @@ export function LogMealDialog({
         items: entry.items,
         notes: entry.notes,
         rating: entry.rating,
+        eatenOn: entry.eatenOn,
       }));
 
       const results = await addBatchMealLogsFromItems(batchData);
@@ -381,46 +481,122 @@ export function LogMealDialog({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-600" />
-                      <span className="font-medium text-green-800">Meal Logged Successfully!</span>
+                      <span className="font-medium text-green-800">
+                        {editingMealLog ? 'Meal Details' : 'Meal Logged Successfully!'}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4 text-primary" />
-                    <span className="font-medium">{entry.aiResult.meal_name}</span>
+                  {/* Meal Name - Editable in edit mode */}
+                  <div className="space-y-2">
+                    <Label>Meal Name</Label>
+                    {editingMealLog ? (
+                      <Input
+                        value={entry.aiResult.meal_name}
+                        onChange={(e) => updateEntryMealName(entry.id, e.target.value)}
+                        className="font-medium"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Utensils className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{entry.aiResult.meal_name}</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                    <div>
-                      <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
-                    </div>
-                    <div>
-                      <span className="font-medium">Protein:</span> {entry.aiResult.macros.protein}g
-                    </div>
-                    <div>
-                      <span className="font-medium">Carbs:</span> {entry.aiResult.macros.carbs}g
-                    </div>
-                    <div>
-                      <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
-                    </div>
+                  {/* Macros - Editable in edit mode */}
+                  <div className="space-y-3">
+                    <Label>Nutritional Information</Label>
+                    {editingMealLog ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Calories</Label>
+                          <Input
+                            type="number"
+                            value={entry.aiResult.macros.calories}
+                            onChange={(e) => updateEntryMacros(entry.id, 'calories', parseInt(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Protein (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.protein}
+                            onChange={(e) => updateEntryMacros(entry.id, 'protein', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Carbs (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.carbs}
+                            onChange={(e) => updateEntryMacros(entry.id, 'carbs', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Fat (g)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={entry.aiResult.macros.fat}
+                            onChange={(e) => updateEntryMacros(entry.id, 'fat', parseFloat(e.target.value) || 0)}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
+                        </div>
+                        <div>
+                          <span className="font-medium">Protein:</span> {entry.aiResult.macros.protein}g
+                        </div>
+                        <div>
+                          <span className="font-medium">Carbs:</span> {entry.aiResult.macros.carbs}g
+                        </div>
+                        <div>
+                          <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => resetEntry(entry.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus className="h-3 w-3" />
-                      Log Another Meal
-                    </Button>
-                  </div>
+                  {!editingMealLog && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => resetEntry(entry.id)}
+                        className="flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Log Another Meal
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Notes and Rating */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Date, Notes and Rating */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Date Eaten
+                  </Label>
+                  <Input
+                    type="date"
+                    value={entry.eatenOn || getTodayLocalDate()}
+                    onChange={(e) => updateEntryEatenOn(entry.id, e.target.value)}
+                    className="w-full"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Notes (optional)</Label>
                   <Textarea
@@ -490,19 +666,29 @@ export function LogMealDialog({
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
               >
-                Close
+                {editingMealLog ? 'Cancel' : 'Close'}
               </Button>
 
-              {!editingMealLog && mealEntries.some(entry => entry.aiResult) && (
+              {editingMealLog ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={resetAllEntries}
-                  className="flex-1 flex items-center gap-2"
+                  onClick={saveEditedMeal}
+                  className="flex-1"
                 >
-                  <Plus className="h-4 w-4" />
-                  Start Fresh
+                  Save Changes
                 </Button>
+              ) : (
+                mealEntries.some(entry => entry.aiResult) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetAllEntries}
+                    className="flex-1 flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Start Fresh
+                  </Button>
+                )
               )}
             </div>
           </div>

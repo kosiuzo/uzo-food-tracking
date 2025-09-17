@@ -127,7 +127,8 @@ export interface MealLog {
     carbs: number;
     fat: number;
   };
-  created_at: string;
+  eaten_on: string; // Date when the meal was actually consumed (YYYY-MM-DD)
+  created_at: string; // Timestamp when the log entry was created
 }
 
 // New types for the reimagined meal planner
@@ -167,7 +168,8 @@ export interface DbMealLog {
   notes?: string | null;
   rating?: number | null;
   macros?: Record<string, unknown> | null;
-  created_at?: string | null;
+  eaten_on?: string | null; // Date when the meal was consumed (YYYY-MM-DD)
+  created_at?: string | null; // Timestamp when the log entry was created
 }
 
 // Tag types

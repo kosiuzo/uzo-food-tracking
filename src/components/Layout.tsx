@@ -4,6 +4,7 @@ import { Package, ChefHat, BookOpen, CalendarDays, MoreHorizontal } from 'lucide
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DebugPanel } from '@/components/DebugPanel';
 
 interface LayoutProps {
   children: ReactNode;
@@ -117,6 +118,9 @@ export function Layout({ children }: LayoutProps) {
           )}
         </div>
       </nav>
+
+      {/* Debug Panel - only shows in development */}
+      <DebugPanel />
     </div>
   );
 }

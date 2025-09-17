@@ -19,6 +19,7 @@ import { useRecipes } from '@/hooks/useRecipes';
 import { useTags } from '@/hooks/useTags';
 import { FoodItem, Recipe } from '@/types';
 import { parseFirstJsonObject } from '@/lib/aiJson';
+import { openRouterClient, OpenRouterError, OpenRouterErrorType } from '@/lib/openrouter';
 import { DIETARY_RESTRICTIONS } from '@/lib/constants';
 
 // Diet types now come from tags system
@@ -311,28 +312,19 @@ IMPORTANT: These recipes are for MEAL PREP, so:
 Return a single JSON object with exactly 3 recipes with realistic nutrition data and precise measurements.`;
 
     try {
-      // Debug: Log the user prompt being sent (no-op in prod)
       const meatName = typeof meat === 'string' ? meat : meat.name;
-      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI User Prompt for ${meatName} 3 recipes:`, userPrompt));
-      
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${import.meta.env.VITE_OPEN_ROUTER_API_KEY}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "FoodTracker Meal Prep Generator",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "microsoft/mai-ds-r1:free",
-          "temperature": 0.2,
-          "top_p": 0.9,
-          "max_tokens": 10000,
-          "response_format": { "type": "json_object" },
-          "messages": [
-            {
-              "role": "system",
-              "content": `You are a meal prep recipe generator that returns VALID JSON only.
+
+      // Use the shared OpenRouter client
+      const response = await openRouterClient.makeRequestWithRetry({
+        model: "microsoft/mai-ds-r1:free",
+        temperature: 0.2,
+        top_p: 0.9,
+        max_tokens: 10000,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a meal prep recipe generator that returns VALID JSON only.
 Schema:
 {
   "Recipe 1": {
@@ -368,38 +360,42 @@ Rules:
 - REQUIRED: Include detailed notes with storage tips (refrigerator life) and reheating instructions.
 - Consider meal prep: how ingredients hold up as leftovers, best reheating methods, texture preservation.
 - Optimize for the available cooking methods provided by user.`
-            },
-            {
-              "role": "user",
-              "content": userPrompt
-            }
-          ]
-        })
-      });
+          },
+          {
+            role: "user",
+            content: userPrompt
+          }
+        ]
+      }, `Meal Prep Generation (${meatName})`, 1); // Allow 1 retry
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const generatedText = data.choices[0]?.message?.content;
-      
-      // Debug: Log the AI response (no-op in prod)
-      import('@/lib/logger').then(({ logger }) => logger.debug(`🤖 AI Response for ${meatName} 3 recipes:`, generatedText));
+      const generatedText = response.choices[0].message.content;
       
       let parsedRecipes: ParsedRecipeResponse;
       try {
         parsedRecipes = parseFirstJsonObject<ParsedRecipeResponse>(generatedText);
-        import('@/lib/logger').then(({ logger }) => logger.debug(`✅ Parsed recipes for ${meatName}:`, parsedRecipes));
-        
+
         // Validate that we have the expected structure
         if (!parsedRecipes['Recipe 1'] || !parsedRecipes['Recipe 2'] || !parsedRecipes['Recipe 3']) {
-          throw new Error('Missing required recipe keys (Recipe 1, Recipe 2, Recipe 3)');
+          const error: OpenRouterError = {
+            type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
+            message: 'AI response missing required recipe keys',
+            details: { response: parsedRecipes, meatName },
+            shouldRetry: false
+          };
+          throw error;
         }
       } catch (parseError) {
-        console.error(`❌ Failed to parse AI response for ${meatName}:`, parseError);
-        console.error('Raw response:', generatedText);
-        throw new Error('Failed to parse AI response');
+        if (parseError instanceof Error && 'type' in parseError) {
+          throw parseError; // Re-throw OpenRouterError
+        }
+
+        const error: OpenRouterError = {
+          type: OpenRouterErrorType.JSON_PARSE_ERROR,
+          message: `Failed to parse meal prep AI response for ${meatName}`,
+          details: { parseError, rawResponse: generatedText, meatName },
+          shouldRetry: false
+        };
+        throw error;
       }
 
       // Convert the parsed recipes object to an array of GeneratedRecipe objects
@@ -454,14 +450,68 @@ Rules:
 
     } catch (error) {
       console.warn(`AI generation failed for ${meatName}:`, error);
-      
-      // Notify user about the API failure
-      toastHook({
-        title: 'AI Generation Failed',
-        description: `Failed to generate AI recipes for ${meatName}. Please try again or check your API configuration.`,
-        variant: 'destructive',
-      });
-      
+
+      // Handle OpenRouterError with specific messaging
+      if (error instanceof Error && 'type' in error) {
+        const openRouterError = error as OpenRouterError;
+
+        switch (openRouterError.type) {
+          case OpenRouterErrorType.AUTH_ERROR:
+            toastHook({
+              title: 'Authentication Error',
+              description: 'Invalid OpenRouter API key. Please check your configuration.',
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.RATE_LIMIT:
+            toastHook({
+              title: 'Rate Limit Exceeded',
+              description: `Too many requests for ${meatName}. Please wait ${openRouterError.retryAfter || 60} seconds.`,
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.QUOTA_EXCEEDED:
+            toastHook({
+              title: 'Quota Exceeded',
+              description: 'API quota exceeded. Please check your OpenRouter account balance.',
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.JSON_PARSE_ERROR:
+            toastHook({
+              title: 'AI Response Error',
+              description: `AI returned invalid format for ${meatName}. Please try again.`,
+              variant: 'destructive',
+            });
+            break;
+
+          case OpenRouterErrorType.RESPONSE_VALIDATION_ERROR:
+            toastHook({
+              title: 'AI Response Error',
+              description: `AI response incomplete for ${meatName}. Please try again.`,
+              variant: 'destructive',
+            });
+            break;
+
+          default:
+            toastHook({
+              title: 'AI Generation Failed',
+              description: `${openRouterError.message} (${meatName})`,
+              variant: 'destructive',
+            });
+        }
+      } else {
+        // Fallback for non-OpenRouter errors
+        toastHook({
+          title: 'AI Generation Failed',
+          description: `Failed to generate AI recipes for ${meatName}. Please try again or check your API configuration.`,
+          variant: 'destructive',
+        });
+      }
+
       // Don't return fallback recipes - let the calling function handle the empty result
       throw error;
     }

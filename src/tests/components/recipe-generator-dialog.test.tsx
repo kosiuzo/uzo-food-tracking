@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeGeneratorDialog } from '../../components/RecipeGeneratorDialog';
 import { renderWithProviders } from '../setup';
+import { openRouterClient } from '../../lib/openrouter';
 
 vi.mock('../../hooks/useInventorySearch');
 vi.mock('../../hooks/useTags');
@@ -33,27 +34,28 @@ describe('RecipeGeneratorDialog', () => {
       allTags: [{ id: 'tag1', name: 'Vegan' }],
     } as ReturnType<typeof tagsHook.useTags>);
 
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify({
-                name: 'AI Salad',
-                instructions: 'Mix ingredients.',
-                servings: 2,
-                total_time_minutes: 10,
-                ingredients: [
-                  { ingredient_name: 'Tomato', quantity: 1, unit: 'pieces' },
-                ],
-                tags: ['Vegan'],
-              }),
-            },
+    vi.spyOn(openRouterClient, 'makeRequestWithRetry').mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              name: 'AI Salad',
+              instructions: 'Mix ingredients.',
+              servings: 2,
+              total_time_minutes: 10,
+              ingredient_list: ['2 cups lettuce', '1 tomato'],
+              nutrition: {
+                calories_per_serving: 150,
+                protein_per_serving: 5,
+                carbs_per_serving: 12,
+                fat_per_serving: 8,
+              },
+              tags: ['Vegan'],
+            }),
           },
-        ],
-      }),
-    } as Response);
+        },
+      ],
+    });
   });
 
   it('generates a recipe and calls onRecipeGenerated when accepted', async () => {
@@ -69,7 +71,7 @@ describe('RecipeGeneratorDialog', () => {
     fireEvent.click(screen.getByText('Select Ingredient'));
     fireEvent.click(screen.getByRole('button', { name: /generate recipe/i }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    await waitFor(() => expect(openRouterClient.makeRequestWithRetry).toHaveBeenCalled());
 
     await screen.findByText('AI Salad');
 

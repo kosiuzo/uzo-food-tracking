@@ -1,4 +1,5 @@
 import { parseFirstJsonObject } from './aiJson';
+import { openRouterClient, OpenRouterError, OpenRouterErrorType } from './openrouter';
 
 /**
  * Response format expected from the LLM for meal log processing
@@ -88,39 +89,21 @@ export async function processMealLogWithAI(items: string[]): Promise<MealLogAIRe
     throw new Error('Items array cannot be empty');
   }
 
-  // Validate API key
-  const apiKey = import.meta.env?.VITE_OPEN_ROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenRouter API key not configured. Please set VITE_OPEN_ROUTER_API_KEY in your environment.');
-  }
-
   // Generate prompts
   const { userPrompt } = generateMealLogPrompts(items);
 
   try {
-    // Debug: Log the user prompt being sent (no-op in prod)
-    console.log('🤖 AI User Prompt for meal log:', userPrompt);
-
-    // Call OpenRouter API with streamlined approach
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "FoodTracker Meal Log Generator",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "model": "meta-llama/llama-3.2-3b-instruct:free",
-        "temperature": 0.1,
-        "top_p": 0.9,
-        "max_tokens": 1000,
-        // Prefer JSON mode if the route honors it
-        "response_format": { "type": "json_object" },
-        "messages": [
-          {
-            "role": "system",
-            "content": `You are a nutrition calculator that returns VALID JSON only.
+    // Use the shared OpenRouter client
+    const response = await openRouterClient.makeRequestWithRetry({
+      model: "microsoft/mai-ds-r1:free",
+      temperature: 0.1,
+      top_p: 0.9,
+      max_tokens: 1000,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `You are a nutrition calculator that returns VALID JSON only.
 Schema:
 {
   "meal_name": "Descriptive name for the meal based on the items",
@@ -150,62 +133,83 @@ Rules:
 - Do not underestimate - provide realistic and accurate macro calculations
 - All macro values should be integers (round to nearest whole number)
 - Meal name should be concise but descriptive (e.g., "Scrambled Eggs with Toast", "Greek Yogurt Bowl")`
-          },
-          {
-            "role": "user",
-            "content": `Analyze these food items and calculate the total nutrition:
+        },
+        {
+          role: "user",
+          content: `Analyze these food items and calculate the total nutrition:
 
 ${items.map(item => `- ${item}`).join('\n')}
 
 Generate a suitable meal name and calculate the total macronutrients for all items combined.
 Return a single JSON object with the meal name and macros.`
-          }
-        ]
-      })
-    });
+        }
+      ]
+    }, 'Meal Log Processing', 1); // Allow 1 retry
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content as string | undefined;
-
-    if (!generatedText || typeof generatedText !== 'string') {
-      console.error('AI returned empty or invalid content:', generatedText);
-      throw new Error('Failed to get valid response from AI');
-    }
+    const generatedText = response.choices[0].message.content;
 
     // Try to extract JSON from the response (robust)
     let parsedResponse: MealLogAIResponse;
     try {
       parsedResponse = parseFirstJsonObject(generatedText);
     } catch (parseError) {
-      console.warn('Failed to parse AI response as JSON:', parseError);
-      console.warn('Raw AI response:', generatedText);
-      throw new Error('Failed to parse AI response');
+      const error: OpenRouterError = {
+        type: OpenRouterErrorType.JSON_PARSE_ERROR,
+        message: 'Failed to parse meal log AI response',
+        details: { parseError, rawResponse: generatedText },
+        shouldRetry: false
+      };
+      throw error;
     }
 
     // Validate the parsed response
     if (!parsedResponse.meal_name || !parsedResponse.macros) {
-      throw new Error('AI response missing required fields');
+      const error: OpenRouterError = {
+        type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
+        message: 'AI response missing required fields (meal_name or macros)',
+        details: { response: parsedResponse },
+        shouldRetry: false
+      };
+      throw error;
     }
 
     const { calories, protein, carbs, fat } = parsedResponse.macros;
     if (typeof calories !== 'number' || typeof protein !== 'number' ||
         typeof carbs !== 'number' || typeof fat !== 'number') {
-      throw new Error('AI response contains invalid macro values');
+      const error: OpenRouterError = {
+        type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
+        message: 'AI response contains invalid macro values',
+        details: { macros: parsedResponse.macros },
+        shouldRetry: false
+      };
+      throw error;
     }
 
     // Ensure all values are positive
     if (calories < 0 || protein < 0 || carbs < 0 || fat < 0) {
-      throw new Error('AI response contains negative nutrition values');
+      const error: OpenRouterError = {
+        type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
+        message: 'AI response contains negative nutrition values',
+        details: { macros: parsedResponse.macros },
+        shouldRetry: false
+      };
+      throw error;
     }
 
     return parsedResponse;
   } catch (error) {
-    console.error('Error processing meal log with AI:', error);
-    throw error;
+    // Re-throw OpenRouterError as-is, convert others to OpenRouterError
+    if (error instanceof Error && 'type' in error) {
+      throw error;
+    }
+
+    const openRouterError: OpenRouterError = {
+      type: OpenRouterErrorType.UNKNOWN_ERROR,
+      message: error instanceof Error ? error.message : 'Unknown error processing meal log',
+      details: { originalError: error },
+      shouldRetry: false
+    };
+    throw openRouterError;
   }
 }
 

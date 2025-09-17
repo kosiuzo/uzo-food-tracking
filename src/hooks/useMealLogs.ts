@@ -123,8 +123,7 @@ export function useMealLogs() {
 
   const getMealLogsByDateRange = (startDate: string, endDate: string) => {
     return mealLogs.filter(log => {
-      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
-      return logDate >= startDate && logDate <= endDate;
+      return log.eaten_on >= startDate && log.eaten_on <= endDate;
     });
   };
 
@@ -134,8 +133,7 @@ export function useMealLogs() {
     const cutoffDateString = cutoffDate.toISOString().split('T')[0];
 
     return mealLogs.filter(log => {
-      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
-      return logDate >= cutoffDateString;
+      return log.eaten_on >= cutoffDateString;
     });
   };
 
@@ -149,6 +147,7 @@ export function useMealLogs() {
         notes: mealLog.notes,
         rating: mealLog.rating,
         macros: mealLog.macros,
+        eaten_on: today, // Set eaten_on to today for re-logged meals
         created_at: new Date().toISOString(),
       };
 
@@ -161,7 +160,7 @@ export function useMealLogs() {
     }
   };
 
-  const addMealLogFromItems = async (items: string[], notes?: string, rating?: number) => {
+  const addMealLogFromItems = async (items: string[], notes?: string, rating?: number, eatenOn?: string) => {
     try {
       setError(null);
 
@@ -176,6 +175,7 @@ export function useMealLogs() {
         notes,
         rating,
         macros: aiResult.macros,
+        eaten_on: eatenOn || getTodayLocalDate(), // Use provided date or default to today
         created_at: new Date().toISOString(),
       };
 
@@ -189,7 +189,7 @@ export function useMealLogs() {
   };
 
   const addBatchMealLogsFromItems = async (
-    mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>
+    mealEntries: Array<{ items: string[]; notes?: string; rating?: number; eatenOn?: string }>
   ) => {
     try {
       setError(null);
@@ -205,6 +205,7 @@ export function useMealLogs() {
         notes: entry.notes,
         rating: entry.rating,
         macros: aiResults[index].macros,
+        eaten_on: entry.eatenOn || getTodayLocalDate(), // Use provided date or default to today
         created_at: new Date().toISOString(),
       }));
 

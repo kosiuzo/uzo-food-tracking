@@ -146,6 +146,7 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
       carbs: macros.carbs || 0,
       fat: macros.fat || 0,
     },
+    eaten_on: dbMealLog.eaten_on || dbMealLog.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
     created_at: dbMealLog.created_at || new Date().toISOString(),
   };
 }
@@ -165,6 +166,7 @@ export function mealLogToDbInsert(mealLog: Partial<MealLog>): Database['public']
       carbs: mealLog.macros.carbs,
       fat: mealLog.macros.fat,
     } : null,
+    eaten_on: mealLog.eaten_on || new Date().toISOString().split('T')[0], // Default to today if not provided
   };
 }
 

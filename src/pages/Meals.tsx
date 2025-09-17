@@ -9,8 +9,6 @@ import { Layout } from '../components/Layout';
 import { LogMealDialog } from '../components/LogMealDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useMealLogs } from '../hooks/useMealLogs';
-import { useRecipes } from '../hooks/useRecipes';
-import { useInventorySearch } from '../hooks/useInventorySearch';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { logger } from '@/lib/logger';
@@ -19,8 +17,6 @@ import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastW
 
 export default function Meals() {
   const { mealLogs, addMealLog, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
-  const { getRecipeById } = useRecipes();
-  const { allItems } = useInventorySearch();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
@@ -36,35 +32,32 @@ export default function Meals() {
   const safeMealLogs = Array.isArray(mealLogs) ? mealLogs : [];
 
   // Filter meals by selected date, date range, or show all if no filter
-  const filteredMeals = selectedDate 
-    ? safeMealLogs.filter(log => log.date === selectedDate)
+  const filteredMeals = selectedDate
+    ? safeMealLogs.filter(log => {
+        const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+        return logDate === selectedDate;
+      })
     : dateRange
-    ? safeMealLogs.filter(log => log.date >= dateRange.start && log.date <= dateRange.end)
+    ? safeMealLogs.filter(log => {
+        const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+        return logDate >= dateRange.start && logDate <= dateRange.end;
+      })
     : safeMealLogs;
 
   const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
 
-  // Safety check for recipes
-  const safeGetRecipeById = (id: string) => {
-    try {
-      return getRecipeById(id);
-    } catch (err) {
-      console.warn('Error getting recipe by ID:', err);
-      return null;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDate = (createdAt: string) => {
+    const logDate = createdAt.split('T')[0]; // Extract date from created_at
     const todayLocal = getTodayLocalDate();
     const yesterdayLocal = getYesterdayLocalDate();
 
-    if (dateString === todayLocal) {
+    if (logDate === todayLocal) {
       return 'Today';
-    } else if (dateString === yesterdayLocal) {
+    } else if (logDate === yesterdayLocal) {
       return 'Yesterday';
     } else {
       // Format the date string for display
-      const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
+      const date = new Date(logDate + 'T00:00:00'); // Add time to avoid timezone issues
       return date.toLocaleDateString();
     }
   };
@@ -117,31 +110,16 @@ export default function Meals() {
   const isMealLoggedToday = (mealLog: MealLog) => {
     const today = getTodayLocalDate();
     return safeMealLogs.some(log => {
-      if (log.date !== today) return false;
-      
-      // Check recipes match
-      const recipesMatch = log.recipe_ids.length === mealLog.recipe_ids.length &&
-        log.recipe_ids.every(id => mealLog.recipe_ids.includes(id));
-      
-      // Check items match
-      const logItems = log.item_entries || [];
-      const mealItems = mealLog.item_entries || [];
-      const itemsMatch = logItems.length === mealItems.length &&
-        logItems.every(item => 
-          mealItems.some(mItem => 
-            mItem.item_id === item.item_id && 
-            mItem.quantity === item.quantity && 
-            mItem.unit === item.unit
-          )
-        );
-      
-      return recipesMatch && itemsMatch;
-    });
-  };
+      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+      if (logDate !== today) return false;
 
-  // Helper to get food item by ID
-  const getFoodItemById = (id: number) => {
-    return allItems.find(item => item.id === id);
+      // Check if items arrays match
+      const itemsMatch = log.items.length === mealLog.items.length &&
+        log.items.every(item => mealLog.items.includes(item)) &&
+        mealLog.items.every(item => log.items.includes(item));
+
+      return itemsMatch;
+    });
   };
 
   return (
@@ -276,10 +254,10 @@ export default function Meals() {
               </Card>
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.calories, 0).toFixed(1)}
+                  {filteredMeals.reduce((sum, log) => sum + log.macros.calories, 0).toFixed(1)}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {selectedDate 
+                  {selectedDate
                     ? 'Calories on ' + formatDateStringForDisplay(selectedDate)
                     : dateRange
                     ? `Calories ${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
@@ -289,23 +267,23 @@ export default function Meals() {
               </Card>
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.protein, 0).toFixed(1)}g
+                  {filteredMeals.reduce((sum, log) => sum + log.macros.protein, 0).toFixed(1)}g
                 </div>
                 <div className="text-sm text-muted-foreground">Protein</div>
               </Card>
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-orange-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.carbs, 0).toFixed(1)}g
+                  {filteredMeals.reduce((sum, log) => sum + log.macros.carbs, 0).toFixed(1)}g
                 </div>
                 <div className="text-sm text-muted-foreground">Carbs</div>
               </Card>
             </div>
-            
+
             {/* Additional Stats Row */}
             <div className="grid grid-cols-1 gap-4">
               <Card className="p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {filteredMeals.reduce((sum, log) => sum + log.nutrition.fat, 0).toFixed(1)}g
+                  {filteredMeals.reduce((sum, log) => sum + log.macros.fat, 0).toFixed(1)}g
                 </div>
                 <div className="text-sm text-muted-foreground">Fat</div>
               </Card>
@@ -350,8 +328,6 @@ export default function Meals() {
                 </div>
               ) : (
                 recentLogs.map(log => {
-                  const recipes = log.recipe_ids.map(id => safeGetRecipeById(id)).filter(Boolean);
-                  
                   return (
                     <Card key={log.id} className="p-4">
                       <div className="space-y-3">
@@ -362,8 +338,14 @@ export default function Meals() {
                               <h3 className="font-medium">{log.meal_name}</h3>
                               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                                {formatDate(log.date)}
+                                {formatDate(log.created_at)}
                               </div>
+                              {log.rating && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <span className="text-xs text-muted-foreground">Rating:</span>
+                                  <span className="text-xs">{'⭐'.repeat(log.rating)}</span>
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <Tooltip>
@@ -422,38 +404,19 @@ export default function Meals() {
                               </Button>
                             </div>
                           </div>
-                          
-                          {/* Recipes */}
-                          {recipes.length > 0 && (
+
+                          {/* Food Items */}
+                          {log.items && log.items.length > 0 && (
                             <div className="space-y-1">
                               <div className="text-xs text-muted-foreground">
-                                Recipes ({recipes.length}):
+                                Items ({log.items.length}):
                               </div>
                               <div className="flex flex-wrap gap-1.5">
-                                {recipes.map((recipe, index) => (
-                                  <Badge key={recipe.id} variant="outline" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
-                                    {recipe.name}
+                                {log.items.map((item, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
+                                    {item}
                                   </Badge>
                                 ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Individual Items */}
-                          {log.item_entries && log.item_entries.length > 0 && (
-                            <div className="space-y-1">
-                              <div className="text-xs text-muted-foreground">
-                                Individual Items ({log.item_entries.length}):
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                {log.item_entries.map((entry, index) => {
-                                  const item = getFoodItemById(entry.item_id);
-                                  return (
-                                    <Badge key={`${entry.item_id}-${index}`} variant="secondary" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
-                                      {item?.name || 'Unknown Item'} ({entry.quantity} {entry.unit})
-                                    </Badge>
-                                  );
-                                })}
                               </div>
                             </div>
                           )}
@@ -462,22 +425,17 @@ export default function Meals() {
                         {/* Nutrition */}
                         <div className="flex gap-4 text-xs flex-wrap">
                           <span className="font-medium">
-                            {log.nutrition.calories.toFixed(1)} cal
+                            {log.macros.calories.toFixed(1)} cal
                           </span>
                           <span className="text-muted-foreground">
-                            P: {log.nutrition.protein.toFixed(1)}g
+                            P: {log.macros.protein.toFixed(1)}g
                           </span>
                           <span className="text-muted-foreground">
-                            C: {log.nutrition.carbs.toFixed(1)}g
+                            C: {log.macros.carbs.toFixed(1)}g
                           </span>
                           <span className="text-muted-foreground">
-                            F: {log.nutrition.fat.toFixed(1)}g
+                            F: {log.macros.fat.toFixed(1)}g
                           </span>
-                          {log.estimated_cost && log.estimated_cost > 0 && (
-                            <span className="text-green-600 font-medium">
-                              Cost: ${log.estimated_cost.toFixed(2)}
-                            </span>
-                          )}
                         </div>
 
                         {log.notes && (
@@ -510,15 +468,6 @@ export default function Meals() {
             }
           }}
           editingMealLog={editingMealLog}
-          onSave={(mealData) => {
-            if (editingMealLog) {
-              updateMealLog(editingMealLog.id, mealData);
-            } else {
-              addMealLog(mealData);
-            }
-            setIsLogDialogOpen(false);
-            setEditingMealLog(null);
-          }}
         />
 
         {/* Delete Confirmation Dialog */}

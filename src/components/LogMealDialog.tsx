@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,508 +6,447 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Plus, Utensils, Apple } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { X, Plus, Utensils, Loader2, Sparkles, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRecipes } from '../hooks/useRecipes';
-import { useInventorySearch } from '../hooks/useInventorySearch';
-import { MealLog, Recipe, FoodItem, MealItemEntry } from '../types';
-import { calculateRecipeNutrition } from '../lib/servingUnitUtils';
+import { MealLog } from '../types';
+import { useMealLogs } from '../hooks/useMealLogs';
 
 interface LogMealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (mealLog: Omit<MealLog, 'id'>) => void;
+  onSave?: (mealLog: Omit<MealLog, 'id'>) => void;
   editingMealLog?: MealLog;
+}
+
+interface MealEntry {
+  id: string;
+  items: string[];
+  notes?: string;
+  rating?: number;
+  aiResult?: {
+    meal_name: string;
+    macros: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+  };
+  isProcessing?: boolean;
 }
 
 export function LogMealDialog({ open, onOpenChange, onSave, editingMealLog }: LogMealDialogProps) {
   const { toast } = useToast();
-  const { allRecipes } = useRecipes();
-  const { allItems } = useInventorySearch();
-  
-  // Track selected items for quantity input
-  const [itemQuantities, setItemQuantities] = useState<Record<number, { quantity: number; unit: string }>>({});
-  
-  const [formData, setFormData] = useState({
-    recipe_ids: [] as string[],
-    item_entries: [] as MealItemEntry[],
-    date: new Date().toISOString().split('T')[0],
-    meal_name: '',
-    notes: '',
-    nutrition: {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-    },
-  });
+  const { addMealLogFromItems, addBatchMealLogsFromItems } = useMealLogs();
 
-  // Cache per-item nutrition calculations to avoid recomputation churn
-  const nutritionCacheRef = useRef<Map<string, { calories: number; protein: number; carbs: number; fat: number }>>(new Map());
+  const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [itemInputs, setItemInputs] = useState<Record<string, string>>({});
 
-  // Update form data when editingMealLog changes
+  // Initialize form when dialog opens or editing meal log changes
   useEffect(() => {
     if (editingMealLog) {
-      setFormData({
-        recipe_ids: editingMealLog.recipe_ids || [],
-        item_entries: editingMealLog.item_entries || [],
-        date: editingMealLog.date,
-        meal_name: editingMealLog.meal_name,
-        notes: editingMealLog.notes || '',
-        nutrition: editingMealLog.nutrition,
-      });
-      
-      // Set item quantities from existing item entries
-      const quantities: Record<number, { quantity: number; unit: string }> = {};
-      editingMealLog.item_entries?.forEach(entry => {
-        quantities[entry.item_id] = { quantity: entry.quantity, unit: entry.unit };
-      });
-      setItemQuantities(quantities);
-    } else if (open) {
-      // Reset form when opening for new meal log
-      setFormData({
-        recipe_ids: [],
-        item_entries: [],
-        date: new Date().toISOString().split('T')[0],
-        meal_name: '',
-        notes: '',
-        nutrition: {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
+      // Editing mode - populate with existing meal log
+      setMealEntries([{
+        id: '1',
+        items: editingMealLog.items,
+        notes: editingMealLog.notes,
+        rating: editingMealLog.rating,
+        aiResult: {
+          meal_name: editingMealLog.meal_name,
+          macros: editingMealLog.macros,
         },
-      });
-      setItemQuantities({});
+      }]);
+    } else if (open) {
+      // New meal log - start with one empty entry
+      const newEntryId = Date.now().toString();
+      setMealEntries([{
+        id: newEntryId,
+        items: [],
+      }]);
+      setItemInputs({ [newEntryId]: '' });
     }
   }, [editingMealLog, open]);
 
-  const selectedRecipes = formData.recipe_ids.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
-
-  const calculateCombinedNutrition = (recipes: Recipe[], itemEntries: MealItemEntry[]) => {
-    // Calculate nutrition from recipes
-    const recipeNutrition = recipes.reduce((total, recipe) => ({
-      calories: total.calories + recipe.nutrition.calories_per_serving,
-      protein: total.protein + recipe.nutrition.protein_per_serving,
-      carbs: total.carbs + recipe.nutrition.carbs_per_serving,
-      fat: total.fat + recipe.nutrition.fat_per_serving,
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-    
-    // Calculate nutrition from item entries
-    const itemNutrition = itemEntries.reduce((total, entry) => ({
-      calories: total.calories + entry.nutrition.calories,
-      protein: total.protein + entry.nutrition.protein,
-      carbs: total.carbs + entry.nutrition.carbs,
-      fat: total.fat + entry.nutrition.fat,
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-    
-    // Combine both
-    return {
-      calories: recipeNutrition.calories + itemNutrition.calories,
-      protein: recipeNutrition.protein + itemNutrition.protein,
-      carbs: recipeNutrition.carbs + itemNutrition.carbs,
-      fat: recipeNutrition.fat + itemNutrition.fat,
-    };
+  const addMealEntry = () => {
+    const newEntryId = Date.now().toString();
+    setMealEntries(prev => [...prev, {
+      id: newEntryId,
+      items: [],
+    }]);
+    setItemInputs(prev => ({ ...prev, [newEntryId]: '' }));
   };
 
-  // Calculate nutrition for individual item entry using centralized utility
-  const calculateItemNutrition = (item: FoodItem, quantity: number, unit: string) => {
-    const cacheKey = `${item.id}|${quantity}|${unit}`;
-    const cached = nutritionCacheRef.current.get(cacheKey);
-    if (cached) return cached;
-    // Use the centralized calculateRecipeNutrition function for a single ingredient
-    const ingredients = [{ item_id: item.id.toString(), quantity, unit }];
-    
-    // Convert FoodItem to the expected format for calculateRecipeNutrition
-    const adaptedItem = {
-      id: item.id.toString(),
-      name: item.name,
-      nutrition: item.nutrition,
-      serving_size: item.serving_size,
-      serving_quantity: item.serving_quantity,
-      serving_unit: item.serving_unit,
-      serving_unit_type: item.serving_unit_type,
-    };
-    
-    const nutrition = calculateRecipeNutrition(ingredients, 1, [adaptedItem]);
-    const result = {
-      calories: nutrition.calories_per_serving,
-      protein: nutrition.protein_per_serving,
-      carbs: nutrition.carbs_per_serving,
-      fat: nutrition.fat_per_serving,
-    };
-    nutritionCacheRef.current.set(cacheKey, result);
-    return result;
-  };
-
-  // Convert allRecipes to options for MultiSelect
-  const recipeOptions: Option[] = allRecipes.map(recipe => ({
-    label: recipe.name,
-    value: recipe.id,
-  }));
-
-  // Convert allItems to options for MultiSelect
-  const itemOptions: Option[] = allItems.map(item => ({
-    label: item.name,
-    value: item.id.toString(),
-  }));
-
-  // Handle recipe selection from MultiSelect
-  const handleRecipeSelectionChange = (selectedIds: string[]) => {
-    const newRecipes = selectedIds.map(id => allRecipes.find(r => r.id === id)).filter(Boolean) as Recipe[];
-    
-    setFormData(prev => ({
-      ...prev,
-      recipe_ids: selectedIds,
-      nutrition: calculateCombinedNutrition(newRecipes, prev.item_entries),
-    }));
-    
-    updateMealName(newRecipes, formData.item_entries);
-  };
-
-  // Handle item selection from MultiSelect
-  const handleItemSelectionChange = (selectedIds: string[]) => {
-    const newItemEntries: MealItemEntry[] = [];
-
-    // Build a pruned itemQuantities map that only keeps selected items
-    const selectedIdNums = new Set(selectedIds.map((id) => parseInt(id)));
-    const prunedQuantities: Record<number, { quantity: number; unit: string }> = {};
-
-    selectedIds.forEach((idStr) => {
-      const itemId = parseInt(idStr);
-      const item = allItems.find((i) => i.id === itemId);
-      if (!item) return;
-
-      const existing = itemQuantities[itemId];
-      const fallbackUnit = item.serving_unit || 'serving';
-      const quantities = existing || { quantity: 1, unit: fallbackUnit };
-
-      // Populate pruned map with either existing or default values
-      prunedQuantities[itemId] = { quantity: quantities.quantity, unit: quantities.unit };
-
-      const nutrition = calculateItemNutrition(item, quantities.quantity, quantities.unit);
-
-      newItemEntries.push({
-        item_id: itemId,
-        quantity: quantities.quantity,
-        unit: quantities.unit,
-        nutrition,
-      });
+  const removeMealEntry = (id: string) => {
+    setMealEntries(prev => prev.filter(entry => entry.id !== id));
+    setItemInputs(prev => {
+      const newInputs = { ...prev };
+      delete newInputs[id];
+      return newInputs;
     });
-
-    // Apply pruned map so deselected keys don't linger in memory
-    setItemQuantities(prunedQuantities);
-
-    setFormData((prev) => ({
-      ...prev,
-      item_entries: newItemEntries,
-      nutrition: calculateCombinedNutrition(selectedRecipes, newItemEntries),
-    }));
-
-    updateMealName(selectedRecipes, newItemEntries);
   };
 
-  // Update meal name based on selections
-  const updateMealName = (recipes: Recipe[], itemEntries: MealItemEntry[]) => {
-    if (recipes.length === 1 && itemEntries.length === 0) {
-      setFormData(prev => ({ ...prev, meal_name: recipes[0].name }));
-    } else if (recipes.length === 0 && itemEntries.length === 1) {
-      const item = allItems.find(i => i.id === itemEntries[0].item_id);
-      setFormData(prev => ({ ...prev, meal_name: item?.name || 'Individual Item' }));
-    } else if (recipes.length > 0 || itemEntries.length > 0) {
-      const totalItems = recipes.length + itemEntries.length;
-      setFormData(prev => ({ ...prev, meal_name: `Mixed Meal (${totalItems} items)` }));
-    }
+  const addItemToEntry = (entryId: string, item: string) => {
+    if (!item.trim()) return;
+
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId
+        ? { ...entry, items: [...entry.items, item.trim()], aiResult: undefined }
+        : entry
+    ));
+
+    // Clear the input for this entry
+    setItemInputs(prev => ({ ...prev, [entryId]: '' }));
   };
 
-  // Handle quantity change for items
-  const handleItemQuantityChange = (itemId: number, quantity: number, unit: string) => {
-    setItemQuantities(prev => ({
-      ...prev,
-      [itemId]: { quantity, unit }
-    }));
-    
-    // Update the item entry in form data
-    const updatedEntries = formData.item_entries.map(entry => {
-      if (entry.item_id === itemId) {
-        const item = allItems.find(i => i.id === itemId);
-        if (!item) return entry;
-        
-        const nutrition = calculateItemNutrition(item, quantity, unit);
-        return { ...entry, quantity, unit, nutrition };
-      }
-      return entry;
-    });
-    
-    setFormData(prev => ({
-      ...prev,
-      item_entries: updatedEntries,
-      nutrition: calculateCombinedNutrition(selectedRecipes, updatedEntries),
-    }));
+  const removeItemFromEntry = (entryId: string, itemIndex: number) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId
+        ? {
+            ...entry,
+            items: entry.items.filter((_, index) => index !== itemIndex),
+            aiResult: undefined
+          }
+        : entry
+    ));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.meal_name.trim()) {
+  const updateEntryNotes = (entryId: string, notes: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, notes } : entry
+    ));
+  };
+
+  const updateEntryRating = (entryId: string, rating: number) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, rating } : entry
+    ));
+  };
+
+  const processEntryWithAI = async (entryId: string) => {
+    const entry = mealEntries.find(e => e.id === entryId);
+    if (!entry || entry.items.length === 0) {
       toast({
         title: "Error",
-        description: "Please enter a meal name",
+        description: "Please add some food items before processing with AI",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.recipe_ids.length === 0 && formData.item_entries.length === 0) {
+    // Mark this entry as processing
+    setMealEntries(prev => prev.map(e =>
+      e.id === entryId ? { ...e, isProcessing: true } : e
+    ));
+
+    try {
+      const result = await addMealLogFromItems(entry.items, entry.notes, entry.rating);
+
+      // Update the entry with AI result
+      setMealEntries(prev => prev.map(e =>
+        e.id === entryId
+          ? {
+              ...e,
+              isProcessing: false,
+              aiResult: {
+                meal_name: result.meal_name,
+                macros: result.macros,
+              }
+            }
+          : e
+      ));
+
+      toast({
+        title: "Success!",
+        description: `Meal "${result.meal_name}" has been logged successfully.`,
+      });
+
+    } catch (error) {
+      setMealEntries(prev => prev.map(e =>
+        e.id === entryId ? { ...e, isProcessing: false } : e
+      ));
+
       toast({
         title: "Error",
-        description: "Please select at least one recipe or food item",
+        description: error instanceof Error ? error.message : "Failed to process meal with AI",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const processBatchWithAI = async () => {
+    const validEntries = mealEntries.filter(entry => entry.items.length > 0);
+
+    if (validEntries.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add food items to at least one meal before processing",
         variant: "destructive",
       });
       return;
     }
 
-    const mealLog: Omit<MealLog, 'id'> = {
-      recipe_ids: formData.recipe_ids.map(id => parseInt(id)),
-      item_entries: formData.item_entries.length > 0 ? formData.item_entries : undefined,
-      date: formData.date,
-      meal_name: formData.meal_name.trim(),
-      notes: formData.notes.trim() || undefined,
-      nutrition: formData.nutrition,
-    };
+    setIsProcessing(true);
 
-    onSave(mealLog);
-    onOpenChange(false);
+    try {
+      const batchData = validEntries.map(entry => ({
+        items: entry.items,
+        notes: entry.notes,
+        rating: entry.rating,
+      }));
+
+      const results = await addBatchMealLogsFromItems(batchData);
+
+      // Update entries with AI results
+      setMealEntries(prev => prev.map((entry, index) => {
+        const validIndex = validEntries.findIndex(ve => ve.id === entry.id);
+        if (validIndex !== -1 && results[validIndex]) {
+          return {
+            ...entry,
+            aiResult: {
+              meal_name: results[validIndex].meal_name,
+              macros: results[validIndex].macros,
+            }
+          };
+        }
+        return entry;
+      }));
+
+      toast({
+        title: "Success!",
+        description: `${results.length} meal${results.length !== 1 ? 's' : ''} logged successfully.`,
+      });
+
+      // Close dialog after successful batch processing
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process meals with AI",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
+  const handleItemInputKeyPress = (e: React.KeyboardEvent, entryId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addItemToEntry(entryId, itemInputs[entryId] || '');
+    }
+  };
+
+  const canProcessBatch = mealEntries.some(entry => entry.items.length > 0) && !isProcessing;
+  const hasMultipleEntries = mealEntries.length > 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="max-w-4xl max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>{editingMealLog ? 'Edit Meal Log' : 'Log a Meal'}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            {editingMealLog ? 'Edit Meal Log' : 'Log Meals with AI'}
+          </DialogTitle>
           <DialogDescription>
-            Select recipes and/or individual food items and log your meal with nutrition information.
+            Add food items to each meal and let AI calculate nutrition and generate meal names.
+            You can log multiple meals at once!
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="date">Date *</Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              required
-            />
-          </div>
+        <div className="space-y-6">
+          {mealEntries.map((entry, entryIndex) => (
+            <Card key={entry.id} className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-lg">
+                  Meal {entryIndex + 1}
+                  {entry.aiResult && (
+                    <Badge variant="secondary" className="ml-2">
+                      <Check className="h-3 w-3 mr-1" />
+                      Processed
+                    </Badge>
+                  )}
+                </h3>
 
-          <div className="space-y-2">
-            <Label>Select Items *</Label>
-            <Tabs defaultValue="recipes" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="recipes" className="flex items-center gap-2">
-                  <Utensils className="h-4 w-4" />
-                  Recipes
-                </TabsTrigger>
-                <TabsTrigger value="items" className="flex items-center gap-2">
-                  <Apple className="h-4 w-4" />
-                  Individual Items
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="recipes" className="space-y-3">
-                <MultiSelect
-                  options={recipeOptions}
-                  defaultValue={formData.recipe_ids}
-                  onValueChange={handleRecipeSelectionChange}
-                  placeholder="Select recipes for this meal..."
-                  maxCount={2}
-                />
-                
-                {/* Selected Recipes Display */}
-                {selectedRecipes.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Selected Recipes:</Label>
-                    <div className="space-y-2">
-                      {selectedRecipes.map((recipe) => (
-                        <Card key={recipe.id} className="p-3 bg-muted/30">
-                          <div className="flex items-center gap-2">
-                            <Utensils className="h-4 w-4 text-primary flex-shrink-0" />
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">{recipe.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {recipe.nutrition.calories_per_serving.toFixed(0)} cal • 
-                                P: {recipe.nutrition.protein_per_serving.toFixed(1)}g • 
-                                C: {recipe.nutrition.carbs_per_serving.toFixed(1)}g • 
-                                F: {recipe.nutrition.fat_per_serving.toFixed(1)}g
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="items" className="space-y-3">
-                <MultiSelect
-                  options={itemOptions}
-                  defaultValue={formData.item_entries.map(entry => entry.item_id.toString())}
-                  onValueChange={handleItemSelectionChange}
-                  placeholder="Select individual food items..."
-                />
-                
-                {/* Selected Items Display with Quantity Inputs */}
-                {formData.item_entries.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Selected Items:</Label>
-                    <div className="space-y-3">
-                      {formData.item_entries.map((entry) => {
-                        const item = allItems.find(i => i.id === entry.item_id);
-                        if (!item) return null;
-                        
-                        return (
-                          <Card key={entry.item_id} className="p-3 bg-muted/30">
-                          <div className="flex items-center gap-2">
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{item.name}</div>
-                                <div className="text-xs text-muted-foreground mb-2">
-                                  {entry.nutrition.calories.toFixed(0)} cal • 
-                                  P: {entry.nutrition.protein.toFixed(1)}g • 
-                                  C: {entry.nutrition.carbs.toFixed(1)}g • 
-                                  F: {entry.nutrition.fat.toFixed(1)}g
-                                </div>
-                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                  <Input
-                                    type="number"
-                                    min="0.1"
-                                    step="0.1"
-                                    defaultValue={entry.quantity}
-                                    onChange={(e) => {
-                                      const str = e.target.value;
-                                      // Allow backspace to clear without forcing 0
-                                      if (str === '') return;
-                                      const next = parseFloat(str);
-                                      if (Number.isNaN(next)) return;
-                                      handleItemQuantityChange(entry.item_id, next, entry.unit);
-                                    }}
-                                    className="w-24 h-10 sm:h-9"
-                                  />
-                                  <Select
-                                    value={entry.unit}
-                                    onValueChange={(value) => handleItemQuantityChange(
-                                      entry.item_id, 
-                                      entry.quantity, 
-                                      value
-                                    )}
-                                  >
-                                    <SelectTrigger className="w-32 h-10 sm:h-9">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Volume</div>
-                                      <SelectItem value="tsp">teaspoons (tsp)</SelectItem>
-                                      <SelectItem value="tbsp">tablespoons (tbsp)</SelectItem>
-                                      <SelectItem value="cup">cups</SelectItem>
-                                      <SelectItem value="fl_oz">fluid ounces (fl oz)</SelectItem>
-                                      <SelectItem value="ml">milliliters (ml)</SelectItem>
-                                      <SelectItem value="l">liters (l)</SelectItem>
-                                      
-                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Weight</div>
-                                      <SelectItem value="g">grams (g)</SelectItem>
-                                      <SelectItem value="kg">kilograms (kg)</SelectItem>
-                                      <SelectItem value="oz">ounces (oz)</SelectItem>
-                                      <SelectItem value="lb">pounds (lb)</SelectItem>
-                                      
-                                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">Count</div>
-                                      <SelectItem value="piece">pieces</SelectItem>
-                                      <SelectItem value="slice">slices</SelectItem>
-                                      <SelectItem value="can">cans</SelectItem>
-                                      <SelectItem value="bottle">bottles</SelectItem>
-                                      <SelectItem value="serving">servings</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+                <div className="flex items-center gap-2">
+                  {!editingMealLog && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => processEntryWithAI(entry.id)}
+                      disabled={entry.items.length === 0 || entry.isProcessing}
+                      className="flex items-center gap-1"
+                    >
+                      {entry.isProcessing ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                      {entry.isProcessing ? 'Processing...' : 'Process with AI'}
+                    </Button>
+                  )}
 
-          <div className="space-y-2">
-            <Label htmlFor="meal-name">Meal Name *</Label>
-            <Input
-              id="meal-name"
-              value={formData.meal_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, meal_name: e.target.value }))}
-              placeholder="e.g., Breakfast Smoothie"
-            />
-          </div>
-
-          {/* Nutrition Information (Combined from Recipes and Items) */}
-          {(selectedRecipes.length > 0 || formData.item_entries.length > 0) && (
-            <div className="space-y-3 bg-muted/50 p-3 rounded-md">
-              <Label>Combined Nutrition</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-medium">Calories:</span> {formData.nutrition.calories.toFixed(1)}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">Protein:</span> {formData.nutrition.protein.toFixed(1)}g
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">Carbs:</span> {formData.nutrition.carbs.toFixed(1)}g
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-medium">Fat:</span> {formData.nutrition.fat.toFixed(1)}g
-                  </div>
-                  {selectedRecipes.length > 0 && formData.item_entries.length > 0 && (
-                    <div className="text-xs text-muted-foreground pt-1">
-                      {selectedRecipes.length} recipe(s) + {formData.item_entries.length} item(s)
-                    </div>
+                  {mealEntries.length > 1 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeMealEntry(entry.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               </div>
-            </div>
+
+              {/* Food Items Input */}
+              <div className="space-y-3">
+                <Label>Food Items</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g., 2 eggs, 1 slice bread, 1 tbsp butter"
+                    value={itemInputs[entry.id] || ''}
+                    onChange={(e) => setItemInputs(prev => ({ ...prev, [entry.id]: e.target.value }))}
+                    onKeyPress={(e) => handleItemInputKeyPress(e, entry.id)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => addItemToEntry(entry.id, itemInputs[entry.id] || '')}
+                    disabled={!(itemInputs[entry.id] || '').trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Display Added Items */}
+                {entry.items.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {entry.items.map((item, itemIndex) => (
+                      <Badge
+                        key={itemIndex}
+                        variant="secondary"
+                        className="text-sm px-3 py-1 flex items-center gap-1"
+                      >
+                        {item}
+                        <button
+                          onClick={() => removeItemFromEntry(entry.id, itemIndex)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* AI Result Display */}
+              {entry.aiResult && (
+                <div className="bg-muted/50 p-3 rounded-md space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-primary" />
+                    <span className="font-medium">{entry.aiResult.meal_name}</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    <div>
+                      <span className="font-medium">Calories:</span> {entry.aiResult.macros.calories}
+                    </div>
+                    <div>
+                      <span className="font-medium">Protein:</span> {entry.aiResult.macros.protein}g
+                    </div>
+                    <div>
+                      <span className="font-medium">Carbs:</span> {entry.aiResult.macros.carbs}g
+                    </div>
+                    <div>
+                      <span className="font-medium">Fat:</span> {entry.aiResult.macros.fat}g
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes and Rating */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Notes (optional)</Label>
+                  <Textarea
+                    placeholder="Any additional notes..."
+                    value={entry.notes || ''}
+                    onChange={(e) => updateEntryNotes(entry.id, e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Rating (optional)</Label>
+                  <Select
+                    value={entry.rating?.toString() || ''}
+                    onValueChange={(value) => updateEntryRating(entry.id, value ? parseFloat(value) : undefined)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Rate this meal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">⭐ 1 - Poor</SelectItem>
+                      <SelectItem value="2">⭐⭐ 2 - Fair</SelectItem>
+                      <SelectItem value="3">⭐⭐⭐ 3 - Good</SelectItem>
+                      <SelectItem value="4">⭐⭐⭐⭐ 4 - Very Good</SelectItem>
+                      <SelectItem value="5">⭐⭐⭐⭐⭐ 5 - Excellent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {/* Add Another Meal Button */}
+          {!editingMealLog && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addMealEntry}
+              className="w-full flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Another Meal
+            </Button>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Any additional notes about this meal..."
-              rows={3}
-            />
-          </div>
-
+          {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1"
+            >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              {editingMealLog ? 'Update Meal' : 'Log Meal'}
-            </Button>
+
+            {!editingMealLog && hasMultipleEntries && (
+              <Button
+                type="button"
+                onClick={processBatchWithAI}
+                disabled={!canProcessBatch}
+                className="flex-1 flex items-center gap-2"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {isProcessing ? 'Processing...' : `Process All ${mealEntries.length} Meals`}
+              </Button>
+            )}
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

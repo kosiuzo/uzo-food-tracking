@@ -2,7 +2,7 @@
 // This ensures consistent data transformations and handles the ID type differences
 
 import type { Database } from '@/types/database';
-import type { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, Tag, DbTag, MealItemEntry } from '@/types';
+import type { FoodItem, DbItem, Recipe, DbRecipe, MealLog, DbMealLog, Tag, DbTag } from '@/types';
 
 // Database types from Supabase
 type DbItemRow = Database['public']['Tables']['items']['Row'];
@@ -133,21 +133,19 @@ export function recipeToDbInsert(recipe: Partial<Recipe>): Database['public']['T
  */
 export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
   const macros = (dbMealLog.macros as Record<string, number>) || {};
-  
+
   return {
     id: dbMealLog.id,
-    recipe_ids: dbMealLog.recipe_ids,
-    item_entries: (dbMealLog.item_entries as unknown as MealItemEntry[]) || undefined,
-    date: dbMealLog.cooked_at || new Date().toISOString().split('T')[0],
+    items: dbMealLog.items || [],
     meal_name: dbMealLog.meal_name || '',
     notes: dbMealLog.notes || undefined,
-    nutrition: {
+    rating: dbMealLog.rating || undefined,
+    macros: {
       calories: macros.calories || 0,
       protein: macros.protein || 0,
       carbs: macros.carbs || 0,
       fat: macros.fat || 0,
     },
-    estimated_cost: dbMealLog.cost || 0,
     created_at: dbMealLog.created_at || new Date().toISOString(),
   };
 }
@@ -157,18 +155,16 @@ export function dbMealLogToMealLog(dbMealLog: DbMealLogRow): MealLog {
  */
 export function mealLogToDbInsert(mealLog: Partial<MealLog>): Database['public']['Tables']['meal_logs']['Insert'] {
   return {
-    recipe_ids: mealLog.recipe_ids || [],
-    item_entries: (mealLog.item_entries as unknown as Record<string, unknown>[]) || null,
-    meal_name: mealLog.meal_name || null,
-    cooked_at: mealLog.date || null,
+    items: mealLog.items || [],
+    meal_name: mealLog.meal_name!,
     notes: mealLog.notes || null,
-    macros: mealLog.nutrition ? {
-      calories: mealLog.nutrition.calories,
-      protein: mealLog.nutrition.protein,
-      carbs: mealLog.nutrition.carbs,
-      fat: mealLog.nutrition.fat,
+    rating: mealLog.rating || null,
+    macros: mealLog.macros ? {
+      calories: mealLog.macros.calories,
+      protein: mealLog.macros.protein,
+      carbs: mealLog.macros.carbs,
+      fat: mealLog.macros.fat,
     } : null,
-    cost: mealLog.estimated_cost || null,
   };
 }
 

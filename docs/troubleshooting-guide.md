@@ -181,6 +181,69 @@ const options = useMemo(() =>
 
 ---
 
+## Dialog State Management Issues
+
+### Issue: Dialog updates not reflecting in parent component list
+
+**Symptoms:**
+- Dialog shows success message after action (e.g., logging meal)
+- Parent component list (e.g., meal logs) doesn't update automatically
+- User must refresh page to see new items in list
+- Dialog auto-closes but changes aren't visible
+
+**Root Cause:**
+Component using separate hook instances instead of sharing state with parent component.
+
+**Technical Details:**
+- Child dialog component uses its own `useMealLogs()` hook instance
+- Parent component uses different `useMealLogs()` hook instance
+- When dialog updates its state, parent state remains unchanged
+- React state is isolated per hook instance
+
+**Solution:**
+Pass state management functions from parent to child as props:
+
+```typescript
+// ❌ Wrong - Dialog uses separate hook instance
+export function LogMealDialog({ open, onOpenChange }: Props) {
+  const { addMealLogFromItems } = useMealLogs(); // Separate state!
+  // ... rest of component
+}
+
+// ✅ Correct - Share parent's hook functions
+interface LogMealDialogProps {
+  // ... other props
+  addMealLogFromItems?: (items: string[], notes?: string, rating?: number) => Promise<MealLog>;
+}
+
+export function LogMealDialog({ addMealLogFromItems: propAdd, ...props }: LogMealDialogProps) {
+  const fallbackHook = useMealLogs();
+  const addMealLogFromItems = propAdd || fallbackHook.addMealLogFromItems; // Use prop or fallback
+}
+
+// Parent component passes its functions
+<LogMealDialog
+  addMealLogFromItems={addMealLogFromItems}
+  // ... other props
+/>
+```
+
+**Files affected:**
+- Dialog component (e.g., `LogMealDialog.tsx`) - Accept functions as props
+- Parent component (e.g., `Meals.tsx`) - Pass hook functions to dialog
+- Hook interfaces - Export required functions
+
+**Prevention:**
+- Design dialogs to accept state management functions as props
+- Use fallback pattern for backward compatibility
+- Consider using global state management (Redux, Zustand) for complex state sharing
+- Test that parent lists update immediately after dialog actions
+
+**Related UX Issues:**
+This issue often occurs alongside auto-closing dialogs that hide the problem. Implement user-controlled dialog closing with clear success states to make state synchronization issues more visible.
+
+---
+
 ## When to Update This Guide
 
 Add new issues to this guide when:

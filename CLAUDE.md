@@ -11,6 +11,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **E2E testing:** `npm run test:e2e`, `npm run test:e2e:ui` (Playwright)
 **Linting:** `npm run lint`
 
+## Pre-Commit Checklist
+
+Before committing any changes, run these commands to ensure code quality and prevent breaking changes:
+
+```bash
+# 1. TypeScript type checking
+npx tsc --noEmit
+
+# 2. ESLint
+npm run lint
+
+# 3. Run all tests
+npm run test:run
+
+# 4. Build project
+npm run build
+```
+
+**All four commands must pass without errors before committing.** These are the same checks that run in CI/CD, so running them locally prevents failed builds and broken deployments.
+
+### Quick Pre-Commit Command
+You can run all checks in sequence with:
+```bash
+npx tsc --noEmit && npm run lint && npm run test:run && npm run build
+```
+
+If any step fails, fix the issues before committing. Common issues:
+- **TypeScript errors:** Fix type mismatches and undefined property access
+- **Lint warnings:** Address code style and potential issues
+- **Test failures:** Update tests to match code changes or fix broken functionality
+- **Build errors:** Resolve import/export issues and missing dependencies
+
 ## Architecture Overview
 
 This is a React-based food tracking application with the following key architectural patterns:

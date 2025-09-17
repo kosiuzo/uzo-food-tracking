@@ -4,6 +4,7 @@ import { MealLog, DbMealLog } from '../types';
 import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
 import { getTodayLocalDate } from '../lib/utils';
+import { processMealLogWithAI, processBatchMealLogsWithAI } from '../lib/mealLogAI';
 
 export function useMealLogs() {
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
@@ -26,7 +27,7 @@ export function useMealLogs() {
       const { data, error } = await supabase
         .from('meal_logs')
         .select('*')
-        .order('cooked_at', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
@@ -121,15 +122,21 @@ export function useMealLogs() {
   };
 
   const getMealLogsByDateRange = (startDate: string, endDate: string) => {
-    return mealLogs.filter(log => log.date >= startDate && log.date <= endDate);
+    return mealLogs.filter(log => {
+      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+      return logDate >= startDate && logDate <= endDate;
+    });
   };
 
   const getRecentMealLogs = (days: number = 7) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const cutoffDateString = cutoffDate.toISOString().split('T')[0];
-    
-    return mealLogs.filter(log => log.date >= cutoffDateString);
+
+    return mealLogs.filter(log => {
+      const logDate = log.created_at.split('T')[0]; // Extract date from created_at
+      return logDate >= cutoffDateString;
+    });
   };
 
   const reLogMeal = async (mealLog: MealLog) => {
@@ -137,15 +144,14 @@ export function useMealLogs() {
       // Create a copy of the meal log with today's date
       const today = getTodayLocalDate();
       const newMealLog: Omit<MealLog, 'id'> = {
-        recipe_ids: mealLog.recipe_ids,
-        item_entries: mealLog.item_entries,
+        items: mealLog.items,
         meal_name: mealLog.meal_name,
-        date: today,
         notes: mealLog.notes,
-        nutrition: mealLog.nutrition,
-        estimated_cost: mealLog.estimated_cost,
+        rating: mealLog.rating,
+        macros: mealLog.macros,
+        created_at: new Date().toISOString(),
       };
-      
+
       // Use the existing addMealLog function
       const addedMealLog = await addMealLog(newMealLog);
       return addedMealLog;
@@ -155,12 +161,78 @@ export function useMealLogs() {
     }
   };
 
+  const addMealLogFromItems = async (items: string[], notes?: string, rating?: number) => {
+    try {
+      setError(null);
+
+      // Process the items through AI to get meal name and macros
+      console.log('🤖 Processing items with AI:', items);
+      const aiResult = await processMealLogWithAI(items);
+
+      // Create meal log with AI-generated data
+      const mealLogData: Omit<MealLog, 'id'> = {
+        items,
+        meal_name: aiResult.meal_name,
+        notes,
+        rating,
+        macros: aiResult.macros,
+        created_at: new Date().toISOString(),
+      };
+
+      console.log('📝 Creating meal log:', mealLogData);
+      return await addMealLog(mealLogData);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process meal with AI';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
+  const addBatchMealLogsFromItems = async (
+    mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>
+  ) => {
+    try {
+      setError(null);
+
+      // Process all meal entries through AI
+      console.log('🤖 Processing batch meals with AI:', mealEntries.length, 'meals');
+      const aiResults = await processBatchMealLogsWithAI(mealEntries);
+
+      // Create meal logs with AI-generated data
+      const mealLogsToAdd: Array<Omit<MealLog, 'id'>> = mealEntries.map((entry, index) => ({
+        items: entry.items,
+        meal_name: aiResults[index].meal_name,
+        notes: entry.notes,
+        rating: entry.rating,
+        macros: aiResults[index].macros,
+        created_at: new Date().toISOString(),
+      }));
+
+      // Add all meal logs to database
+      console.log('📝 Creating batch meal logs:', mealLogsToAdd.length, 'meals');
+      const addedMealLogs: MealLog[] = [];
+
+      for (const mealLogData of mealLogsToAdd) {
+        const addedMealLog = await addMealLog(mealLogData);
+        addedMealLogs.push(addedMealLog);
+      }
+
+      return addedMealLogs;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process batch meals with AI';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   return {
     mealLogs,
     loading,
     error,
     usingMockData,
     addMealLog,
+    addMealLogFromItems,
+    addBatchMealLogsFromItems,
     updateMealLog,
     deleteMealLog,
     reLogMeal,

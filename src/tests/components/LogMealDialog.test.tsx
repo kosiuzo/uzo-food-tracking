@@ -1,85 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { LogMealDialog } from '../../components/LogMealDialog';
 import { renderWithProviders } from '../setup';
-
-// Mock hooks
-vi.mock('../../hooks/useRecipes', () => ({
-  useRecipes: () => ({
-    allRecipes: [
-      {
-        id: '1',
-        name: 'Test Recipe',
-        nutrition: {
-          calories_per_serving: 200,
-          protein_per_serving: 10,
-          carbs_per_serving: 30,
-          fat_per_serving: 5,
-        }
-      }
-    ]
-  })
-}));
-
-vi.mock('../../hooks/useInventorySearch', () => ({
-  useInventorySearch: () => ({
-    allItems: [
-      {
-        id: 1,
-        name: 'Apple',
-        serving_unit: 'piece',
-        serving_unit_type: 'package',
-        serving_size: 150,
-        serving_quantity: 1,
-        nutrition: {
-          calories_per_serving: 95,
-          protein_per_serving: 0.5,
-          carbs_per_serving: 25,
-          fat_per_serving: 0.3,
-        }
-      }
-    ]
-  })
-}));
 
 const mockToast = vi.fn();
 vi.mock('../../hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast })
 }));
 
-// Mock serving unit utilities
-vi.mock('../../lib/servingUnitUtils', () => ({
-  calculateRecipeNutrition: vi.fn((ingredients, servings, allItems) => {
-    const ingredient = ingredients[0];
-    const item = allItems.find(i => i.id.toString() === ingredient.item_id);
-    
-    if (!item) {
-      return { calories_per_serving: 0, protein_per_serving: 0, carbs_per_serving: 0, fat_per_serving: 0 };
-    }
-    
-    return {
-      calories_per_serving: item.nutrition.calories_per_serving * ingredient.quantity,
-      protein_per_serving: item.nutrition.protein_per_serving * ingredient.quantity,
-      carbs_per_serving: item.nutrition.carbs_per_serving * ingredient.quantity,
-      fat_per_serving: item.nutrition.fat_per_serving * ingredient.quantity,
-    };
+// Mock the hooks that the component uses
+vi.mock('../../hooks/useMealLogs', () => ({
+  useMealLogs: () => ({
+    // Mock empty implementation since this is now AI-based
   })
-}));
-
-// Mock MultiSelect component
-vi.mock('../../components/ui/multi-select', () => ({
-  MultiSelect: ({ onValueChange }: {
-    onValueChange: (values: string[]) => void;
-  }) => (
-    <div data-testid="multi-select">
-      <button
-        data-testid="select-button"
-        onClick={() => onValueChange(['1'])}
-      >
-        Select Items
-      </button>
-    </div>
-  ),
 }));
 
 describe('LogMealDialog', () => {
@@ -91,7 +24,7 @@ describe('LogMealDialog', () => {
     mockToast.mockClear();
   });
 
-  it('renders dialog with proper title and tabs', () => {
+  it('renders dialog with AI-based title', () => {
     renderWithProviders(
       <LogMealDialog
         open={true}
@@ -100,81 +33,18 @@ describe('LogMealDialog', () => {
       />
     );
 
-    expect(screen.getByText('Log a Meal')).toBeInTheDocument();
-    expect(screen.getByText('Recipes')).toBeInTheDocument();
-    expect(screen.getByText('Individual Items')).toBeInTheDocument();
-  });
-
-  it('has required form fields', () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    expect(screen.getByLabelText(/date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/meal name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
-  });
-
-  it('validates required fields and shows error', async () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    // Try to save without filling required fields
-    const saveButton = screen.getByText(/log meal/i);
-    fireEvent.click(saveButton);
-
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "Error",
-        description: "Please enter a meal name",
-        variant: "destructive",
-      });
-    });
-  });
-
-  it('shows validation error when no items are selected', async () => {
-    renderWithProviders(
-      <LogMealDialog
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        onSave={mockOnSave}
-      />
-    );
-
-    // Fill meal name but don't select any items
-    const mealNameInput = screen.getByLabelText(/meal name/i);
-    fireEvent.change(mealNameInput, { target: { value: 'Test Meal' } });
-
-    const saveButton = screen.getByText(/log meal/i);
-    fireEvent.click(saveButton);
-
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "Error",
-        description: "Please select at least one recipe or food item",
-        variant: "destructive",
-      });
-    });
+    expect(screen.getByText('Log Meals with AI')).toBeInTheDocument();
+    expect(screen.getByText('Add food items to each meal and let AI calculate nutrition and generate meal names. You can log multiple meals at once!')).toBeInTheDocument();
   });
 
   it('renders editing mode with correct title', () => {
     const editingMealLog = {
       id: 1,
-      recipe_ids: [1],
-      item_entries: [],
       date: '2025-08-28',
       meal_name: 'Test Meal',
       notes: 'Test notes',
-      nutrition: { calories: 200, protein: 10, carbs: 30, fat: 5 }
+      cost: 5.50,
+      macros: { calories: 200, protein: 10, carbs: 30, fat: 5 }
     };
 
     renderWithProviders(
@@ -187,6 +57,32 @@ describe('LogMealDialog', () => {
     );
 
     expect(screen.getByText('Edit Meal Log')).toBeInTheDocument();
-    expect(screen.getByText('Update Meal')).toBeInTheDocument();
+  });
+
+  it('displays meal entry cards for adding items', () => {
+    renderWithProviders(
+      <LogMealDialog
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onSave={mockOnSave}
+      />
+    );
+
+    expect(screen.getByText('Meal 1')).toBeInTheDocument();
+    expect(screen.getByText('Food Items')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('e.g., 2 eggs, 1 slice bread, 1 tbsp butter')).toBeInTheDocument();
+  });
+
+  it('shows Process with AI button for each meal entry', () => {
+    renderWithProviders(
+      <LogMealDialog
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onSave={mockOnSave}
+      />
+    );
+
+    const processButtons = screen.getAllByText(/Process with AI/);
+    expect(processButtons.length).toBeGreaterThan(0);
   });
 });

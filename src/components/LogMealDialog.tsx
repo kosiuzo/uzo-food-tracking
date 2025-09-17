@@ -7,18 +7,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Plus, Utensils, Loader2, Sparkles, Check } from 'lucide-react';
+import { X, Plus, Utensils, Loader2, Sparkles, Check, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { useMealLogs } from '../hooks/useMealLogs';
+import { getTodayLocalDate } from '@/lib/utils';
 
 interface LogMealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave?: (mealLog: Omit<MealLog, 'id'>) => void;
   editingMealLog?: MealLog;
-  addMealLogFromItems?: (items: string[], notes?: string, rating?: number) => Promise<MealLog>;
-  addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number }>) => Promise<MealLog[]>;
+  addMealLogFromItems?: (items: string[], notes?: string, rating?: number, eatenOn?: string) => Promise<MealLog>;
+  addBatchMealLogsFromItems?: (mealEntries: Array<{ items: string[]; notes?: string; rating?: number; eatenOn?: string }>) => Promise<MealLog[]>;
   updateMealLog?: (id: number, updatedData: Omit<MealLog, 'id'>) => Promise<void>;
 }
 
@@ -27,6 +28,7 @@ interface MealEntry {
   items: string[];
   notes?: string;
   rating?: number;
+  eatenOn?: string; // YYYY-MM-DD format
   aiResult?: {
     meal_name: string;
     macros: {
@@ -83,17 +85,19 @@ export function LogMealDialog({
         items: processedItems,
         notes: editingMealLog.notes,
         rating: editingMealLog.rating,
+        eatenOn: editingMealLog.eaten_on, // Use the eaten_on date from existing log
         aiResult: {
           meal_name: editingMealLog.meal_name,
           macros: editingMealLog.macros,
         },
       }]);
     } else if (open) {
-      // New meal log - start with one empty entry
+      // New meal log - start with one empty entry defaulting to today
       const newEntryId = Date.now().toString();
       setMealEntries([{
         id: newEntryId,
         items: [],
+        eatenOn: getTodayLocalDate(), // Default to today for new entries
       }]);
       setItemInputs({ [newEntryId]: '' });
     }
@@ -104,6 +108,7 @@ export function LogMealDialog({
     setMealEntries(prev => [...prev, {
       id: newEntryId,
       items: [],
+      eatenOn: getTodayLocalDate(), // Default to today for new entries
     }]);
     setItemInputs(prev => ({ ...prev, [newEntryId]: '' }));
   };
@@ -159,6 +164,12 @@ export function LogMealDialog({
     ));
   };
 
+  const updateEntryEatenOn = (entryId: string, eatenOn: string) => {
+    setMealEntries(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, eatenOn } : entry
+    ));
+  };
+
   const updateEntryMacros = (entryId: string, field: keyof MealEntry['aiResult']['macros'], value: number) => {
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId && entry.aiResult
@@ -193,7 +204,7 @@ export function LogMealDialog({
   const resetEntry = (entryId: string) => {
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId
-        ? { ...entry, items: [], notes: '', rating: undefined, aiResult: undefined, isProcessing: false }
+        ? { ...entry, items: [], notes: '', rating: undefined, aiResult: undefined, isProcessing: false, eatenOn: getTodayLocalDate() }
         : entry
     ));
     setItemInputs(prev => ({ ...prev, [entryId]: '' }));
@@ -204,6 +215,7 @@ export function LogMealDialog({
     setMealEntries([{
       id: newEntryId,
       items: [],
+      eatenOn: getTodayLocalDate(),
     }]);
     setItemInputs({ [newEntryId]: '' });
   };
@@ -225,7 +237,7 @@ export function LogMealDialog({
     ));
 
     try {
-      const result = await addMealLogFromItems(entry.items, entry.notes, entry.rating);
+      const result = await addMealLogFromItems(entry.items, entry.notes, entry.rating, entry.eatenOn);
 
       // Update the entry with AI result
       setMealEntries(prev => prev.map(e =>
@@ -272,7 +284,8 @@ export function LogMealDialog({
         notes: entry.notes,
         rating: entry.rating,
         macros: entry.aiResult.macros,
-        created_at: editingMealLog.created_at,
+        eaten_on: entry.eatenOn || getTodayLocalDate(), // Use the edited date
+        created_at: editingMealLog.created_at, // Keep original creation timestamp
       };
 
       await updateMealLog(editingMealLog.id, updatedMealLog);
@@ -311,6 +324,7 @@ export function LogMealDialog({
         items: entry.items,
         notes: entry.notes,
         rating: entry.rating,
+        eatenOn: entry.eatenOn,
       }));
 
       const results = await addBatchMealLogsFromItems(batchData);
@@ -569,8 +583,20 @@ export function LogMealDialog({
                 </div>
               )}
 
-              {/* Notes and Rating */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Date, Notes and Rating */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Date Eaten
+                  </Label>
+                  <Input
+                    type="date"
+                    value={entry.eatenOn || getTodayLocalDate()}
+                    onChange={(e) => updateEntryEatenOn(entry.id, e.target.value)}
+                    className="w-full"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Notes (optional)</Label>
                   <Textarea

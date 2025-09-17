@@ -34,31 +34,28 @@ export default function Meals() {
   // Filter meals by selected date, date range, or show all if no filter
   const filteredMeals = selectedDate
     ? safeMealLogs.filter(log => {
-        const logDate = log.created_at.split('T')[0]; // Extract date from created_at
-        return logDate === selectedDate;
+        return log.eaten_on === selectedDate;
       })
     : dateRange
     ? safeMealLogs.filter(log => {
-        const logDate = log.created_at.split('T')[0]; // Extract date from created_at
-        return logDate >= dateRange.start && logDate <= dateRange.end;
+        return log.eaten_on >= dateRange.start && log.eaten_on <= dateRange.end;
       })
     : safeMealLogs;
 
   const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
 
-  const formatDate = (createdAt: string) => {
-    if (!createdAt) return 'Unknown Date';
-    const logDate = createdAt.split('T')[0]; // Extract date from created_at
+  const formatDate = (eatenOn: string) => {
+    if (!eatenOn) return 'Unknown Date';
     const todayLocal = getTodayLocalDate();
     const yesterdayLocal = getYesterdayLocalDate();
 
-    if (logDate === todayLocal) {
+    if (eatenOn === todayLocal) {
       return 'Today';
-    } else if (logDate === yesterdayLocal) {
+    } else if (eatenOn === yesterdayLocal) {
       return 'Yesterday';
     } else {
       // Format the date string for display
-      const date = new Date(logDate + 'T00:00:00'); // Add time to avoid timezone issues
+      const date = new Date(eatenOn + 'T00:00:00'); // Add time to avoid timezone issues
       return date.toLocaleDateString();
     }
   };
@@ -111,9 +108,8 @@ export default function Meals() {
   const isMealLoggedToday = (mealLog: MealLog) => {
     const today = getTodayLocalDate();
     return safeMealLogs.some(log => {
-      if (!log.created_at && !log.date) return false;
-      const logDate = (log.created_at || log.date).split('T')[0]; // Extract date from created_at or date
-      if (logDate !== today) return false;
+      if (!log.eaten_on) return false;
+      if (log.eaten_on !== today) return false;
 
       // Check if items arrays match
       const logItems = log.items || [];
@@ -363,7 +359,7 @@ export default function Meals() {
                               <h3 className="font-medium">{log.meal_name}</h3>
                               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
-                                {formatDate(log.created_at || log.date)}
+                                {formatDate(log.eaten_on)}
                               </div>
                               {log.rating && (
                                 <div className="flex items-center gap-1 mt-1">

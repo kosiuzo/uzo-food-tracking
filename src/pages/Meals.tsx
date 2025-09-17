@@ -433,16 +433,31 @@ export default function Meals() {
                           {/* Food Items */}
                           {log.items && log.items.length > 0 && (
                             <div className="space-y-1">
-                              <div className="text-xs text-muted-foreground">
-                                Items ({log.items.length}):
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                {log.items.map((item, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
-                                    {item}
-                                  </Badge>
-                                ))}
-                              </div>
+                              {(() => {
+                                // Split comma-separated items for better display
+                                const allItems: string[] = [];
+                                log.items.forEach(item => {
+                                  const splitItems = item.split(',')
+                                    .map(i => i.trim())
+                                    .filter(i => i.length > 0);
+                                  allItems.push(...splitItems);
+                                });
+
+                                return (
+                                  <>
+                                    <div className="text-xs text-muted-foreground">
+                                      Items ({allItems.length}):
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {allItems.map((item, index) => (
+                                        <Badge key={index} variant="outline" className="text-xs px-3 py-1 whitespace-nowrap break-words min-w-0 flex-shrink-0">
+                                          {item}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </div>
                           )}
                         </div>

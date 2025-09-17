@@ -60,13 +60,27 @@ export function LogMealDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [itemInputs, setItemInputs] = useState<Record<string, string>>({});
 
+  // Helper function to ensure items are properly split
+  const processItems = (items: string[]) => {
+    const processed: string[] = [];
+    items.forEach(item => {
+      // Split each item by comma in case it contains multiple items
+      const splitItems = item.split(',')
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+      processed.push(...splitItems);
+    });
+    return processed;
+  };
+
   // Initialize form when dialog opens or editing meal log changes
   useEffect(() => {
     if (editingMealLog) {
-      // Editing mode - populate with existing meal log
+      // Editing mode - populate with existing meal log and process items
+      const processedItems = processItems(editingMealLog.items || []);
       setMealEntries([{
         id: '1',
-        items: editingMealLog.items,
+        items: processedItems,
         notes: editingMealLog.notes,
         rating: editingMealLog.rating,
         aiResult: {
@@ -106,9 +120,14 @@ export function LogMealDialog({
   const addItemToEntry = (entryId: string, item: string) => {
     if (!item.trim()) return;
 
+    // Split comma-separated items and clean them up
+    const newItems = item.split(',')
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+
     setMealEntries(prev => prev.map(entry =>
       entry.id === entryId
-        ? { ...entry, items: [...entry.items, item.trim()], aiResult: undefined }
+        ? { ...entry, items: [...entry.items, ...newItems], aiResult: undefined }
         : entry
     ));
 

@@ -62,7 +62,7 @@ export class OpenRouterClient {
   private defaultTimeout = 60000; // 60 seconds
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || (import.meta as { env?: { VITE_OPEN_ROUTER_API_KEY?: string } }).env?.VITE_OPEN_ROUTER_API_KEY;
+    this.apiKey = apiKey || (import.meta as { env?: { VITE_OPEN_ROUTER_API_KEY?: string } }).env?.VITE_OPEN_ROUTER_API_KEY || '';
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured. Please set VITE_OPEN_ROUTER_API_KEY in your environment.');
     }
@@ -95,12 +95,13 @@ export class OpenRouterClient {
    */
   private getRetryInfo(errorType: OpenRouterErrorType, headers: Headers): { shouldRetry: boolean; retryAfter?: number } {
     switch (errorType) {
-      case OpenRouterErrorType.RATE_LIMIT:
+      case OpenRouterErrorType.RATE_LIMIT: {
         const retryAfter = headers.get('retry-after');
         return {
           shouldRetry: true,
           retryAfter: retryAfter ? parseInt(retryAfter) : 60
         };
+      }
 
       case OpenRouterErrorType.API_ERROR:
       case OpenRouterErrorType.NETWORK_ERROR:
@@ -122,7 +123,7 @@ export class OpenRouterClient {
   /**
    * Get user-friendly error message and troubleshooting steps
    */
-  private getErrorMessage(errorType: OpenRouterErrorType, details?: any): string {
+  private getErrorMessage(errorType: OpenRouterErrorType, details?: { message?: string }): string {
     switch (errorType) {
       case OpenRouterErrorType.AUTH_ERROR:
         return 'Invalid API key. Please check your OpenRouter API key configuration.';
@@ -205,8 +206,8 @@ export class OpenRouterClient {
     console.groupEnd();
 
     // In development, also store in sessionStorage for debugging
-    if ((import.meta as any).env?.DEV) {
-      const errors = JSON.parse(sessionStorage.getItem('openrouter-errors') || '[]');
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+      const errors: unknown[] = JSON.parse(sessionStorage.getItem('openrouter-errors') || '[]');
       errors.push(logData);
       // Keep only last 10 errors
       if (errors.length > 10) errors.shift();
@@ -233,7 +234,7 @@ export class OpenRouterClient {
     });
 
     // In development, track successful calls
-    if ((import.meta as any).env?.DEV) {
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
       const calls = JSON.parse(sessionStorage.getItem('openrouter-success') || '[]');
       calls.push(logData);
       // Keep only last 20 successful calls
@@ -279,7 +280,7 @@ export class OpenRouterClient {
 
       clearTimeout(timeoutId);
 
-      let responseData: any;
+      let responseData: unknown;
       let responseText: string = '';
 
       try {
@@ -302,11 +303,12 @@ export class OpenRouterClient {
       if (!response.ok) {
         const errorType = this.categorizeError(response, responseData);
         const retryInfo = this.getRetryInfo(errorType, response.headers);
+        const errorData = responseData as { error?: { message?: string } };
 
         const error: OpenRouterError = {
           type: errorType,
-          message: this.getErrorMessage(errorType, responseData?.error),
-          details: responseData?.error || responseData,
+          message: this.getErrorMessage(errorType, errorData?.error),
+          details: errorData?.error || responseData,
           shouldRetry: retryInfo.shouldRetry,
           retryAfter: retryInfo.retryAfter,
           httpStatus: response.status,
@@ -318,7 +320,8 @@ export class OpenRouterClient {
       }
 
       // Validate response structure
-      if (!responseData.choices || !Array.isArray(responseData.choices) || responseData.choices.length === 0) {
+      const openRouterResponse = responseData as OpenRouterResponse;
+      if (!openRouterResponse.choices || !Array.isArray(openRouterResponse.choices) || openRouterResponse.choices.length === 0) {
         const error: OpenRouterError = {
           type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
           message: this.getErrorMessage(OpenRouterErrorType.RESPONSE_VALIDATION_ERROR),
@@ -332,7 +335,7 @@ export class OpenRouterClient {
         throw error;
       }
 
-      const choice = responseData.choices[0];
+      const choice = openRouterResponse.choices[0];
       if (!choice?.message?.content) {
         const error: OpenRouterError = {
           type: OpenRouterErrorType.RESPONSE_VALIDATION_ERROR,
@@ -348,9 +351,9 @@ export class OpenRouterClient {
       }
 
       const duration = Date.now() - startTime;
-      this.logSuccess(responseData, request, context, duration);
+      this.logSuccess(openRouterResponse, request, context, duration);
 
-      return responseData;
+      return openRouterResponse;
 
     } catch (error) {
       if (error && typeof error === 'object' && 'type' in error) {
@@ -364,7 +367,7 @@ export class OpenRouterClient {
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorType = OpenRouterErrorType.NETWORK_ERROR;
         errorMessage = this.getErrorMessage(errorType);
-      } else if ((error as any).name === 'AbortError') {
+      } else if ((error as { name: string }).name === 'AbortError') {
         errorType = OpenRouterErrorType.TIMEOUT_ERROR;
         errorMessage = this.getErrorMessage(errorType);
       }
@@ -372,7 +375,7 @@ export class OpenRouterClient {
       const openRouterError: OpenRouterError = {
         type: errorType,
         message: errorMessage,
-        details: { originalError: (error as any).message, stack: (error as any).stack },
+        details: { originalError: (error as Error).message, stack: (error as Error).stack },
         shouldRetry: this.getRetryInfo(errorType, new Headers()).shouldRetry
       };
 
@@ -415,8 +418,14 @@ export class OpenRouterClient {
   /**
    * Get debug information for troubleshooting
    */
-  getDebugInfo(): any {
-    if (!(import.meta as any).env?.DEV) {
+  getDebugInfo(): {
+    message?: string;
+    errors?: unknown[];
+    successfulCalls?: unknown[];
+    apiKeyConfigured?: boolean;
+    environment?: string;
+  } {
+    if (!(import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
       return { message: 'Debug info only available in development mode' };
     }
 
@@ -424,7 +433,7 @@ export class OpenRouterClient {
       errors: JSON.parse(sessionStorage.getItem('openrouter-errors') || '[]'),
       successfulCalls: JSON.parse(sessionStorage.getItem('openrouter-success') || '[]'),
       apiKeyConfigured: !!this.apiKey,
-      environment: (import.meta as any).env?.MODE
+      environment: (import.meta as { env?: { MODE?: string } }).env?.MODE
     };
   }
 
@@ -432,7 +441,7 @@ export class OpenRouterClient {
    * Clear debug logs
    */
   clearDebugLogs(): void {
-    if ((import.meta as any).env?.DEV) {
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
       sessionStorage.removeItem('openrouter-errors');
       sessionStorage.removeItem('openrouter-success');
       console.log('🧹 OpenRouter debug logs cleared');
@@ -440,7 +449,23 @@ export class OpenRouterClient {
   }
 }
 
-// Export singleton instance
-export const openRouterClient = new OpenRouterClient();
+// Export singleton instance - only create if API key is available
+let _openRouterClient: OpenRouterClient | null = null;
+
+export const openRouterClient = (() => {
+  if (!_openRouterClient) {
+    try {
+      _openRouterClient = new OpenRouterClient();
+    } catch (error) {
+      // In test environment, return a mock client
+      if (process.env.NODE_ENV === 'test') {
+        _openRouterClient = new OpenRouterClient('test-key');
+      } else {
+        throw error;
+      }
+    }
+  }
+  return _openRouterClient;
+})();
 
 // Utility types are already exported above

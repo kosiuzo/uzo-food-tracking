@@ -10,12 +10,37 @@ import { openRouterClient, OpenRouterErrorType } from '@/lib/openrouter';
  * Debug panel component for troubleshooting OpenRouter API issues
  * Only shows in development mode
  */
+interface DebugInfo {
+  message?: string;
+  errors?: Array<{
+    context: string;
+    errorType: OpenRouterErrorType;
+    message: string;
+    timestamp: string;
+    shouldRetry: boolean;
+    retryAfter?: number;
+    httpStatus?: number;
+    details?: unknown;
+  }>;
+  successfulCalls?: Array<{
+    context: string;
+    model: string;
+    duration: number;
+    timestamp: string;
+    usage?: {
+      total_tokens: number;
+    };
+  }>;
+  apiKeyConfigured?: boolean;
+  environment?: string;
+}
+
 export function DebugPanel() {
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   // Only show in development
-  if (!(import.meta as any).env?.DEV) {
+  if (!(import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
     return null;
   }
 
@@ -152,7 +177,7 @@ export function DebugPanel() {
                     Recent Successful Calls ({debugInfo.successfulCalls.length})
                   </h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {debugInfo.successfulCalls.slice(-5).reverse().map((call: any, index: number) => (
+                    {debugInfo.successfulCalls.slice(-5).reverse().map((call, index: number) => (
                       <div key={index} className="text-sm p-2 bg-green-50 rounded border border-green-200">
                         <div className="flex justify-between items-start">
                           <span className="font-medium">{call.context}</span>
@@ -187,12 +212,12 @@ export function DebugPanel() {
                       Recent Errors ({debugInfo.errors.length})
                     </h4>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {debugInfo.errors.slice(-5).reverse().map((error: any, index: number) => (
+                      {debugInfo.errors.slice(-5).reverse().map((error, index: number) => (
                         <div key={index} className="text-sm p-3 bg-red-50 rounded border border-red-200">
                           <div className="flex justify-between items-start mb-2">
                             <span className="font-medium">{error.context}</span>
                             <Badge
-                              variant={getErrorTypeColor(error.errorType) as any}
+                              variant={getErrorTypeColor(error.errorType) as "default" | "secondary" | "destructive" | "outline"}
                               className="text-xs flex items-center gap-1"
                             >
                               {getErrorIcon(error.errorType)}

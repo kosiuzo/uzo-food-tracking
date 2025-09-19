@@ -4,6 +4,7 @@ import Meals from '../../pages/Meals';
 import { renderWithProviders } from '../setup';
 import * as mealLogsHook from '../../hooks/useMealLogs';
 import * as recipesHook from '../../hooks/useRecipes';
+import { getTodayLocalDate } from '../../lib/utils';
 
 vi.mock('../../hooks/useMealLogs');
 vi.mock('../../hooks/useRecipes');
@@ -24,26 +25,27 @@ vi.mock('@/components/ui/tooltip', () => ({
 
 describe('Meals Page', () => {
   it('renders meal logs', () => {
+    const today = getTodayLocalDate();
     vi.mocked(mealLogsHook.useMealLogs).mockReturnValue({
       mealLogs: [{
         id: 1,
         meal_name: 'Pasta',
-        date: '2024-01-01',
-        recipe_ids: [],
+        eaten_on: today,
+        items: ['pasta', 'sauce'],
+        macros: { calories: 500, protein: 15, carbs: 80, fat: 5 },
         notes: '',
-        nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-        estimated_cost: 0,
+        rating: undefined,
+        created_at: new Date().toISOString(),
       }],
       addMealLog: vi.fn(),
+      addMealLogFromItems: vi.fn(),
+      addBatchMealLogsFromItems: vi.fn(),
       updateMealLog: vi.fn(),
       deleteMealLog: vi.fn(),
       reLogMeal: vi.fn(),
       usingMockData: true,
       error: null,
       loading: false,
-      getMealLogsByDateRange: vi.fn(),
-      getRecentMealLogs: vi.fn(),
-      refetch: vi.fn(),
     } as ReturnType<typeof mealLogsHook.useMealLogs>);
 
     vi.mocked(recipesHook.useRecipes).mockReturnValue({
@@ -51,7 +53,8 @@ describe('Meals Page', () => {
     } as ReturnType<typeof recipesHook.useRecipes>);
 
     renderWithProviders(<Meals />);
-    expect(screen.getByText('Total Meals')).toBeInTheDocument();
+    // Since we now default to today's date filter, it should show meals for that date
+    expect(screen.getByRole('heading', { name: /Meals on \d+\/\d+\/\d+/ })).toBeInTheDocument();
     expect(screen.getByText('Pasta')).toBeInTheDocument();
   });
 });

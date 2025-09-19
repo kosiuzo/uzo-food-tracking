@@ -21,7 +21,7 @@ export default function Meals() {
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayLocalDate());
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [reLoggedMeals, setReLoggedMeals] = useState<Set<string>>(new Set());
 
@@ -104,22 +104,10 @@ export default function Meals() {
     }
   };
 
-  // Check if a meal is already logged for today
+  // Allow relogging any meal unlimited times
   const isMealLoggedToday = (mealLog: MealLog) => {
-    const today = getTodayLocalDate();
-    return safeMealLogs.some(log => {
-      if (!log.eaten_on) return false;
-      if (log.eaten_on !== today) return false;
-
-      // Check if items arrays match
-      const logItems = log.items || [];
-      const mealLogItems = mealLog.items || [];
-      const itemsMatch = logItems.length === mealLogItems.length &&
-        logItems.every(item => mealLogItems.includes(item)) &&
-        mealLogItems.every(item => logItems.includes(item));
-
-      return itemsMatch;
-    });
+    // Always return false so relog button is never disabled
+    return false;
   };
 
   return (

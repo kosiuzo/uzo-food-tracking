@@ -95,6 +95,13 @@ vi.mock('../lib/supabase', () => ({
               single: vi.fn(() => {
                 throw new Error('Mocked database error'); // Force fallback to mock data
               })
+            })),
+            order: vi.fn(() => ({
+              data: [
+                { week_start: '2024-01-15' },
+                { week_start: '2024-01-08' }
+              ],
+              error: null
             }))
           })),
           insert: vi.fn(() => ({

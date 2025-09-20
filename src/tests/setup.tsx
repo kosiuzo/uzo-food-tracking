@@ -6,6 +6,21 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
+// Mock window.matchMedia for mobile hooks
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 // Mock OpenRouter client before other imports
 vi.mock('../lib/openrouter', () => ({
   openRouterClient: {

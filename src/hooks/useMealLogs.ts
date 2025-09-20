@@ -137,17 +137,23 @@ export function useMealLogs() {
     });
   };
 
-  const reLogMeal = async (mealLog: MealLog) => {
+  const reLogMeal = async (mealLog: MealLog, multiplier: number = 1, notes?: string, eatenOn?: string) => {
     try {
-      // Create a copy of the meal log with today's date
-      const today = getTodayLocalDate();
+      // Create a copy of the meal log with adjusted macros and date
+      const adjustedMacros = mealLog.macros ? {
+        calories: mealLog.macros.calories * multiplier,
+        protein: mealLog.macros.protein * multiplier,
+        carbs: mealLog.macros.carbs * multiplier,
+        fat: mealLog.macros.fat * multiplier,
+      } : undefined;
+
       const newMealLog: Omit<MealLog, 'id'> = {
         items: mealLog.items,
-        meal_name: mealLog.meal_name,
-        notes: mealLog.notes,
+        meal_name: multiplier !== 1 ? `${mealLog.meal_name} (${multiplier}x)` : mealLog.meal_name,
+        notes: notes || mealLog.notes,
         rating: mealLog.rating,
-        macros: mealLog.macros,
-        eaten_on: today, // Set eaten_on to today for re-logged meals
+        macros: adjustedMacros,
+        eaten_on: eatenOn || getTodayLocalDate(),
         created_at: new Date().toISOString(),
       };
 

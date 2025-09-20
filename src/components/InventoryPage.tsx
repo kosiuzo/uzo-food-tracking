@@ -77,11 +77,13 @@ export function InventoryPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Inventory</h1>
+        <h1 className="text-lg font-bold mb-3">Inventory</h1>
+
+        {/* Action Row */}
+        <div className="flex items-center justify-between gap-3">
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="secondary" size="sm" className="gap-2 rounded-full">
                 <Filter className="h-4 w-4" />
                 Filter
               </Button>
@@ -161,6 +163,17 @@ export function InventoryPage() {
               </div>
             </SheetContent>
           </Sheet>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddDialogOpen(true)}
+            className="gap-2"
+            aria-label="Add item to inventory"
+          >
+            <Plus className="h-4 w-4" />
+            Add Item
+          </Button>
         </div>
       </div>
 
@@ -225,7 +238,7 @@ export function InventoryPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-24">
+      <div className="px-4 pb-4">
         {loading ? (
           <div className="flex justify-center items-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -246,17 +259,6 @@ export function InventoryPage() {
         )}
       </div>
 
-      {/* Sticky Bottom Add Button */}
-      <div className="fixed inset-x-0 bottom-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          className="w-full h-12 gap-2"
-          aria-label="Add item to inventory"
-        >
-          <Plus className="h-5 w-5" />
-          Add Item
-        </Button>
-      </div>
 
       {/* Add/Edit Dialog */}
       <AddEditItemDialog

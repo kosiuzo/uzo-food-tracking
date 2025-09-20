@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Clock, Plus, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,9 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [eatenOn, setEatenOn] = useState(getTodayLocalDate());
   const [isRelogging, setIsRelogging] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const { toast } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -35,7 +37,50 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
       setMultiplier(1);
       setAdditionalNotes('');
       setEatenOn(getTodayLocalDate());
+      setIsKeyboardVisible(false);
     }
+  }, [open]);
+
+  // Handle keyboard visibility on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        // Detect if keyboard is likely visible on mobile
+        const isMobile = window.innerWidth <= 768;
+        const heightDifference = window.screen.height - window.innerHeight;
+        const keyboardThreshold = 150; // Adjust this value as needed
+
+        if (isMobile && heightDifference > keyboardThreshold) {
+          setIsKeyboardVisible(true);
+        } else {
+          setIsKeyboardVisible(false);
+        }
+      }
+    };
+
+    // Handle focus events to scroll input into view
+    const handleFocus = (e: FocusEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        setTimeout(() => {
+          e.target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 300); // Delay to allow keyboard animation
+      }
+    };
+
+    if (open) {
+      window.addEventListener('resize', handleResize);
+      document.addEventListener('focusin', handleFocus);
+      handleResize(); // Check initial state
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('focusin', handleFocus);
+    };
   }, [open]);
 
   // Filter meals based on search query
@@ -104,7 +149,15 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={`max-w-2xl ${isKeyboardVisible ? 'max-h-[50vh]' : 'max-h-[90vh]'} overflow-y-auto`}
+        style={isKeyboardVisible ? {
+          position: 'fixed',
+          top: '10px',
+          transform: 'translateX(-50%)',
+          left: '50%'
+        } : undefined}
+      >
         <DialogHeader>
           <DialogTitle>Re-log Previous Meal</DialogTitle>
         </DialogHeader>
@@ -116,11 +169,14 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 id="meal-search"
                 placeholder="Search by meal name or ingredient..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                autoComplete="off"
+                inputMode="search"
               />
             </div>
           </div>
@@ -129,7 +185,7 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
           {searchQuery && (
             <div className="space-y-2">
               <Label>Search Results ({uniqueMeals.length} meals)</Label>
-              <div className="max-h-64 overflow-y-auto space-y-2">
+              <div className={`${isKeyboardVisible ? 'max-h-32' : 'max-h-64'} overflow-y-auto space-y-2`}>
                 {uniqueMeals.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No meals found matching "{searchQuery}"
@@ -221,14 +277,14 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
                     </div>
                   )}
 
-                  {/* Nutrition */}
+                  {/* Nutrition - Updated with multiplier */}
                   <div className="flex gap-4 text-sm">
                     <span className="font-medium">
-                      {selectedMeal.macros?.calories?.toFixed(1) || 0} cal
+                      {((selectedMeal.macros?.calories || 0) * multiplier).toFixed(1)} cal
                     </span>
-                    <span>P: {selectedMeal.macros?.protein?.toFixed(1) || 0}g</span>
-                    <span>C: {selectedMeal.macros?.carbs?.toFixed(1) || 0}g</span>
-                    <span>F: {selectedMeal.macros?.fat?.toFixed(1) || 0}g</span>
+                    <span>P: {((selectedMeal.macros?.protein || 0) * multiplier).toFixed(1)}g</span>
+                    <span>C: {((selectedMeal.macros?.carbs || 0) * multiplier).toFixed(1)}g</span>
+                    <span>F: {((selectedMeal.macros?.fat || 0) * multiplier).toFixed(1)}g</span>
                   </div>
                 </div>
               </Card>

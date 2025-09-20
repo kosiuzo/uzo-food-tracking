@@ -44,7 +44,7 @@ describe('Recipes Page', () => {
 
   it('renders recipes list', () => {
     renderWithProviders(<Recipes />);
-    expect(screen.getByText('Total Recipes')).toBeInTheDocument();
+    expect(screen.getByText('Total')).toBeInTheDocument();
     expect(screen.getByText('Cake')).toBeInTheDocument();
   });
 });

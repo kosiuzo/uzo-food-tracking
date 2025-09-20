@@ -3,7 +3,6 @@ import { Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { FoodItemCard } from './FoodItemCard';
 import { AddEditItemDialog } from './AddEditItemDialog';
 import { useInventorySearch } from '../hooks/useInventorySearch';
@@ -65,14 +64,9 @@ export function InventoryPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-11"
+            autoComplete="off"
+            inputMode="search"
           />
-          {!usingMockData && searchQuery && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Badge variant="secondary" className="text-xs">
-                Full-text search
-              </Badge>
-            </div>
-          )}
         </div>
         
         <div className="grid grid-cols-2 gap-3">

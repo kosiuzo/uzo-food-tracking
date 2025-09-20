@@ -91,46 +91,59 @@ export function useRecipes() {
     }
   };
 
-// Enhanced filtering with search capabilities
+// Enhanced filtering with smart search capabilities
   const filteredRecipes = recipes.filter(recipe => {
     let matchesSearch = true;
-    
-    // If we have a search query, use it for filtering (fallback for mock data)
-    if (searchQuery && usingMockData) {
-      matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                     recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                     recipe.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // If we have a search query, use smart search for both mock and real data when backend search isn't used
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+
+      // Smart search: Check recipe name, instructions, notes
+      const nameMatch = recipe.name.toLowerCase().includes(query);
+      const instructionsMatch = recipe.instructions?.toLowerCase().includes(query);
+      const notesMatch = recipe.notes?.toLowerCase().includes(query);
+
+      // Smart ingredient search - check both ingredient_list (AI recipes) and ingredients (linked items)
+      let ingredientMatch = false;
+
+      // Search in ingredient_list (AI-generated recipes)
+      if (recipe.ingredient_list && recipe.ingredient_list.length > 0) {
+        ingredientMatch = recipe.ingredient_list.some(ingredient =>
+          ingredient.toLowerCase().includes(query)
+        );
+      }
+
+      // Search in ingredients (regular recipes with linked items) - would need ingredient names
+      // Note: For now, regular recipes don't have ingredient names readily available in the filter
+      // This could be enhanced by including ingredient names in the recipe data structure
+
+      // Search in tags
+      const tagMatch = recipe.tags?.some(tag =>
+        tag.name.toLowerCase().includes(query)
+      );
+
+      matchesSearch = nameMatch || instructionsMatch || notesMatch || ingredientMatch || tagMatch;
     }
-    
+
     return matchesSearch;
   });
 
   const favoriteRecipes = filteredRecipes.filter(r => r.is_favorite);
 
-  // Enhanced search function for real-time search
+  // Enhanced search function for real-time search - prioritize client-side like meal re-log
   const performSearch = async (query: string, tagIds: number[] = []) => {
-    if (usingMockData) {
-      // For mock data, use the existing filter approach
-      setSearchQuery(query);
+    // Always use client-side smart search for better UX (like meal re-log)
+    setSearchQuery(query);
+
+    // If no query, reset to show all recipes
+    if (!query.trim()) {
+      // Don't reload, just clear the search query to show all recipes
       return;
     }
 
-    try {
-      setLoading(true);
-      const searchOptions = {
-        tags: tagIds,
-        sortBy: 'relevance' as const,
-      };
-
-      const result = await searchRecipes(query, searchOptions);
-      setRecipes(result.items);
-      setSearchQuery(query);
-    } catch (err) {
-      console.error('Recipe search failed:', err);
-      setError('Recipe search failed');
-    } finally {
-      setLoading(false);
-    }
+    // Use client-side smart search for immediate, partial matching
+    // Backend search can be added later as an advanced option if needed
   };
 
 const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] }) => {

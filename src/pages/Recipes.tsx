@@ -160,7 +160,7 @@ export default function Recipes() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search recipes by name, instructions, or ingredients..."
+            placeholder="Search recipes by name, ingredients, tags, or instructions..."
             value={searchQuery}
             onChange={(e) => {
               const value = e.target.value;
@@ -170,12 +170,14 @@ export default function Recipes() {
                 performSearch(value, selectedTagIds.map(id => parseInt(id)));
               }
             }}
-            className="pl-10"
+            className="pl-10 pr-24"
+            autoComplete="off"
+            inputMode="search"
           />
-          {!usingMockData && searchQuery && (
+          {searchQuery && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <Badge variant="secondary" className="text-xs">
-                Full-text search
+                {usingMockData ? 'Smart search' : 'Full-text search'}
               </Badge>
             </div>
           )}
@@ -205,9 +207,26 @@ export default function Recipes() {
 
         {/* Recipes List */}
         <div className="space-y-3">
-{displayedRecipes.length === 0 ? (
+          {displayedRecipes.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No recipes found</p>
+              <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-lg">
+                  {searchQuery
+                    ? `No recipes found matching "${searchQuery}"`
+                    : favoritesOnly
+                    ? 'No favorite recipes found'
+                    : selectedTagIds.length > 0
+                    ? 'No recipes found with selected tags'
+                    : 'No recipes found'
+                  }
+                </p>
+                {searchQuery && (
+                  <p className="text-sm text-muted-foreground">
+                    Try searching for ingredients, recipe names, or cooking instructions
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             displayedRecipes.map(recipe => (

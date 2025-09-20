@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { FoodItem, DbItem } from '../types';
 import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
-import { searchItems } from '../lib/search';
 import { mockFoodItems } from '../data/mockData';
 import { useDebounce } from '../lib/search';
 
@@ -100,46 +99,23 @@ export function useInventorySearch(): UseInventorySearchResult {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Search items using full-text search (only when we have a search query and real data)
-  const {
-    data: searchResults,
-    isLoading: isSearching,
-    error: searchError
-  } = useQuery({
-    queryKey: ['search-inventory', debouncedSearchQuery, categoryFilter, stockFilter],
-    queryFn: async () => {
-      if (usingMockData) {
-        return null; // Don't search when using mock data
-      }
-      
-      const searchOptions = {
-        includeInactive: stockFilter !== 'in-stock',
-        categories: categoryFilter !== 'all' ? [categoryFilter] : [],
-        sortBy: 'relevance' as const,
-        limit: 1000, // Get all matching items
-      };
-
-      const result = await searchItems(debouncedSearchQuery, searchOptions);
-      return result.items;
-    },
-    enabled: !usingMockData && debouncedSearchQuery.length >= 2,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-
-  // Determine which items to use and apply client-side filtering
+  // Enhanced client-side filtering with smart search capabilities (like recipes and meal re-log)
   const items = useMemo(() => {
-    const baseItems = usingMockData ? mockItems : 
-      (debouncedSearchQuery.length >= 2 && searchResults) ? searchResults : allItems;
-    
+    const baseItems = usingMockData ? mockItems : allItems;
+
     return baseItems.filter(item => {
-      // For mock data, apply search filtering client-side
+      // Smart search filtering for all data (mock and real)
       let matchesSearch = true;
-      if (debouncedSearchQuery && usingMockData) {
+      if (debouncedSearchQuery) {
         const query = debouncedSearchQuery.toLowerCase();
-        matchesSearch = item.name.toLowerCase().includes(query) ||
-                       item.brand?.toLowerCase().includes(query) ||
-                       item.category.toLowerCase().includes(query) ||
-                       item.ingredients?.toLowerCase().includes(query);
+
+        // Smart search: Check name, brand, category, and ingredients for partial matches
+        const nameMatch = item.name.toLowerCase().includes(query);
+        const brandMatch = item.brand?.toLowerCase().includes(query);
+        const categoryMatch = item.category.toLowerCase().includes(query);
+        const ingredientsMatch = item.ingredients?.toLowerCase().includes(query);
+
+        matchesSearch = nameMatch || brandMatch || categoryMatch || ingredientsMatch;
       }
       
       // Apply filters
@@ -153,7 +129,7 @@ export function useInventorySearch(): UseInventorySearchResult {
       
       return matchesSearch && matchesCategory && matchesStock && matchesRating;
     });
-  }, [allItems, mockItems, searchResults, debouncedSearchQuery, usingMockData, categoryFilter, stockFilter, ratingFilter]);
+  }, [allItems, mockItems, debouncedSearchQuery, usingMockData, categoryFilter, stockFilter, ratingFilter]);
 
   // Derive categories from current items
   const categories = useMemo(() => {
@@ -161,14 +137,13 @@ export function useInventorySearch(): UseInventorySearchResult {
     return Array.from(new Set(baseItems.map(item => item.category)));
   }, [allItems, mockItems, usingMockData]);
 
-  // Loading state
-  const loading = isLoadingItems || (isSearching && !usingMockData);
-  
-  // Error state  
-  const error = itemsError ? 
-    (usingMockData ? 'Using mock data - database connection unavailable' : 
-     itemsError instanceof Error ? itemsError.message : 'Failed to load items') :
-    searchError instanceof Error ? searchError.message : null;
+  // Loading state (only for initial data load)
+  const loading = isLoadingItems;
+
+  // Error state (simplified since no more search API calls)
+  const error = itemsError ?
+    (usingMockData ? 'Using mock data - database connection unavailable' :
+     itemsError instanceof Error ? itemsError.message : 'Failed to load items') : null;
 
   // Stats
   const outOfStockItems = useMemo(() => 
@@ -218,7 +193,6 @@ export function useInventorySearch(): UseInventorySearchResult {
       
       // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
-      queryClient.invalidateQueries({ queryKey: ['search-inventory'] });
       
       return newItem;
     } catch (err) {
@@ -292,7 +266,6 @@ export function useInventorySearch(): UseInventorySearchResult {
 
       // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
-      queryClient.invalidateQueries({ queryKey: ['search-inventory'] });
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
@@ -318,7 +291,6 @@ export function useInventorySearch(): UseInventorySearchResult {
 
       // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
-      queryClient.invalidateQueries({ queryKey: ['search-inventory'] });
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete item';

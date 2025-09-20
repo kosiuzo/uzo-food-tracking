@@ -70,6 +70,7 @@ describe('Inventory Page', () => {
   it('creates an item', async () => {
     const user = userEvent.setup();
     renderWithProviders(<InventoryPage />);
+    await user.click(screen.getByText('Add Item'));
     await user.click(screen.getByText('save item'));
     expect(addItem).toHaveBeenCalledWith({
       id: '2',

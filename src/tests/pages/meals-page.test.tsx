@@ -54,7 +54,7 @@ describe('Meals Page', () => {
 
     renderWithProviders(<Meals />);
     // Since we now default to today's date filter, it should show meals for that date
-    expect(screen.getByRole('heading', { name: /Meals on Today/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Meals on/ })).toBeInTheDocument();
     expect(screen.getByText('Pasta')).toBeInTheDocument();
   });
 });

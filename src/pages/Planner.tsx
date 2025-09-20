@@ -359,7 +359,10 @@ const Planner = () => {
         )}
 
         {/* Weekly Overview - Always show */}
-        <div className="px-4">
+        <div className="px-4 space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Meal Plan Blocks
+          </h2>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Weekly Meal Plan</CardTitle>

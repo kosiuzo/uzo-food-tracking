@@ -365,10 +365,39 @@ export default function Meals() {
             {/* List Header */}
             <div className="px-4 flex items-center justify-between">
               <h2 className="text-lg font-bold">
-                Meals on {selectedDate === getTodayLocalDate() ? 'Today' :
-                         selectedDate === getYesterdayLocalDate() ? 'Yesterday' :
-                         dateRange ? `${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}` :
-                         selectedDate ? formatDateStringForDisplay(selectedDate) : 'All Time'}
+                {(() => {
+                  const isToday = selectedDate === getTodayLocalDate();
+                  const isYesterday = selectedDate === getYesterdayLocalDate();
+                  const formattedSingleDate = selectedDate ? formatDateStringForDisplay(selectedDate) : '';
+                  const formattedRange = dateRange
+                    ? `${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
+                    : '';
+                  const accessibleDateLabel = dateRange
+                    ? formattedRange
+                    : formattedSingleDate || 'All Time';
+                  const visualLabel = dateRange
+                    ? formattedRange
+                    : isToday
+                      ? 'Today'
+                      : isYesterday
+                        ? 'Yesterday'
+                        : formattedSingleDate || 'All Time';
+                  const needsAccessibleHelper = visualLabel !== accessibleDateLabel;
+
+                  return (
+                    <>
+                      Meals on{' '}
+                      {needsAccessibleHelper ? (
+                        <>
+                          <span className="sr-only">{accessibleDateLabel}</span>
+                          <span aria-hidden="true">{visualLabel}</span>
+                        </>
+                      ) : (
+                        accessibleDateLabel
+                      )}
+                    </>
+                  );
+                })()}
               </h2>
               <Button
                 variant="ghost"

@@ -51,9 +51,9 @@ describe('Planner Page', () => {
 
   it('should render the planner page with title and description', () => {
     renderWithProviders(<Planner />);
-    
+
     expect(screen.getByText('Add Meal Block')).toBeInTheDocument();
-    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Meal Plan')).toBeInTheDocument();
   });
 
   it('should display the add meal block button', () => {
@@ -64,15 +64,15 @@ describe('Planner Page', () => {
 
   it('should display meal plan blocks section', () => {
     renderWithProviders(<Planner />);
-    
-    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
+
+    expect(screen.getByText('Weekly Meal Plan')).toBeInTheDocument();
   });
 
   it('should display existing meal plan blocks', () => {
     renderWithProviders(<Planner />);
-    
+
     // This test will pass if the component renders without crashing
-    expect(screen.getByText('Meal Plan Blocks')).toBeInTheDocument();
+    expect(screen.getByText('Weekly Meal Plan')).toBeInTheDocument();
   });
 
   it('handles loading state', () => {

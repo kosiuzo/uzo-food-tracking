@@ -7,33 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Layout } from '../components/Layout';
 import { useToast } from '@/hooks/use-toast';
 import { Settings as SettingsIcon, Target, Save } from 'lucide-react';
-
-// Storage key for settings
-const SETTINGS_STORAGE_KEY = 'uzo-food-tracking-settings';
-
-// Default settings
-const DEFAULT_SETTINGS = {
-  calorieTarget: 2000,
-  proteinTarget: 200,
-  carbsTarget: 100,
-  fatTarget: 100,
-  calorieTargetEnabled: false,
-  proteinTargetEnabled: true,
-  carbsTargetEnabled: false,
-  fatTargetEnabled: false,
-};
-
-// Types
-interface AppSettings {
-  calorieTarget: number;
-  proteinTarget: number;
-  carbsTarget: number;
-  fatTarget: number;
-  calorieTargetEnabled: boolean;
-  proteinTargetEnabled: boolean;
-  carbsTargetEnabled: boolean;
-  fatTargetEnabled: boolean;
-}
+import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, type AppSettings } from '@/lib/settings-constants';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -428,68 +402,3 @@ export default function Settings() {
   );
 }
 
-// Export utility functions to get current settings
-export const getCalorieTarget = (): number => {
-  try {
-    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return parsed.calorieTarget || DEFAULT_SETTINGS.calorieTarget;
-    }
-  } catch (error) {
-    console.error('Error loading calorie target:', error);
-  }
-  return DEFAULT_SETTINGS.calorieTarget;
-};
-
-export const getProteinTarget = (): number => {
-  try {
-    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return parsed.proteinTarget || DEFAULT_SETTINGS.proteinTarget;
-    }
-  } catch (error) {
-    console.error('Error loading protein target:', error);
-  }
-  return DEFAULT_SETTINGS.proteinTarget;
-};
-
-export const getCarbsTarget = (): number => {
-  try {
-    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return parsed.carbsTarget || DEFAULT_SETTINGS.carbsTarget;
-    }
-  } catch (error) {
-    console.error('Error loading carbs target:', error);
-  }
-  return DEFAULT_SETTINGS.carbsTarget;
-};
-
-export const getFatTarget = (): number => {
-  try {
-    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return parsed.fatTarget || DEFAULT_SETTINGS.fatTarget;
-    }
-  } catch (error) {
-    console.error('Error loading fat target:', error);
-  }
-  return DEFAULT_SETTINGS.fatTarget;
-};
-
-export const getSettings = (): AppSettings => {
-  try {
-    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      return { ...DEFAULT_SETTINGS, ...parsed };
-    }
-  } catch (error) {
-    console.error('Error loading settings:', error);
-  }
-  return DEFAULT_SETTINGS;
-};

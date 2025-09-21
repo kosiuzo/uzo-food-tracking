@@ -8,13 +8,15 @@ test.describe('Recipe Tags Functionality', () => {
   });
 
   test('should filter recipes by tags', async ({ page }) => {
-    // Wait for recipes to load
-    await expect(page.locator('[data-testid="recipe-card"]').first()).toBeVisible({ timeout: 10000 });
+    // Wait for recipes to load - look for recipe cards which are now styled as Cards with ChefHat icons
+    await expect(page.locator('.lucide-chef-hat').first().or(page.getByText('No recipes yet'))).toBeVisible({ timeout: 10000 });
 
-    // Find and click the tag filter MultiSelect
-    const tagFilterTrigger = page.locator('button').filter({ hasText: 'Select tags to filter...' }).or(
-      page.locator('[data-testid="tag-filter"]')
-    ).first();
+    // Click the Filter button to open the filter sheet
+    await page.getByRole('button', { name: 'Filter' }).click();
+
+    // Wait for the filter sheet to open and find the Tags MultiSelect
+    await expect(page.getByText('Filter & Sort')).toBeVisible();
+    const tagFilterTrigger = page.getByText('Select tags...');
     await tagFilterTrigger.click();
 
     // Wait for the dropdown to open
@@ -28,18 +30,21 @@ test.describe('Recipe Tags Functionality', () => {
       // Close the dropdown by clicking outside or pressing escape
       await page.keyboard.press('Escape');
 
-      // Wait a bit for filtering to apply
+      // Apply the filter by clicking the Apply button
+      await page.getByRole('button', { name: 'Apply' }).click();
+
+      // Wait a bit for filtering to apply and sheet to close
       await page.waitForTimeout(1000);
 
       // Verify that only dessert recipes are shown
-      const visibleCards = await page.locator('[data-testid="recipe-card"]').count();
+      const visibleCards = await page.locator('h3').filter({ hasText: /.+/ }).count();
       console.log(`Visible recipe cards after filtering: ${visibleCards}`);
 
       // Check that at least one recipe is visible and contains dessert tag
       expect(visibleCards).toBeGreaterThan(0);
 
       // Verify the first visible recipe has the dessert tag
-      const firstCard = page.locator('[data-testid="recipe-card"]').first();
+      const firstCard = page.locator('h3').filter({ hasText: /.+/ }).first().locator('..');
       await expect(firstCard.locator('.badge').filter({ hasText: 'dessert' })).toBeVisible();
     } else {
       console.log('Dessert tag not found, skipping filter test');
@@ -47,10 +52,9 @@ test.describe('Recipe Tags Functionality', () => {
   });
 
   test('should add tags when creating a new recipe', async ({ page }) => {
-    // Click the floating add button
-    await page.locator('button').filter({ hasText: '+' }).or(
-      page.locator('[data-testid="add-recipe-btn"]')
-    ).first().click();
+    // Click the Create dropdown button and then Add manually
+    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByText('Add manually').click();
 
     // Wait for the dialog to open
     await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
@@ -102,19 +106,22 @@ test.describe('Recipe Tags Functionality', () => {
   });
 
   test('should show existing tags when editing a recipe', async ({ page }) => {
-    // Wait for recipes to load
-    await expect(page.locator('[data-testid="recipe-card"]').first()).toBeVisible({ timeout: 10000 });
+    // Wait for recipes to load - look for recipe cards which are now styled as Cards with ChefHat icons
+    await expect(page.locator('.lucide-chef-hat').first().or(page.getByText('No recipes yet'))).toBeVisible({ timeout: 10000 });
 
-    // Find a recipe card that has tags
-    const recipeWithTags = page.locator('[data-testid="recipe-card"]').filter({
+    // Find a recipe card that has tags - look for cards that contain badges
+    const recipeWithTags = page.locator('div').filter({
       has: page.locator('.badge')
     }).first();
 
     if (await recipeWithTags.isVisible()) {
-      // Click the edit button for this recipe
-      await recipeWithTags.locator('button[aria-label="Edit recipe"]').or(
-        recipeWithTags.locator('button').filter({ hasText: /edit/i })
+      // Click the more actions button (three dots) for this recipe
+      await recipeWithTags.locator('button[aria-label="More actions"]').or(
+        recipeWithTags.locator('.lucide-more-vertical').locator('..')
       ).first().click();
+
+      // Click Edit from the dropdown menu
+      await page.getByText('Edit').click();
 
       // Wait for the edit dialog to open
       await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
@@ -143,8 +150,8 @@ test.describe('Recipe Tags Functionality', () => {
   });
 
   test('should display tag colors correctly', async ({ page }) => {
-    // Wait for recipes to load
-    await expect(page.locator('[data-testid="recipe-card"]').first()).toBeVisible({ timeout: 10000 });
+    // Wait for recipes to load - look for recipe cards which are now styled as Cards with ChefHat icons
+    await expect(page.locator('.lucide-chef-hat').first().or(page.getByText('No recipes yet'))).toBeVisible({ timeout: 10000 });
 
     // Find a recipe with tags
     const tagBadge = page.locator('.badge').first();
@@ -167,13 +174,15 @@ test.describe('Recipe Tags Functionality', () => {
   });
 
   test('should allow clearing tag filters', async ({ page }) => {
-    // Wait for recipes to load
-    await expect(page.locator('[data-testid="recipe-card"]').first()).toBeVisible({ timeout: 10000 });
+    // Wait for recipes to load - look for recipe cards which are now styled as Cards with ChefHat icons
+    await expect(page.locator('.lucide-chef-hat').first().or(page.getByText('No recipes yet'))).toBeVisible({ timeout: 10000 });
 
-    const initialRecipeCount = await page.locator('[data-testid="recipe-card"]').count();
+    const initialRecipeCount = await page.locator('h3').filter({ hasText: /.+/ }).count();
 
     // Apply a tag filter first
-    const tagFilterTrigger = page.locator('button').filter({ hasText: 'Select tags to filter...' }).first();
+    await page.getByRole('button', { name: 'Filter' }).click();
+    await expect(page.getByText('Filter & Sort')).toBeVisible();
+    const tagFilterTrigger = page.getByText('Select tags...');
     await tagFilterTrigger.click();
 
     // Select any available tag
@@ -181,10 +190,11 @@ test.describe('Recipe Tags Functionality', () => {
     const firstOption = page.locator('[role="option"]').first();
     await firstOption.click();
     await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Apply' }).click();
 
     // Wait for filtering to apply
     await page.waitForTimeout(1000);
-    const filteredCount = await page.locator('[data-testid="recipe-card"]').count();
+    const filteredCount = await page.locator('h3').filter({ hasText: /.+/ }).count();
 
     // Clear the filter by clicking the X button in the MultiSelect
     const clearButton = page.locator('[data-remove-item]').or(
@@ -198,7 +208,7 @@ test.describe('Recipe Tags Functionality', () => {
       await page.waitForTimeout(1000);
 
       // Verify all recipes are shown again
-      const clearedCount = await page.locator('[data-testid="recipe-card"]').count();
+      const clearedCount = await page.locator('h3').filter({ hasText: /.+/ }).count();
       expect(clearedCount).toBe(initialRecipeCount);
     }
   });

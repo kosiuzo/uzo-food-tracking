@@ -228,10 +228,10 @@ export default function Recipes() {
     <Layout>
       <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 sm:px-6 py-4">
 
         {/* Action Row */}
-        <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center justify-between gap-3 mb-6">
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="gap-2 rounded-full">
@@ -373,7 +373,7 @@ export default function Recipes() {
 
       {/* Mock Data Indicator */}
       {usingMockData && (
-        <div className="mx-4 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-amber-500"></div>
             <p className="text-sm text-amber-800">
@@ -386,7 +386,7 @@ export default function Recipes() {
 
       {/* Error Display */}
       {error && !usingMockData && (
-        <div className="mx-4 mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -394,7 +394,7 @@ export default function Recipes() {
 
 
       {/* Content */}
-      <div className="px-4 pb-20">
+      <div className="px-4 sm:px-6 pb-20 pt-4">
         {emptyStateContent ? emptyStateContent : (
           <div className="space-y-3">
             {filteredRecipes.map(recipe => (

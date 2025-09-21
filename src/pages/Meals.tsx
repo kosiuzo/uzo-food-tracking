@@ -290,48 +290,64 @@ export default function Meals() {
             {/* Sticky KPI Section */}
             <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
               <div className="px-4 pt-3 pb-3 space-y-3">
-                {/* Calories KPI - Compact Card */}
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
+                {/* Top Row - Calories and Meals */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Calories Card */}
+                  <Card className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-bold">Calories</h3>
+                        <div className="text-xl font-bold text-primary">
+                          {totalCalories.toFixed(0)}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          of {calorieTarget} target
+                        </p>
+                      </div>
+                      <div className="relative w-14 h-14">
+                        {/* Ring gauge */}
+                        <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 56 56">
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="22"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-muted-foreground/20"
+                          />
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="22"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray={`${(caloriesPercent / 100) * 138.2} 138.2`}
+                            className="text-primary transition-all duration-500"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Meals Card */}
+                  <Card className="p-4">
                     <div className="space-y-1">
-                      <h3 className="text-base font-bold">Calories</h3>
-                      <div className="text-2xl font-bold text-primary">
-                        {totalCalories.toFixed(0)}
+                      <h3 className="text-sm font-bold">Meals</h3>
+                      <div className="text-xl font-bold">
+                        {filteredMeals.length}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        of {calorieTarget} target
+                        logged today
                       </p>
                     </div>
-                    <div className="relative w-16 h-16">
-                      {/* Ring gauge */}
-                      <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="24"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="none"
-                          className="text-muted-foreground/20"
-                        />
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="24"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="none"
-                          strokeDasharray={`${(caloriesPercent / 100) * 150.8} 150.8`}
-                          className="text-primary transition-all duration-500"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
 
                 {/* Macros Row - Compact */}
                 <div className="grid grid-cols-3 gap-2">

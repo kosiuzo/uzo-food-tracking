@@ -423,40 +423,63 @@ export default function Meals() {
                               </div>
                             )}
                           </div>
+
+                          {/* Macro Pills */}
+                          {log.macros && (log.macros.protein > 0 || log.macros.carbs > 0 || log.macros.fat > 0) && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {log.macros.protein > 0 && (
+                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                  {log.macros.protein.toFixed(0)}p
+                                </Badge>
+                              )}
+                              {log.macros.carbs > 0 && (
+                                <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-100">
+                                  {log.macros.carbs.toFixed(0)}c
+                                </Badge>
+                              )}
+                              {log.macros.fat > 0 && (
+                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-100">
+                                  {log.macros.fat.toFixed(0)}f
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Items Preview */}
-                        {firstTwoItems.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {firstTwoItems.map((item, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {item}
-                              </Badge>
-                            ))}
-                            {restCount > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{restCount}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Actions */}
+                        {/* Items and Actions Row */}
                         <div className="flex items-center justify-between">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReLogMeal(log);
-                            }}
-                            className="gap-2 h-8 rounded-full"
-                          >
-                            <span className="text-sm">↻</span>
-                            Re-log
-                          </Button>
+                          {/* Items Preview - Show more items */}
+                          {allItems.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 flex-1 mr-3">
+                              {allItems.slice(0, 4).map((item, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {item}
+                                </Badge>
+                              ))}
+                              {allItems.length > 4 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{allItems.length - 4}
+                                </Badge>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex-1"></div>
+                          )}
 
-                          <div className="flex items-center gap-1">
+                          {/* Actions */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReLogMeal(log);
+                              }}
+                              className="h-8 w-8 p-0"
+                              title="Re-log meal"
+                            >
+                              <History className="h-4 w-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -466,6 +489,7 @@ export default function Meals() {
                                 setIsLogDialogOpen(true);
                               }}
                               className="h-8 w-8 p-0"
+                              title="Edit meal"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -477,6 +501,7 @@ export default function Meals() {
                                 setDeleteConfirm({ open: true, mealLog: log });
                               }}
                               className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              title="Delete meal"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

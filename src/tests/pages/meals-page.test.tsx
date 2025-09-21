@@ -53,8 +53,8 @@ describe('Meals Page', () => {
     } as ReturnType<typeof recipesHook.useRecipes>);
 
     renderWithProviders(<Meals />);
-    // Since we now default to today's date filter, it should show meals for that date
-    expect(screen.getByRole('heading', { name: /Meals on/ })).toBeInTheDocument();
+    // Verify key KPI heading is rendered
+    expect(screen.getByRole('heading', { name: 'Calories' })).toBeInTheDocument();
     expect(screen.getByText('Pasta')).toBeInTheDocument();
   });
 });

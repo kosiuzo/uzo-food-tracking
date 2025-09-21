@@ -139,7 +139,7 @@ export default function Meals() {
       <div className="min-h-screen bg-background">
 
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-1.5">
 
           {/* Action Row */}
           <div className="flex items-center justify-between gap-3">
@@ -276,108 +276,109 @@ export default function Meals() {
           <>
             {/* Mock Data Indicator - Only show when actually using mock data due to connection issues */}
             {usingMockData && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="mx-4 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-amber-500"></div>
                   <p className="text-sm text-amber-800">
-                    <strong>Demo Mode:</strong> Cannot connect to database. Showing sample meal logs. 
+                    <strong>Demo Mode:</strong> Cannot connect to database. Showing sample meal logs.
                     {error && <span className="block mt-1">Error: {error}</span>}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* KPI Stack */}
-            <div className="px-4 pt-4 space-y-4">
-              {/* Calories KPI - Dominant Card */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-bold">Calories</h3>
-                    <div className="text-3xl font-bold text-primary">
-                      {totalCalories.toFixed(0)}
+            {/* Sticky KPI Section */}
+            <div className="sticky top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+              <div className="px-4 pt-3 pb-3 space-y-3">
+                {/* Calories KPI - Compact Card */}
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold">Calories</h3>
+                      <div className="text-2xl font-bold text-primary">
+                        {totalCalories.toFixed(0)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        of {calorieTarget} target
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      of {calorieTarget} target
-                    </p>
-                  </div>
-                  <div className="relative w-20 h-20">
-                    {/* Ring gauge */}
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="30"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="none"
-                        className="text-muted-foreground/20"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="30"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="none"
-                        strokeDasharray={`${(caloriesPercent / 100) * 188.4} 188.4`}
-                        className="text-primary transition-all duration-500"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
+                    <div className="relative w-16 h-16">
+                      {/* Ring gauge */}
+                      <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="24"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-muted-foreground/20"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="24"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${(caloriesPercent / 100) * 150.8} 150.8`}
+                          className="text-primary transition-all duration-500"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
 
-              {/* Macros Row */}
-              <div className="grid grid-cols-3 gap-3">
-                <Card className="p-4 text-center">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-blue-600">Protein</div>
-                    <div className="text-xl font-bold">{totalProtein.toFixed(0)}g</div>
-                    <div className="text-xs text-muted-foreground">{proteinPercentage.toFixed(0)}%</div>
-                    <div className="w-full bg-muted rounded-full h-1.5">
-                      <div
-                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(proteinPercentage, 100)}%` }}
-                      ></div>
+                {/* Macros Row - Compact */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Card className="p-3 text-center">
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-blue-600">Protein</div>
+                      <div className="text-lg font-bold">{totalProtein.toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">{proteinPercentage.toFixed(0)}%</div>
+                      <div className="w-full bg-muted rounded-full h-1">
+                        <div
+                          className="bg-blue-600 h-1 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(proteinPercentage, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-                <Card className="p-4 text-center">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-orange-600">Carbs</div>
-                    <div className="text-xl font-bold">{totalCarbs.toFixed(0)}g</div>
-                    <div className="text-xs text-muted-foreground">{carbsPercentage.toFixed(0)}%</div>
-                    <div className="w-full bg-muted rounded-full h-1.5">
-                      <div
-                        className="bg-orange-600 h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(carbsPercentage, 100)}%` }}
-                      ></div>
+                  </Card>
+                  <Card className="p-3 text-center">
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-orange-600">Carbs</div>
+                      <div className="text-lg font-bold">{totalCarbs.toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">{carbsPercentage.toFixed(0)}%</div>
+                      <div className="w-full bg-muted rounded-full h-1">
+                        <div
+                          className="bg-orange-600 h-1 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(carbsPercentage, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-                <Card className="p-4 text-center">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-purple-600">Fat</div>
-                    <div className="text-xl font-bold">{totalFat.toFixed(0)}g</div>
-                    <div className="text-xs text-muted-foreground">{fatPercentage.toFixed(0)}%</div>
-                    <div className="w-full bg-muted rounded-full h-1.5">
-                      <div
-                        className="bg-purple-600 h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(fatPercentage, 100)}%` }}
-                      ></div>
+                  </Card>
+                  <Card className="p-3 text-center">
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-purple-600">Fat</div>
+                      <div className="text-lg font-bold">{totalFat.toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">{fatPercentage.toFixed(0)}%</div>
+                      <div className="w-full bg-muted rounded-full h-1">
+                        <div
+                          className="bg-purple-600 h-1 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(fatPercentage, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               </div>
             </div>
 
-
-            {/* Meal List */}
+            {/* Scrollable Meal List */}
             <div className="px-4 pt-4 pb-4 space-y-3">
               
               {recentLogs.length === 0 ? (

@@ -181,7 +181,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <main className="container px-4 py-6">
+      <main className="container px-4 py-1">
         {children}
       </main>
 

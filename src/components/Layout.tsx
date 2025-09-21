@@ -1,6 +1,6 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChefHat, BookOpen, Menu, Package } from 'lucide-react';
+import { CalendarDays, ChefHat, BookOpen, Menu, Package, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DebugPanel } from '@/components/DebugPanel';
@@ -60,7 +60,12 @@ const baseNavigationSections: NavSection[] = [
 ];
 
 const additionalNavItems: NavItem[] = [
-  // Tags are now managed via a button on the Recipe page.
+  {
+    path: '/settings',
+    label: 'Settings',
+    icon: Settings,
+    description: 'Configure app preferences and targets.',
+  },
 ];
 
 export function Layout({ children }: LayoutProps) {

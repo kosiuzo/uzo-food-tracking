@@ -19,6 +19,7 @@ import { MealLog } from '../types';
 import { logger } from '@/lib/logger';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
+import { getCalorieTarget } from './Settings';
 
 export default function Meals() {
   const { mealLogs, addMealLog, addMealLogFromItems, addBatchMealLogsFromItems, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
@@ -118,8 +119,8 @@ export default function Meals() {
   const carbsPercentage = totalMacros > 0 ? (totalCarbs / totalMacros * 100) : 0;
   const fatPercentage = totalMacros > 0 ? (totalFat / totalMacros * 100) : 0;
 
-  // Sample daily targets (can be made configurable later)
-  const calorieTarget = 2000;
+  // Get dynamic calorie target from settings
+  const calorieTarget = getCalorieTarget();
   const caloriesPercent = Math.min((totalCalories / calorieTarget) * 100, 100);
 
   const getDateLabel = () => {

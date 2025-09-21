@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import { Layout } from '../components/Layout';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -219,16 +220,30 @@ export default function Meals() {
               </SheetContent>
             </Sheet>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsLogDialogOpen(true)}
-              className="gap-2"
-              aria-label="Log a new meal"
-            >
-              <Plus className="h-4 w-4" />
-              Log Meal
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  aria-label="Meal actions"
+                >
+                  <Plus className="h-4 w-4" />
+                  Log Meal
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsLogDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Log Meal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsRelogDialogOpen(true)}>
+                  <History className="h-4 w-4 mr-2" />
+                  Re-log Meal
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -361,56 +376,9 @@ export default function Meals() {
               </div>
             </div>
 
-            {/* List Header */}
-            <div className="px-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold">
-                {(() => {
-                  const isToday = selectedDate === getTodayLocalDate();
-                  const isYesterday = selectedDate === getYesterdayLocalDate();
-                  const formattedSingleDate = selectedDate ? formatDateStringForDisplay(selectedDate) : '';
-                  const formattedRange = dateRange
-                    ? `${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)}`
-                    : '';
-                  const accessibleDateLabel = dateRange
-                    ? formattedRange
-                    : formattedSingleDate || 'All Time';
-                  const visualLabel = dateRange
-                    ? formattedRange
-                    : isToday
-                      ? 'Today'
-                      : isYesterday
-                        ? 'Yesterday'
-                        : formattedSingleDate || 'All Time';
-                  const needsAccessibleHelper = visualLabel !== accessibleDateLabel;
-
-                  return (
-                    <>
-                      Meals on{' '}
-                      {needsAccessibleHelper ? (
-                        <>
-                          <span className="sr-only">{accessibleDateLabel}</span>
-                          <span aria-hidden="true">{visualLabel}</span>
-                        </>
-                      ) : (
-                        accessibleDateLabel
-                      )}
-                    </>
-                  );
-                })()}
-              </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsRelogDialogOpen(true)}
-                className="gap-2 text-muted-foreground"
-              >
-                <History className="h-4 w-4" />
-                Re-log meal
-              </Button>
-            </div>
 
             {/* Meal List */}
-            <div className="px-4 pb-4 space-y-3">
+            <div className="px-4 pt-4 pb-4 space-y-3">
               
               {recentLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">

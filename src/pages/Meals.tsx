@@ -19,7 +19,7 @@ import { MealLog } from '../types';
 import { logger } from '@/lib/logger';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
-import { getCalorieTarget } from './Settings';
+import { getSettings } from './Settings';
 
 export default function Meals() {
   const { mealLogs, addMealLog, addMealLogFromItems, addBatchMealLogsFromItems, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
@@ -119,9 +119,16 @@ export default function Meals() {
   const carbsPercentage = totalMacros > 0 ? (totalCarbs / totalMacros * 100) : 0;
   const fatPercentage = totalMacros > 0 ? (totalFat / totalMacros * 100) : 0;
 
-  // Get dynamic calorie target from settings
-  const calorieTarget = getCalorieTarget();
+  // Get dynamic targets from settings
+  const settings = getSettings();
+  const calorieTarget = settings.calorieTarget;
+  const proteinTarget = settings.proteinTarget;
+  const carbsTarget = settings.carbsTarget;
+  const fatTarget = settings.fatTarget;
   const caloriesPercent = Math.min((totalCalories / calorieTarget) * 100, 100);
+  const proteinPercent = Math.min((totalProtein / proteinTarget) * 100, 100);
+  const carbsPercent = Math.min((totalCarbs / carbsTarget) * 100, 100);
+  const fatPercent = Math.min((totalFat / fatTarget) * 100, 100);
 
   const getDateLabel = () => {
     if (selectedDate === getTodayLocalDate()) return 'Today ▾';
@@ -293,7 +300,7 @@ export default function Meals() {
               <div className="px-4 pt-3 pb-3 space-y-3">
                 {/* Top Row - Calories and Meals */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Calories Card */}
+                  {/* Calories Card - Always show, but conditional tracking */}
                   <Card className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
@@ -302,37 +309,42 @@ export default function Meals() {
                           {totalCalories.toFixed(0)}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          of {calorieTarget} target
+                          {settings.calorieTargetEnabled
+                            ? `of ${calorieTarget} target`
+                            : 'logged today'
+                          }
                         </p>
                       </div>
-                      <div className="relative w-14 h-14">
-                        {/* Ring gauge */}
-                        <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 56 56">
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="22"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-muted-foreground/20"
-                          />
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="22"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray={`${(caloriesPercent / 100) * 138.2} 138.2`}
-                            className="text-primary transition-all duration-500"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
+                      {settings.calorieTargetEnabled && (
+                        <div className="relative w-14 h-14">
+                          {/* Ring gauge */}
+                          <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 56 56">
+                            <circle
+                              cx="28"
+                              cy="28"
+                              r="22"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="none"
+                              className="text-muted-foreground/20"
+                            />
+                            <circle
+                              cx="28"
+                              cy="28"
+                              r="22"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="none"
+                              strokeDasharray={`${(caloriesPercent / 100) * 138.2} 138.2`}
+                              className="text-primary transition-all duration-500"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-xs font-medium">{caloriesPercent.toFixed(0)}%</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </Card>
 
@@ -356,11 +368,21 @@ export default function Meals() {
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-blue-600">Protein</div>
                       <div className="text-lg font-bold">{totalProtein.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">{proteinPercentage.toFixed(0)}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {settings.proteinTargetEnabled
+                          ? `${proteinPercent.toFixed(0)}% of ${proteinTarget}g`
+                          : `${proteinPercentage.toFixed(0)}%`
+                        }
+                      </div>
                       <div className="w-full bg-muted rounded-full h-1">
                         <div
                           className="bg-blue-600 h-1 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(proteinPercentage, 100)}%` }}
+                          style={{
+                            width: `${Math.min(
+                              settings.proteinTargetEnabled ? proteinPercent : proteinPercentage,
+                              100
+                            )}%`
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -369,11 +391,21 @@ export default function Meals() {
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-orange-600">Carbs</div>
                       <div className="text-lg font-bold">{totalCarbs.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">{carbsPercentage.toFixed(0)}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {settings.carbsTargetEnabled
+                          ? `${carbsPercent.toFixed(0)}% of ${carbsTarget}g`
+                          : `${carbsPercentage.toFixed(0)}%`
+                        }
+                      </div>
                       <div className="w-full bg-muted rounded-full h-1">
                         <div
                           className="bg-orange-600 h-1 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(carbsPercentage, 100)}%` }}
+                          style={{
+                            width: `${Math.min(
+                              settings.carbsTargetEnabled ? carbsPercent : carbsPercentage,
+                              100
+                            )}%`
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -382,11 +414,21 @@ export default function Meals() {
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-purple-600">Fat</div>
                       <div className="text-lg font-bold">{totalFat.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">{fatPercentage.toFixed(0)}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {settings.fatTargetEnabled
+                          ? `${fatPercent.toFixed(0)}% of ${fatTarget}g`
+                          : `${fatPercentage.toFixed(0)}%`
+                        }
+                      </div>
                       <div className="w-full bg-muted rounded-full h-1">
                         <div
                           className="bg-purple-600 h-1 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(fatPercentage, 100)}%` }}
+                          style={{
+                            width: `${Math.min(
+                              settings.fatTargetEnabled ? fatPercent : fatPercentage,
+                              100
+                            )}%`
+                          }}
                         ></div>
                       </div>
                     </div>

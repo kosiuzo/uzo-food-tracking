@@ -27,13 +27,13 @@ const baseNavigationSections: NavSection[] = [
     title: 'Daily Tracking',
     items: [
       {
-        path: '/',
+        path: '/inventory',
         label: 'Inventory',
         icon: Package,
         description: 'Monitor what ingredients you have on hand.',
       },
       {
-        path: '/meals',
+        path: '/',
         label: 'Log',
         icon: BookOpen,
         description: 'Capture meals, leftovers, and quick notes.',

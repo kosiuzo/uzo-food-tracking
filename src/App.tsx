@@ -26,7 +26,8 @@ const App = () => (
         }}
       >
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Meals />} />
+          <Route path="/inventory" element={<Index />} />
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/recipes/:id" element={<RecipeViewer />} />
           <Route path="/meals" element={<Meals />} />

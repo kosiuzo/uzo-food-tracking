@@ -211,29 +211,6 @@ export function InventoryPage() {
           />
         </div>
 
-        {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          <Badge
-            variant={categoryFilter === 'all' && ratingFilter === 'all' ? 'default' : 'secondary'}
-            className="whitespace-nowrap cursor-pointer"
-            onClick={() => {
-              setCategoryFilter('all');
-              setRatingFilter('all');
-            }}
-          >
-            All
-          </Badge>
-          {categories.slice(0, 4).map(category => (
-            <Badge
-              key={category}
-              variant={categoryFilter === category ? 'default' : 'secondary'}
-              className="whitespace-nowrap cursor-pointer"
-              onClick={() => setCategoryFilter(category)}
-            >
-              {category}
-            </Badge>
-          ))}
-        </div>
       </div>
 
       {/* Content */}

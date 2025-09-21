@@ -6,6 +6,21 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
+// Mock window.matchMedia for mobile hooks
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 // Mock OpenRouter client before other imports
 vi.mock('../lib/openrouter', () => ({
   openRouterClient: {
@@ -77,17 +92,22 @@ vi.mock('../lib/supabase', () => ({
         return {
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              single: vi.fn(() => {
-                throw new Error('Mocked database error'); // Force fallback to mock data
-              })
+              single: vi.fn(() => Promise.resolve({
+                data: null,
+                error: null
+              }))
+            })),
+            order: vi.fn(() => Promise.resolve({
+              data: [
+                { week_start: '2024-01-15' },
+                { week_start: '2024-01-08' }
+              ],
+              error: null
             }))
           })),
           insert: vi.fn(() => ({
             select: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: { id: 1, week_start: '2024-01-15' },
-                error: null
-              }))
+              single: vi.fn(() => Promise.reject(new Error('Mock database insert error to trigger fallback')))
             }))
           }))
         };
@@ -97,20 +117,20 @@ vi.mock('../lib/supabase', () => ({
         return {
           insert: vi.fn(() => ({
             select: vi.fn(() => ({
-              single: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({
                 data: { id: 999, name: 'Test Block', start_day: 0, end_day: 2 },
                 error: null
               }))
             }))
           })),
           update: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({
               data: null,
               error: null
             }))
           })),
           delete: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({
               data: null,
               error: null
             }))
@@ -122,20 +142,20 @@ vi.mock('../lib/supabase', () => ({
         return {
           insert: vi.fn(() => ({
             select: vi.fn(() => ({
-              single: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({
                 data: { id: 888, name: 'New Rotation', notes: 'Test rotation' },
                 error: null
               }))
             }))
           })),
           update: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({
               data: null,
               error: null
             }))
           })),
           delete: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({
               data: null,
               error: null
             }))
@@ -145,12 +165,12 @@ vi.mock('../lib/supabase', () => ({
       
       if (tableName === 'rotation_recipes') {
         return {
-          insert: vi.fn(() => ({
+          insert: vi.fn(() => Promise.resolve({
             data: null,
             error: null
           })),
           delete: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({
               data: null,
               error: null
             }))
@@ -160,7 +180,7 @@ vi.mock('../lib/supabase', () => ({
       
       if (tableName === 'block_snacks') {
         return {
-          insert: vi.fn(() => ({
+          insert: vi.fn(() => Promise.resolve({
             data: null,
             error: null
           }))
@@ -170,38 +190,38 @@ vi.mock('../lib/supabase', () => ({
       // Default mock for other tables
       return {
         select: vi.fn(() => ({
-          order: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({
             data: [],
             error: null,
           })),
-          single: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({
             data: null,
             error: null,
           })),
         })),
         insert: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
               data: null,
               error: null,
             })),
           })),
         })),
         update: vi.fn(() => ({
-          eq: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({
             data: null,
             error: null,
           })),
         })),
         delete: vi.fn(() => ({
-          eq: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({
             data: null,
             error: null,
           })),
         })),
         upsert: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
               data: null,
               error: null,
             })),

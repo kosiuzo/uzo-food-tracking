@@ -4,8 +4,9 @@ test.describe('Basic Navigation Tests', () => {
   test('should load the main page with correct title', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle('Uzo Food Tracking');
-    await expect(page.getByText('In Stock').first()).toBeVisible();
-    await expect(page.getByText('Out of Stock').first()).toBeVisible();
+    // The main page now shows the inventory page with filter and add item buttons
+    await expect(page.getByRole('button', { name: 'Filter' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Item' })).toBeVisible();
   });
 
   test('should navigate to recipes page', async ({ page }) => {
@@ -28,8 +29,9 @@ test.describe('Basic Navigation Tests', () => {
     await expect(page).toHaveURL(/.*planner/);
   });
 
-  test('should have working search button', async ({ page }) => {
+  test('should have working search input', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('button', { name: /Search/ })).toBeVisible();
+    // The main page now has a search input for inventory items
+    await expect(page.getByPlaceholder('Search items')).toBeVisible();
   });
 });

@@ -108,26 +108,13 @@ INSERT INTO items (name, brand, category, in_stock, price, carbs_per_serving, fa
 
 -- Insert initial tags
 INSERT INTO tags (name, color, description, created_at, updated_at) VALUES
-('paleo', '#8b5cf6', 'Paleo diet friendly', NOW(), NOW()),
-('paleo - allowing rice', '#8b5cf6', 'Paleo diet friendly, allowing rice', NOW(), NOW()),
-('gluten-free', '#f59e0b', 'Contains no gluten', NOW(), NOW()),
-('dairy-free', '#10b981', 'Contains no dairy products', NOW(), NOW()),
-('vegetarian', '#22c55e', 'Suitable for vegetarians', NOW(), NOW()),
-('vegan', '#059669', 'Suitable for vegans', NOW(), NOW()),
-('keto-friendly', '#dc2626', 'Suitable for ketogenic diet', NOW(), NOW()),
-('high-protein', '#3b82f6', 'High in protein content', NOW(), NOW()),
-('low-carb', '#f97316', 'Low in carbohydrates', NOW(), NOW()),
-('meal-prep', '#6366f1', 'Great for meal preparation', NOW(), NOW()),
-('quick-meals', '#ec4899', 'Can be prepared quickly', NOW(), NOW()),
-('breakfast', '#eab308', 'Breakfast dishes', NOW(), NOW()),
-('lunch', '#14b8a6', 'Lunch dishes', NOW(), NOW()),
-('dinner', '#8b5cf6', 'Dinner dishes', NOW(), NOW()),
-('snack', '#f59e0b', 'Snack foods', NOW(), NOW()),
-('dessert', '#ec4899', 'Dessert dishes', NOW(), NOW()),
+('chicken', '#84cc16', 'Recipes featuring chicken', NOW(), NOW()),
+('ground beef', '#ef4444', 'Recipes featuring ground beef', NOW(), NOW()),
+('salmon', '#0ea5e9', 'Recipes featuring salmon', NOW(), NOW()),
+('steak', '#8b5cf6', 'Recipes featuring steak', NOW(), NOW()),
+('baking', '#f59e0b', 'Baked goods and oven dishes', NOW(), NOW()),
+('smoothies', '#22c55e', 'Blended drinks and smoothies', NOW(), NOW()),
 ('sauce', '#6b7280', 'Sauces and condiments', NOW(), NOW()),
-('side-dish', '#84cc16', 'Side dishes', NOW(), NOW()),
-('main-dish', '#dc2626', 'Main course dishes', NOW(), NOW()),
-('protein-rich', '#3b82f6', 'Rich in protein', NOW(), NOW()),
 ('stir-fry', '#f97316', 'Stir-fry dishes', NOW(), NOW());
 
 -- Insert recipes from Recipes.md
@@ -414,150 +401,46 @@ INSERT INTO recipes (name, total_time, servings, instructions, notes, nutrition_
 -- Insert recipe_tags relationships
 INSERT INTO recipe_tags (recipe_id, tag_id, created_at) VALUES
 -- Tzatziki (Recipe 1)
-(1, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(1, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(1, (SELECT id FROM tags WHERE name = 'vegetarian'), NOW()),
 (1, (SELECT id FROM tags WHERE name = 'sauce'), NOW()),
 -- Coconut Aminos Sauce (Recipe 2)
-(2, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(2, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(2, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
-(2, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
 (2, (SELECT id FROM tags WHERE name = 'sauce'), NOW()),
 -- Paleo Pineapple Fried Rice with Chicken Breast (Recipe 3)
-(3, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(3, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(3, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(3, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(3, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
+(3, (SELECT id FROM tags WHERE name = 'chicken'), NOW()),
 (3, (SELECT id FROM tags WHERE name = 'stir-fry'), NOW()),
 -- Bacon Brussels Sprouts (Recipe 4)
-(4, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(4, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(4, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(4, (SELECT id FROM tags WHERE name = 'keto-friendly'), NOW()),
-(4, (SELECT id FROM tags WHERE name = 'side-dish'), NOW()),
+(4, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
 -- Paleo Banana Almond Flour Protein Waffles (Recipe 5)
-(5, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(5, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(5, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(5, (SELECT id FROM tags WHERE name = 'protein-rich'), NOW()),
-(5, (SELECT id FROM tags WHERE name = 'meal-prep'), NOW()),
-(5, (SELECT id FROM tags WHERE name = 'breakfast'), NOW()),
-
--- Recipe tags for new recipes from All-Apple Recipes.txt
--- Reverse Sear Steak
-(6, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(6, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(6, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(6, (SELECT id FROM tags WHERE name = 'keto-friendly'), NOW()),
-(6, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(6, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-
--- Jasmine Rice
-(7, (SELECT id FROM tags WHERE name = 'paleo - allowing rice'), NOW()),
-(7, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(7, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(7, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
-(7, (SELECT id FROM tags WHERE name = 'side-dish'), NOW()),
-
--- Basmati Rice  
-(8, (SELECT id FROM tags WHERE name = 'paleo - allowing rice'), NOW()),
-(8, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(8, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(8, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
-(8, (SELECT id FROM tags WHERE name = 'side-dish'), NOW()),
-
--- Coconut Almond Flour Waffles
-(9, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(9, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(9, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(9, (SELECT id FROM tags WHERE name = 'breakfast'), NOW()),
-
--- Paleo Vanilla Loaf
-(10, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(10, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(10, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(10, (SELECT id FROM tags WHERE name = 'dessert'), NOW()),
-
--- Paleo Fried Chicken
-(11, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(11, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(11, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(11, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(11, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-
--- Paleo Meatloaf
-(12, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(12, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(12, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(12, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(12, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-(12, (SELECT id FROM tags WHERE name = 'meal-prep'), NOW()),
-
--- Simple Paleo Waffles
-(13, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(13, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(13, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(13, (SELECT id FROM tags WHERE name = 'breakfast'), NOW()),
-
--- Baked BBQ Beef Ribs
-(14, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(14, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(14, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(14, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-
--- Cinnamon Roasted Butternut Squash
-(15, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(15, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(15, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(15, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
-(15, (SELECT id FROM tags WHERE name = 'side-dish'), NOW()),
-
--- Fried Boneless Chicken Thighs
-(16, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(16, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(16, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(16, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(16, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-
--- Classic Guacamole
-(17, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(17, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(17, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(17, (SELECT id FROM tags WHERE name = 'vegan'), NOW()),
+(5, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Reverse Sear Steak (Recipe 6)
+(6, (SELECT id FROM tags WHERE name = 'steak'), NOW()),
+-- Jasmine Rice (Recipe 7) -- no tags needed
+-- Basmati Rice (Recipe 8) -- no tags needed
+-- Coconut Almond Flour Waffles (Recipe 9)
+(9, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Paleo Vanilla Loaf (Recipe 10)
+(10, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Paleo Fried Chicken (Recipe 11)
+(11, (SELECT id FROM tags WHERE name = 'chicken'), NOW()),
+-- Paleo Meatloaf (Recipe 12)
+(12, (SELECT id FROM tags WHERE name = 'ground beef'), NOW()),
+-- Simple Paleo Waffles (Recipe 13)
+(13, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Baked BBQ Beef Ribs (Recipe 14)
+(14, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Cinnamon Roasted Butternut Squash (Recipe 15)
+(15, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Fried Boneless Chicken Thighs (Recipe 16)
+(16, (SELECT id FROM tags WHERE name = 'chicken'), NOW()),
+-- Classic Guacamole (Recipe 17)
 (17, (SELECT id FROM tags WHERE name = 'sauce'), NOW()),
-(17, (SELECT id FROM tags WHERE name = 'snack'), NOW()),
-
--- Banana Coconut Flour Cookies
-(18, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(18, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(18, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(18, (SELECT id FROM tags WHERE name = 'dessert'), NOW()),
-(18, (SELECT id FROM tags WHERE name = 'snack'), NOW()),
-
--- Banana Chocolate Chip Cookies
-(19, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(19, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(19, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(19, (SELECT id FROM tags WHERE name = 'dessert'), NOW()),
-(19, (SELECT id FROM tags WHERE name = 'snack'), NOW()),
-
--- Simple Paleo Meatballs
-(20, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(20, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(20, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(20, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(20, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-(20, (SELECT id FROM tags WHERE name = 'meal-prep'), NOW()),
-
--- Perfect Chicken Breast
-(21, (SELECT id FROM tags WHERE name = 'paleo'), NOW()),
-(21, (SELECT id FROM tags WHERE name = 'gluten-free'), NOW()),
-(21, (SELECT id FROM tags WHERE name = 'dairy-free'), NOW()),
-(21, (SELECT id FROM tags WHERE name = 'high-protein'), NOW()),
-(21, (SELECT id FROM tags WHERE name = 'main-dish'), NOW()),
-(21, (SELECT id FROM tags WHERE name = 'quick-meals'), NOW());
+-- Banana Coconut Flour Cookies (Recipe 18)
+(18, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Banana Chocolate Chip Cookies (Recipe 19)
+(19, (SELECT id FROM tags WHERE name = 'baking'), NOW()),
+-- Simple Paleo Meatballs (Recipe 20)
+(20, (SELECT id FROM tags WHERE name = 'ground beef'), NOW()),
+-- Perfect Chicken Breast (Recipe 21)
+(21, (SELECT id FROM tags WHERE name = 'chicken'), NOW());
 
 -- Insert recipe ingredients for new recipes
 INSERT INTO recipe_items (recipe_id, item_id, quantity, unit, cost_per_unit, total_cost, cost_calculated_at) VALUES

@@ -1,61 +1,126 @@
 import { useState } from 'react';
-import { Plus, Search, Clock, Users, Edit, Heart, Trash2, Bot, Utensils, Tag, MessageSquare } from 'lucide-react';
+import { Plus, Search, Clock, Users, Heart, MoreVertical, Filter, Wand2, ChefHat } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Layout } from '../components/Layout';
 import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { TagDialog } from '../components/TagDialog';
 import { useRecipes } from '../hooks/useRecipes';
-import { useRecipeTagManagement, useTags } from '../hooks/useTags';
+import { useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Recipe } from '../types';
-import { QuickFeedbackDialog } from '../components/QuickFeedbackDialog';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
   const { allTags } = useTags();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isGeneratorDialogOpen, setIsGeneratorDialogOpen] = useState(false);
-  const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<string | null>(null);
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [viewMode, setViewMode] = useState('all');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [activeTagFilter, setActiveTagFilter] = useState('All');
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recipe: Recipe | null }>({ open: false, recipe: null });
-  const [feedbackForRecipe, setFeedbackForRecipe] = useState<Recipe | null>(null);
+
+  // Filter state
+  const [filterSearchQuery, setFilterSearchQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState('Any');
+  const [servingsFilter, setServingsFilter] = useState('Any');
+  const [sortBy, setSortBy] = useState('A–Z');
+
+  // Predefined tag options for quick filtering
+  const predefinedTags = ['All', 'Chicken', 'Ground Beef', 'Salmon', 'Steak', 'Baking'];
 
   // Helper function to get ingredient count for both regular and AI-generated recipes
   const getIngredientCount = (recipe: Recipe): number => {
-    // Prioritize ingredient_list for AI-generated recipes
     if (recipe.ingredient_list && recipe.ingredient_list.length > 0) {
       return recipe.ingredient_list.length;
     }
-    // If recipe has linked ingredients (regular recipe), use those
     if (recipe.ingredients && recipe.ingredients.length > 0) {
       return recipe.ingredients.length;
     }
-    // Fallback to 0 if no ingredients found
     return 0;
   };
 
-  const displayedRecipes = recipes
-    .filter(recipe => favoritesOnly ? recipe.is_favorite : true)
+  // Enhanced filtering logic
+  const filteredRecipes = recipes
     .filter(recipe => {
-      if (selectedTagIds.length === 0) return true;
-      return selectedTagIds.some(tagId => 
-        recipe.tags?.some(tag => tag.id === tagId)
-      );
+      // View mode filter (all vs favorites)
+      if (viewMode === 'favorites' && !recipe.is_favorite) return false;
+
+      // Search filter (from filter sheet)
+      if (filterSearchQuery) {
+        const query = filterSearchQuery.toLowerCase();
+        const nameMatch = recipe.name.toLowerCase().includes(query);
+        const ingredientMatch = recipe.ingredient_list?.some(ing =>
+          ing.toLowerCase().includes(query)
+        ) || false;
+        const tagMatch = recipe.tags?.some(tag =>
+          tag.name.toLowerCase().includes(query)
+        ) || false;
+        if (!nameMatch && !ingredientMatch && !tagMatch) return false;
+      }
+
+      // Tag filter
+      if (activeTagFilter !== 'All') {
+        const hasMatchingTag = recipe.tags?.some(tag =>
+          tag.name.toLowerCase().includes(activeTagFilter.toLowerCase())
+        );
+        if (!hasMatchingTag) return false;
+      }
+
+      // Multi-select tag filter (from filter sheet)
+      if (selectedTagIds.length > 0) {
+        const hasSelectedTag = selectedTagIds.some(tagId =>
+          recipe.tags?.some(tag => tag.id === tagId)
+        );
+        if (!hasSelectedTag) return false;
+      }
+
+      // Time filter
+      if (timeFilter !== 'Any' && recipe.total_time_minutes) {
+        const timeLimit = parseInt(timeFilter.replace(/[^0-9]/g, ''));
+        if (recipe.total_time_minutes > timeLimit) return false;
+      }
+
+      // Servings filter
+      if (servingsFilter !== 'Any') {
+        if (servingsFilter === '1–2' && recipe.servings > 2) return false;
+        if (servingsFilter === '3–4' && (recipe.servings < 3 || recipe.servings > 4)) return false;
+        if (servingsFilter === '5+' && recipe.servings < 5) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'A–Z':
+          return a.name.localeCompare(b.name);
+        case 'Recently added':
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        case 'Cook time':
+          return (a.total_time_minutes || Infinity) - (b.total_time_minutes || Infinity);
+        case 'Favorites':
+          return (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0);
+        default:
+          return 0;
+      }
     });
+
+  const favoriteCount = recipes.filter(r => r.is_favorite).length;
   
 
   const handleEditRecipe = (recipe: Recipe) => {
@@ -65,17 +130,43 @@ export default function Recipes() {
 
   const handleDeleteRecipe = async () => {
     if (!deleteConfirm.recipe) return;
-    
+
     try {
       await deleteRecipe(deleteConfirm.recipe.id);
       toast({
         title: 'Recipe deleted',
         description: `${deleteConfirm.recipe.name} has been deleted successfully.`,
       });
+      setDeleteConfirm({ open: false, recipe: null });
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to delete recipe. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFilterApply = () => {
+    setIsFilterSheetOpen(false);
+  };
+
+  const handleFilterReset = () => {
+    setViewMode('all');
+    setFilterSearchQuery('');
+    setSelectedTagIds([]);
+    setTimeFilter('Any');
+    setServingsFilter('Any');
+    setSortBy('A–Z');
+  };
+
+  const handleFavoriteToggle = async (recipe: Recipe) => {
+    try {
+      await toggleFavorite(recipe.id);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update favorite. Please try again.',
         variant: 'destructive',
       });
     }
@@ -101,373 +192,355 @@ export default function Recipes() {
     }
   };
 
+  const emptyStateContent = filteredRecipes.length === 0 ? (
+    filterSearchQuery || activeTagFilter !== 'All' || selectedTagIds.length > 0 || viewMode === 'favorites' ? (
+      // No search results
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <Search className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No recipes match</h3>
+        <p className="text-sm text-muted-foreground text-center mb-4">
+          Try removing a tag or changing filters.
+        </p>
+      </div>
+    ) : (
+      // No recipes at all
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No recipes yet</h3>
+        <p className="text-sm text-muted-foreground text-center mb-6">
+          Start by creating a recipe or importing one.
+        </p>
+        <div className="flex gap-3">
+          <Button onClick={() => setIsGeneratorDialogOpen(true)} className="gap-2">
+            <Wand2 className="h-4 w-4" />
+            Create with AI
+          </Button>
+          <Button variant="secondary" onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add manually
+          </Button>
+        </div>
+      </div>
+    )
+  ) : null;
+
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={() => setIsTagDialogOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Tag className="h-4 w-4" />
-            Manage Tags
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setIsGeneratorDialogOpen(true)}
-            className="flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            <Bot className="h-4 w-4" />
-            Generate Recipe with AI
-          </Button>
-        </div>
+      <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 sm:px-6 py-4">
 
-        {/* Mock Data Indicator */}
-        {usingMockData && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-amber-500"></div>
-              <p className="text-sm text-amber-800">
-                <strong>Demo Mode:</strong> Showing sample recipes with beautiful food images. 
-                Connect to Supabase to see your real recipes.
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Action Row */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="secondary" size="sm" className="gap-2 rounded-full">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+            </SheetTrigger>
+            <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90vh]" : ""}>
+              <SheetHeader>
+                <SheetTitle>Filter & Sort</SheetTitle>
+              </SheetHeader>
+            <div className="space-y-6 mt-6">
+              <div className="space-y-3">
+                <label className="text-sm font-medium">View</label>
+                <Select value={viewMode} onValueChange={setViewMode}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select view" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All recipes</SelectItem>
+                    <SelectItem value="favorites">Favorites only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Error Display */}
-        {error && !usingMockData && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Search</label>
+                <Input
+                  placeholder="Search name, ingredients, tags"
+                  value={filterSearchQuery}
+                  onChange={(e) => setFilterSearchQuery(e.target.value)}
+                  className="h-12"
+                />
+              </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-lg border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{recipes.length}</div>
-            <div className="text-sm text-muted-foreground">Total Recipes</div>
-          </div>
-          <div className="rounded-lg border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-pink-600">{recipes.filter(r => r.is_favorite).length}</div>
-            <div className="text-sm text-muted-foreground">Favorites</div>
-          </div>
-        </div>
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Tags</label>
+                <MultiSelect
+                  options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+                  onValueChange={setSelectedTagIds}
+                  defaultValue={selectedTagIds}
+                  placeholder="Select tags..."
+                  maxCount={3}
+                />
+              </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search recipes by name, ingredients, tags, or instructions..."
-            value={searchQuery}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSearchQuery(value);
-              // Use enhanced search if available, otherwise fall back to basic filtering
-              if (performSearch) {
-                performSearch(value, selectedTagIds.map(id => parseInt(id)));
-              }
-            }}
-            className="pl-10 pr-24"
-            autoComplete="off"
-            inputMode="search"
-          />
-          {searchQuery && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Badge variant="secondary" className="text-xs">
-                {usingMockData ? 'Smart search' : 'Full-text search'}
-              </Badge>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <Label className="text-sm whitespace-nowrap mb-2 block">Filter by tags:</Label>
-            <MultiSelect
-              options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
-              onValueChange={(tagIds) => {
-                setSelectedTagIds(tagIds);
-                // Trigger search with updated tag filter
-                if (performSearch && searchQuery) {
-                  performSearch(searchQuery, tagIds.map(id => parseInt(id)));
-                }
-              }}
-              defaultValue={selectedTagIds}
-              placeholder="Select tags to filter..."
-              maxCount={5}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch id="favorites-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
-            <Label htmlFor="favorites-only" className="text-sm">Favorites only</Label>
-          </div>
-        </div>
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Cook time</label>
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Any">Any</SelectItem>
+                    <SelectItem value="<= 15 min">≤ 15 min</SelectItem>
+                    <SelectItem value="<= 30 min">≤ 30 min</SelectItem>
+                    <SelectItem value="<= 45 min">≤ 45 min</SelectItem>
+                    <SelectItem value="<= 60 min">≤ 60 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Recipes List */}
-        <div className="space-y-3">
-          {displayedRecipes.length === 0 ? (
-            <div className="text-center py-8">
-              <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <div className="space-y-2">
-                <p className="text-muted-foreground text-lg">
-                  {searchQuery
-                    ? `No recipes found matching "${searchQuery}"`
-                    : favoritesOnly
-                    ? 'No favorite recipes found'
-                    : selectedTagIds.length > 0
-                    ? 'No recipes found with selected tags'
-                    : 'No recipes found'
-                  }
-                </p>
-                {searchQuery && (
-                  <p className="text-sm text-muted-foreground">
-                    Try searching for ingredients, recipe names, or cooking instructions
-                  </p>
-                )}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Servings</label>
+                <Select value={servingsFilter} onValueChange={setServingsFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Any">Any</SelectItem>
+                    <SelectItem value="1–2">1–2</SelectItem>
+                    <SelectItem value="3–4">3–4</SelectItem>
+                    <SelectItem value="5+">5+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Sort by</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A–Z">A–Z</SelectItem>
+                    <SelectItem value="Recently added">Recently added</SelectItem>
+                    <SelectItem value="Cook time">Cook time</SelectItem>
+                    <SelectItem value="Favorites">Favorites</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleFilterApply} className="flex-1">
+                  Apply
+                </Button>
+                <Button variant="outline" onClick={handleFilterReset}>
+                  Reset
+                </Button>
               </div>
             </div>
-          ) : (
-            displayedRecipes.map(recipe => (
-              <Card key={recipe.id} className="p-4">
-                <div className="space-y-4">
-                  {/* Enhanced Header Section */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight">{recipe.name}</h3>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          <span className="font-medium">{recipe.servings} servings</span>
+            </SheetContent>
+          </Sheet>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsGeneratorDialogOpen(true)}>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Create with AI
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add manually
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Tag Scroller */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {predefinedTags.map(tag => (
+            <Badge
+              key={tag}
+              variant={activeTagFilter === tag ? 'default' : 'secondary'}
+              className="whitespace-nowrap cursor-pointer rounded-full"
+              onClick={() => setActiveTagFilter(tag)}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* Mock Data Indicator */}
+      {usingMockData && (
+        <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+            <p className="text-sm text-amber-800">
+              <strong>Demo Mode:</strong> Showing sample recipes with beautiful food images.
+              Connect to Supabase to see your real recipes.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && !usingMockData && (
+        <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
+
+
+      {/* Content */}
+      <div className="px-4 sm:px-6 pb-20 pt-4">
+        {emptyStateContent ? emptyStateContent : (
+          <div className="space-y-3">
+            {filteredRecipes.map(recipe => (
+              <Card key={recipe.id} className="border rounded-xl hover:shadow-sm transition-shadow">
+                <div className="flex gap-3 p-4 items-start">
+                  {/* Clickable area: thumbnail + content */}
+                  <Link to={`/recipes/${recipe.id}`} className="flex gap-3 flex-1 min-w-0 items-start">
+                    {/* Thumbnail */}
+                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+                      <div className="h-full w-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                        <ChefHat className="h-6 w-6 text-orange-600" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title */}
+                      <h3 className="font-bold text-base line-clamp-2 leading-tight">{recipe.name}</h3>
+
+                      {/* Meta Row: Servings + Time */}
+                      <div className="flex items-center gap-4 mt-1">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          <span>{recipe.servings} servings</span>
                         </div>
                         {recipe.total_time_minutes && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span className="font-medium">{recipe.total_time_minutes} min</span>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>{recipe.total_time_minutes} min</span>
                           </div>
                         )}
                       </div>
+
+                      {/* Tags */}
                       {recipe.tags && recipe.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {recipe.tags.map((tag) => (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {recipe.tags.slice(0, 2).map((tag) => (
                             <Badge
                               key={tag.id}
-                              variant="outline"
-                              className="text-xs text-white font-medium"
-                              style={{ backgroundColor: tag.color, borderColor: tag.color }}
+                              variant="secondary"
+                              className="text-xs rounded-full px-2 py-0.5"
                             >
                               {tag.name}
                             </Badge>
                           ))}
+                          {recipe.tags.length > 2 && (
+                            <Badge variant="secondary" className="text-xs rounded-full px-2 py-0.5">
+                              +{recipe.tags.length - 2}
+                            </Badge>
+                          )}
                         </div>
                       )}
                     </div>
-                    {/* Action Buttons - Mobile Optimized */}
-                    <div className="flex gap-2">
-                      {/* Cook Button - Primary Action */}
-                      <Button asChild variant="default" size="sm" className="bg-primary hover:bg-primary/90" aria-label="Cook this recipe">
-                        <Link to={`/recipes/${recipe.id}`}>
-                          <Utensils className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      {/* Heart Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleFavorite(recipe.id)}
-                        aria-label="Toggle favorite"
-                        className="hover:bg-pink-50 hover:text-pink-600"
-                      >
-                        <Heart
-                          className={`h-4 w-4 ${recipe.is_favorite ? 'text-pink-600' : ''}`}
-                          fill={recipe.is_favorite ? 'currentColor' : 'none'}
-                        />
-                      </Button>
-                      {/* Edit Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRecipe(recipe)}
-                        aria-label="Edit recipe"
-                        className="hover:bg-blue-50 hover:text-blue-600"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {/* Delete Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteConfirm({ open: true, recipe })}
-                        className="text-destructive hover:text-destructive hover:bg-red-50"
-                        aria-label="Delete recipe"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  </Link>
 
-                  {/* Enhanced Nutrition Display */}
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      Nutrition per serving
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-white rounded-lg p-3 border border-blue-200 text-center">
-                        <div className="text-xl font-bold text-blue-600">{recipe.nutrition.calories_per_serving.toFixed(0)}</div>
-                        <div className="text-xs text-gray-600 font-medium">Calories</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-green-200 text-center">
-                        <div className="text-xl font-bold text-green-600">{recipe.nutrition.protein_per_serving.toFixed(1)}g</div>
-                        <div className="text-xs text-gray-600 font-medium">Protein</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-orange-200 text-center">
-                        <div className="text-xl font-bold text-orange-600">{recipe.nutrition.carbs_per_serving.toFixed(1)}g</div>
-                        <div className="text-xs text-gray-600 font-medium">Carbs</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-purple-200 text-center">
-                        <div className="text-xl font-bold text-purple-600">{recipe.nutrition.fat_per_serving.toFixed(1)}g</div>
-                        <div className="text-xs text-gray-600 font-medium">Fat</div>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    {/* Favorite Toggle */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-11 w-11 p-0 shrink-0"
+                      onClick={() => handleFavoriteToggle(recipe)}
+                      aria-label="Toggle favorite"
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${recipe.is_favorite ? 'text-pink-600 fill-current' : 'text-muted-foreground'}`}
+                      />
+                    </Button>
 
-                  {/* Recipe Summary Info */}
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-semibold text-gray-700">Ready to cook</span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {getIngredientCount(recipe)} ingredients • {recipe.instructions.split('\n').filter(step => step.trim()).length} steps
-                      </div>
-                    </div>
-                    {recipe.notes && (
-                      <div className="mt-3 p-3 bg-white rounded-lg border border-green-200">
-                        <p className="text-sm text-gray-700 italic">"{recipe.notes}"</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quick Feedback (comments) */}
-                  <div className="rounded-lg border bg-card p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{(recipe.feedback?.length || 0)} comment{(recipe.feedback?.length || 0) !== 1 ? 's' : ''}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                        onClick={() => setFeedbackForRecipe(recipe)}
-                        aria-label="Add comment"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    {(recipe.feedback && recipe.feedback.length > 0) ? (
-                      <div className="space-y-1 mt-2 max-h-20 overflow-y-auto">
-                        {recipe.feedback
-                          ?.slice()
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .slice(0, 2)
-                          .map((fb, idx) => (
-                            <div key={`${fb.date}-${idx}`} className="text-xs bg-muted/50 rounded px-2 py-1">
-                              <p className="text-foreground text-xs leading-tight">{fb.text}</p>
-                              <p className="text-muted-foreground text-[10px] mt-0.5">
-                                {new Date(fb.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </p>
-                            </div>
-                          ))}
-                        {(recipe.feedback?.length || 0) > 2 && (
-                          <p className="text-[10px] text-muted-foreground pl-2">+{(recipe.feedback!.length - 2)} more comment{(recipe.feedback!.length - 2) !== 1 ? 's' : ''}...</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mt-2">No comments yet. Be the first to add one.</p>
-                    )}
+                    {/* More Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-11 w-11 p-0 shrink-0"
+                          aria-label="More actions"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditRecipe(recipe)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          // TODO: Implement duplicate functionality
+                        }}>
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setDeleteConfirm({ open: true, recipe })}
+                          className="text-destructive"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </Card>
-            ))
-          )}
-        </div>
-
-        {/* Floating Add Button */}
-        <Button
-          className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-
-        {/* Add/Edit Recipe Dialog */}
-        <AddRecipeDialog
-          open={isAddDialogOpen}
-          onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (!open) setEditingRecipe(null);
-          }}
-          onSave={async (recipeData) => {
-            const { selectedTagIds, ...recipeWithoutTags } = recipeData;
-            
-            if (editingRecipe) {
-              await updateRecipe(editingRecipe, { ...recipeWithoutTags, selectedTagIds });
-            } else {
-              await addRecipe({ ...recipeWithoutTags, selectedTagIds });
-            }
-            setIsAddDialogOpen(false);
-            setEditingRecipe(null);
-          }}
-          editingRecipe={editingRecipe ? recipes.find(r => r.id === editingRecipe) : undefined}
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <ConfirmDialog
-          open={deleteConfirm.open}
-          onOpenChange={(open) => setDeleteConfirm({ open, recipe: open ? deleteConfirm.recipe : null })}
-          title="Delete Recipe"
-          description={`Are you sure you want to delete "${deleteConfirm.recipe?.name}"? This action cannot be undone.`}
-          onConfirm={handleDeleteRecipe}
-          confirmText="Delete"
-          variant="destructive"
-        />
-
-        {/* Recipe Generator Dialog */}
-        <RecipeGeneratorDialog
-          open={isGeneratorDialogOpen}
-          onOpenChange={setIsGeneratorDialogOpen}
-          onRecipeGenerated={handleRecipeGenerated}
-        />
-
-        {/* Tag Management Dialog */}
-        <TagDialog
-          open={isTagDialogOpen}
-          onOpenChange={setIsTagDialogOpen}
-        />
-
-        {/* Quick Feedback Dialog */}
-        {feedbackForRecipe && (
-          <QuickFeedbackDialog
-            open={!!feedbackForRecipe}
-            onOpenChange={(open) => {
-              if (!open) setFeedbackForRecipe(null);
-            }}
-            recipe={feedbackForRecipe}
-            onSave={async (updates) => {
-              await updateRecipe(feedbackForRecipe.id, updates);
-              setFeedbackForRecipe(null);
-            }}
-          />
+            ))}
+          </div>
         )}
+      </div>
+
+
+      {/* Add/Edit Recipe Dialog */}
+      <AddRecipeDialog
+        open={isAddDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) setEditingRecipe(null);
+        }}
+        onSave={async (recipeData) => {
+          const { selectedTagIds, ...recipeWithoutTags } = recipeData;
+
+          if (editingRecipe) {
+            await updateRecipe(editingRecipe, { ...recipeWithoutTags, selectedTagIds });
+          } else {
+            await addRecipe({ ...recipeWithoutTags, selectedTagIds });
+          }
+          setIsAddDialogOpen(false);
+          setEditingRecipe(null);
+        }}
+        editingRecipe={editingRecipe ? recipes.find(r => r.id === editingRecipe) : undefined}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, recipe: open ? deleteConfirm.recipe : null })}
+        title="Delete Recipe"
+        description={`Are you sure you want to delete "${deleteConfirm.recipe?.name}"? This action cannot be undone.`}
+        onConfirm={handleDeleteRecipe}
+        confirmText="Delete"
+        variant="destructive"
+      />
+
+      {/* Recipe Generator Dialog */}
+      <RecipeGeneratorDialog
+        open={isGeneratorDialogOpen}
+        onOpenChange={setIsGeneratorDialogOpen}
+        onRecipeGenerated={handleRecipeGenerated}
+      />
       </div>
     </Layout>
   );

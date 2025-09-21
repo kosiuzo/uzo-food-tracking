@@ -44,7 +44,8 @@ describe('Recipes Page', () => {
 
   it('renders recipes list', () => {
     renderWithProviders(<Recipes />);
-    expect(screen.getByText('Total Recipes')).toBeInTheDocument();
+    // Header shows Filter + Create actions; verify a stable label
+    expect(screen.getByText('Create')).toBeInTheDocument();
     expect(screen.getByText('Cake')).toBeInTheDocument();
   });
 });

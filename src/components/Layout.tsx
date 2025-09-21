@@ -1,6 +1,6 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChefHat, BookOpen, Menu, Package, Settings } from 'lucide-react';
+import { CalendarDays, ChefHat, BookOpen, Menu, Package, Settings, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DebugPanel } from '@/components/DebugPanel';
@@ -60,6 +60,12 @@ const baseNavigationSections: NavSection[] = [
 ];
 
 const additionalNavItems: NavItem[] = [
+  {
+    path: '/analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    description: 'View your nutrition insights and trends.',
+  },
   {
     path: '/settings',
     label: 'Settings',

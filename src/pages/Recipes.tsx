@@ -42,7 +42,7 @@ export default function Recipes() {
   const [sortBy, setSortBy] = useState('A–Z');
 
   // Predefined tag options for quick filtering
-  const predefinedTags = ['All', 'High-Protein', 'Paleo', 'Gluten-Free', 'Dairy-Free', 'Keto', '30-min', '5-ingred'];
+  const predefinedTags = ['All', 'Chicken', 'Ground Beef', 'Salmon', 'Steak', 'Baking'];
 
   // Helper function to get ingredient count for both regular and AI-generated recipes
   const getIngredientCount = (recipe: Recipe): number => {
@@ -152,6 +152,7 @@ export default function Recipes() {
   };
 
   const handleFilterReset = () => {
+    setViewMode('all');
     setFilterSearchQuery('');
     setSelectedTagIds([]);
     setTimeFilter('Any');
@@ -231,126 +232,128 @@ export default function Recipes() {
 
         {/* Action Row */}
         <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="secondary" size="sm" className="gap-2 rounded-full">
-                  <Filter className="h-4 w-4" />
-                  Filter
-                </Button>
-              </SheetTrigger>
-              <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90vh]" : ""}>
-                <SheetHeader>
-                  <SheetTitle>Filter & Sort</SheetTitle>
-                </SheetHeader>
-              <div className="space-y-6 mt-6">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Search</label>
-                  <Input
-                    placeholder="Search name, ingredients, tags"
-                    value={filterSearchQuery}
-                    onChange={(e) => setFilterSearchQuery(e.target.value)}
-                    className="h-12"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Tags</label>
-                  <MultiSelect
-                    options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
-                    onValueChange={setSelectedTagIds}
-                    defaultValue={selectedTagIds}
-                    placeholder="Select tags..."
-                    maxCount={3}
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Cook time</label>
-                  <Select value={timeFilter} onValueChange={setTimeFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Any">Any</SelectItem>
-                      <SelectItem value="<= 15 min">≤ 15 min</SelectItem>
-                      <SelectItem value="<= 30 min">≤ 30 min</SelectItem>
-                      <SelectItem value="<= 45 min">≤ 45 min</SelectItem>
-                      <SelectItem value="<= 60 min">≤ 60 min</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Servings</label>
-                  <Select value={servingsFilter} onValueChange={setServingsFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Any">Any</SelectItem>
-                      <SelectItem value="1–2">1–2</SelectItem>
-                      <SelectItem value="3–4">3–4</SelectItem>
-                      <SelectItem value="5+">5+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Sort by</label>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A–Z">A–Z</SelectItem>
-                      <SelectItem value="Recently added">Recently added</SelectItem>
-                      <SelectItem value="Cook time">Cook time</SelectItem>
-                      <SelectItem value="Favorites">Favorites</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleFilterApply} className="flex-1">
-                    Apply
-                  </Button>
-                  <Button variant="outline" onClick={handleFilterReset}>
-                    Reset
-                  </Button>
-                </div>
+          <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="secondary" size="sm" className="gap-2 rounded-full">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+            </SheetTrigger>
+            <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90vh]" : ""}>
+              <SheetHeader>
+                <SheetTitle>Filter & Sort</SheetTitle>
+              </SheetHeader>
+            <div className="space-y-6 mt-6">
+              <div className="space-y-3">
+                <label className="text-sm font-medium">View</label>
+                <Select value={viewMode} onValueChange={setViewMode}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select view" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All recipes</SelectItem>
+                    <SelectItem value="favorites">Favorites only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              </SheetContent>
-            </Sheet>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Search</label>
+                <Input
+                  placeholder="Search name, ingredients, tags"
+                  value={filterSearchQuery}
+                  onChange={(e) => setFilterSearchQuery(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Tags</label>
+                <MultiSelect
+                  options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+                  onValueChange={setSelectedTagIds}
+                  defaultValue={selectedTagIds}
+                  placeholder="Select tags..."
+                  maxCount={3}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Cook time</label>
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Any">Any</SelectItem>
+                    <SelectItem value="<= 15 min">≤ 15 min</SelectItem>
+                    <SelectItem value="<= 30 min">≤ 30 min</SelectItem>
+                    <SelectItem value="<= 45 min">≤ 45 min</SelectItem>
+                    <SelectItem value="<= 60 min">≤ 60 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Servings</label>
+                <Select value={servingsFilter} onValueChange={setServingsFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Any">Any</SelectItem>
+                    <SelectItem value="1–2">1–2</SelectItem>
+                    <SelectItem value="3–4">3–4</SelectItem>
+                    <SelectItem value="5+">5+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Sort by</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A–Z">A–Z</SelectItem>
+                    <SelectItem value="Recently added">Recently added</SelectItem>
+                    <SelectItem value="Cook time">Cook time</SelectItem>
+                    <SelectItem value="Favorites">Favorites</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleFilterApply} className="flex-1">
+                  Apply
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsGeneratorDialogOpen(true)}>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Create with AI
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsAddDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add manually
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                <Button variant="outline" onClick={handleFilterReset}>
+                  Reset
+                </Button>
+              </div>
+            </div>
+            </SheetContent>
+          </Sheet>
 
-          <ToggleGroup type="single" value={viewMode} onValueChange={setViewMode} className="bg-muted rounded-lg p-1">
-            <ToggleGroupItem value="all" className="text-sm px-4 py-2 rounded-md">
-              All
-            </ToggleGroupItem>
-            <ToggleGroupItem value="favorites" className="text-sm px-4 py-2 rounded-md">
-              Favorites
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsGeneratorDialogOpen(true)}>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Create with AI
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add manually
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Tag Scroller */}
@@ -388,19 +391,6 @@ export default function Recipes() {
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-card border rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-brand">{recipes.length}</div>
-            <div className="text-sm text-muted-foreground font-medium">Total</div>
-          </div>
-          <div className="bg-card border rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-pink-600">{favoriteCount}</div>
-            <div className="text-sm text-muted-foreground font-medium">Favorites</div>
-          </div>
-        </div>
-      </div>
 
 
       {/* Content */}

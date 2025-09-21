@@ -399,53 +399,56 @@ export default function Recipes() {
           <div className="space-y-3">
             {filteredRecipes.map(recipe => (
               <Card key={recipe.id} className="border rounded-xl hover:shadow-sm transition-shadow">
-                <div className="flex gap-3 p-4" onClick={() => window.location.href = `/recipes/${recipe.id}`}>
-                  {/* Thumbnail */}
-                  <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-                    <div className="h-full w-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
-                      <ChefHat className="h-6 w-6 text-orange-600" />
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    {/* Title */}
-                    <h3 className="font-bold text-base line-clamp-2 leading-tight">{recipe.name}</h3>
-
-                    {/* Meta Row: Servings + Time */}
-                    <div className="flex items-center gap-4 mt-1">
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Users className="h-3 w-3" />
-                        <span>{recipe.servings} servings</span>
+                <div className="flex gap-3 p-4 items-start">
+                  {/* Clickable area: thumbnail + content */}
+                  <Link to={`/recipes/${recipe.id}`} className="flex gap-3 flex-1 min-w-0 items-start">
+                    {/* Thumbnail */}
+                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+                      <div className="h-full w-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                        <ChefHat className="h-6 w-6 text-orange-600" />
                       </div>
-                      {recipe.total_time_minutes && (
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title */}
+                      <h3 className="font-bold text-base line-clamp-2 leading-tight">{recipe.name}</h3>
+
+                      {/* Meta Row: Servings + Time */}
+                      <div className="flex items-center gap-4 mt-1">
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>{recipe.total_time_minutes} min</span>
+                          <Users className="h-3 w-3" />
+                          <span>{recipe.servings} servings</span>
+                        </div>
+                        {recipe.total_time_minutes && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>{recipe.total_time_minutes} min</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tags */}
+                      {recipe.tags && recipe.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {recipe.tags.slice(0, 2).map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              variant="secondary"
+                              className="text-xs rounded-full px-2 py-0.5"
+                            >
+                              {tag.name}
+                            </Badge>
+                          ))}
+                          {recipe.tags.length > 2 && (
+                            <Badge variant="secondary" className="text-xs rounded-full px-2 py-0.5">
+                              +{recipe.tags.length - 2}
+                            </Badge>
+                          )}
                         </div>
                       )}
                     </div>
-
-                    {/* Tags */}
-                    {recipe.tags && recipe.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {recipe.tags.slice(0, 2).map((tag) => (
-                          <Badge
-                            key={tag.id}
-                            variant="secondary"
-                            className="text-xs rounded-full px-2 py-0.5"
-                          >
-                            {tag.name}
-                          </Badge>
-                        ))}
-                        {recipe.tags.length > 2 && (
-                          <Badge variant="secondary" className="text-xs rounded-full px-2 py-0.5">
-                            +{recipe.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  </Link>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
@@ -454,10 +457,7 @@ export default function Recipes() {
                       variant="ghost"
                       size="sm"
                       className="h-11 w-11 p-0 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFavoriteToggle(recipe);
-                      }}
+                      onClick={() => handleFavoriteToggle(recipe)}
                       aria-label="Toggle favorite"
                     >
                       <Heart
@@ -472,30 +472,22 @@ export default function Recipes() {
                           variant="ghost"
                           size="sm"
                           className="h-11 w-11 p-0 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
                           aria-label="More actions"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditRecipe(recipe);
-                        }}>
+                        <DropdownMenuItem onClick={() => handleEditRecipe(recipe)}>
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
+                        <DropdownMenuItem onClick={() => {
                           // TODO: Implement duplicate functionality
                         }}>
                           Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirm({ open: true, recipe });
-                          }}
+                          onClick={() => setDeleteConfirm({ open: true, recipe })}
                           className="text-destructive"
                         >
                           Delete

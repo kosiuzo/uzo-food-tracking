@@ -1,5 +1,5 @@
-import { ReactNode, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { CalendarDays, ChefHat, BookOpen, Menu, Package, Settings, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -76,7 +76,6 @@ const additionalNavItems: NavItem[] = [
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigationSections = useMemo(() => {
@@ -105,10 +104,10 @@ export function Layout({ children }: LayoutProps) {
     return location.pathname.startsWith(item.path);
   });
 
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    setIsMenuOpen(false);
-  };
+  // Close the menu on any route change (covers back/forward nav)
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,6 +120,8 @@ export function Layout({ children }: LayoutProps) {
                 size="icon"
                 className="rounded-full"
                 aria-label="Open navigation menu"
+                aria-expanded={isMenuOpen}
+                aria-controls="primary-navigation"
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -138,7 +139,12 @@ export function Layout({ children }: LayoutProps) {
                   </SheetDescription>
                 </SheetHeader>
 
-                <nav className="mt-8 space-y-8" role="navigation">
+                <nav
+                  id="primary-navigation"
+                  aria-label="Primary navigation"
+                  className="mt-8 space-y-8"
+                  role="navigation"
+                >
                 {navigationSections.map(section => (
                   <div key={section.title} className="space-y-4">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground px-1">
@@ -153,26 +159,32 @@ export function Layout({ children }: LayoutProps) {
                         return (
                           <Button
                             key={path}
+                            asChild
                             variant={isActive ? 'secondary' : 'ghost'}
                             className={cn(
                               'w-full justify-start gap-3 rounded-xl px-3 py-3 min-h-[48px] text-left transition-colors',
                               isActive && 'shadow-sm'
                             )}
-                            onClick={() => handleNavigate(path)}
                           >
-                            <div
-                              className={cn(
-                                'flex h-10 w-10 items-center justify-center rounded-lg border flex-shrink-0',
-                                isActive
-                                  ? 'border-primary/40 bg-primary/10'
-                                  : 'border-border'
-                              )}
+                            <NavLink
+                              to={path}
+                              end={path === '/'}
+                              onClick={() => setIsMenuOpen(false)}
                             >
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium leading-tight text-sm">{label}</div>
-                            </div>
+                              <div
+                                className={cn(
+                                  'flex h-10 w-10 items-center justify-center rounded-lg border flex-shrink-0',
+                                  isActive
+                                    ? 'border-primary/40 bg-primary/10'
+                                    : 'border-border'
+                                )}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium leading-tight text-sm">{label}</div>
+                              </div>
+                            </NavLink>
                           </Button>
                         );
                       })}

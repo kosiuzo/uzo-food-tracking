@@ -228,7 +228,6 @@ export default function Recipes() {
       <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
-        <h1 className="text-lg font-bold mb-3">Recipes</h1>
 
         {/* Action Row */}
         <div className="flex items-center justify-between gap-3 mb-3">

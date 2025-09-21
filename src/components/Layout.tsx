@@ -116,23 +116,24 @@ export function Layout({ children }: LayoutProps) {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-[280px] sm:w-[320px]"
+              className="w-[300px] sm:w-[320px] p-0"
               aria-label="Primary navigation"
             >
-              <SheetHeader className="text-left">
-                <SheetTitle>Navigation</SheetTitle>
-                <SheetDescription>
-                  Quickly jump between the tools you use most.
-                </SheetDescription>
-              </SheetHeader>
+              <div className="p-6">
+                <SheetHeader className="text-left">
+                  <SheetTitle>Navigation</SheetTitle>
+                  <SheetDescription>
+                    Quickly jump between the tools you use most.
+                  </SheetDescription>
+                </SheetHeader>
 
-              <nav className="mt-6 space-y-6" role="navigation">
+                <nav className="mt-8 space-y-8" role="navigation">
                 {navigationSections.map(section => (
-                  <div key={section.title} className="space-y-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <div key={section.title} className="space-y-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground px-1">
                       {section.title}
                     </p>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {section.items.map(({ path, label, icon: Icon, description }) => {
                         const isActive = path === '/'
                           ? location.pathname === '/'
@@ -143,14 +144,14 @@ export function Layout({ children }: LayoutProps) {
                             key={path}
                             variant={isActive ? 'secondary' : 'ghost'}
                             className={cn(
-                              'w-full justify-start gap-3 rounded-xl px-3 py-2 text-left transition-colors',
+                              'w-full justify-start gap-3 rounded-xl px-3 py-3 min-h-[48px] text-left transition-colors',
                               isActive && 'shadow-sm'
                             )}
                             onClick={() => handleNavigate(path)}
                           >
                             <div
                               className={cn(
-                                'flex h-9 w-9 items-center justify-center rounded-lg border',
+                                'flex h-10 w-10 items-center justify-center rounded-lg border flex-shrink-0',
                                 isActive
                                   ? 'border-primary/40 bg-primary/10'
                                   : 'border-border'
@@ -158,13 +159,8 @@ export function Layout({ children }: LayoutProps) {
                             >
                               <Icon className="h-5 w-5" />
                             </div>
-                            <div className="flex-1">
-                              <div className="font-medium leading-tight">{label}</div>
-                              {description && (
-                                <p className="text-xs text-muted-foreground">
-                                  {description}
-                                </p>
-                              )}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium leading-tight text-sm">{label}</div>
                             </div>
                           </Button>
                         );
@@ -172,7 +168,8 @@ export function Layout({ children }: LayoutProps) {
                     </div>
                   </div>
                 ))}
-              </nav>
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
 
@@ -180,11 +177,6 @@ export function Layout({ children }: LayoutProps) {
             <span className="text-sm font-semibold leading-none">
               {activeNavItem?.label ?? 'Uzo Food Tracking'}
             </span>
-            {activeNavItem?.description && (
-              <span className="text-xs text-muted-foreground">
-                {activeNavItem.description}
-              </span>
-            )}
           </div>
         </div>
       </header>

@@ -6,8 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Layout } from '../components/Layout';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Target, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Target, Save, Tags, Plus, Trash2, Edit2 } from 'lucide-react';
 import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, type AppSettings } from '@/lib/settings-constants';
+import { useTags } from '@/hooks/useTags';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -17,6 +21,14 @@ export default function Settings() {
   const [carbsInput, setCarbsInput] = useState('');
   const [fatInput, setFatInput] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+
+  // Tag management state
+  const { allTags, addTag, updateTag, deleteTag, isAdding, isUpdating, isDeleting } = useTags();
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<{id: number; name: string; color: string; description?: string} | null>(null);
+  const [tagName, setTagName] = useState('');
+  const [tagColor, setTagColor] = useState('#3b82f6');
+  const [tagDescription, setTagDescription] = useState('');
 
   // Load settings on component mount
   useEffect(() => {
@@ -151,6 +163,103 @@ export default function Settings() {
     setFatInput(DEFAULT_SETTINGS.fatTarget.toString());
     setSettings(DEFAULT_SETTINGS);
     setIsDirty(true);
+  };
+
+  // Tag management functions
+  const openTagDialog = (tag?: {id: number; name: string; color: string; description?: string}) => {
+    if (tag) {
+      setEditingTag(tag);
+      setTagName(tag.name);
+      setTagColor(tag.color);
+      setTagDescription(tag.description || '');
+    } else {
+      setEditingTag(null);
+      setTagName('');
+      setTagColor('#3b82f6');
+      setTagDescription('');
+    }
+    setTagDialogOpen(true);
+  };
+
+  const closeTagDialog = () => {
+    setTagDialogOpen(false);
+    setEditingTag(null);
+    setTagName('');
+    setTagColor('#3b82f6');
+    setTagDescription('');
+  };
+
+  const handleSaveTag = () => {
+    if (!tagName.trim()) {
+      toast({
+        title: 'Invalid tag name',
+        description: 'Please enter a tag name.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const tagData = {
+      name: tagName.trim(),
+      color: tagColor,
+      description: tagDescription.trim() || undefined,
+    };
+
+    if (editingTag) {
+      updateTag({ id: editingTag.id, updates: tagData }, {
+        onSuccess: () => {
+          toast({
+            title: 'Tag updated',
+            description: `"${tagName}" has been updated successfully.`,
+          });
+          closeTagDialog();
+        },
+        onError: (error) => {
+          toast({
+            title: 'Error updating tag',
+            description: error.message || 'Failed to update tag. Please try again.',
+            variant: 'destructive',
+          });
+        },
+      });
+    } else {
+      addTag(tagData, {
+        onSuccess: () => {
+          toast({
+            title: 'Tag created',
+            description: `"${tagName}" has been created successfully.`,
+          });
+          closeTagDialog();
+        },
+        onError: (error) => {
+          toast({
+            title: 'Error creating tag',
+            description: error.message || 'Failed to create tag. Please try again.',
+            variant: 'destructive',
+          });
+        },
+      });
+    }
+  };
+
+  const handleDeleteTag = (tag: {id: number; name: string}) => {
+    if (window.confirm(`Are you sure you want to delete the tag "${tag.name}"? This will remove it from all recipes.`)) {
+      deleteTag(tag.id, {
+        onSuccess: () => {
+          toast({
+            title: 'Tag deleted',
+            description: `"${tag.name}" has been deleted successfully.`,
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: 'Error deleting tag',
+            description: error.message || 'Failed to delete tag. Please try again.',
+            variant: 'destructive',
+          });
+        },
+      });
+    }
   };
 
   return (
@@ -395,9 +504,162 @@ export default function Settings() {
             </Card>
           </div>
 
+          {/* Tag Management Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Tags className="h-5 w-5 text-primary" />
+              <h2 className="text-base font-semibold">Tag Management</h2>
+            </div>
+
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Manage tags used to categorize your recipes
+                  </p>
+                  <Button onClick={() => openTagDialog()} className="gap-2" size="sm">
+                    <Plus className="h-4 w-4" />
+                    Add Tag
+                  </Button>
+                </div>
+
+                {/* Tags Grid */}
+                <div className="space-y-3">
+                  {allTags.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No tags created yet. Add your first tag to get started.
+                    </p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {allTags.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Badge
+                              style={{ backgroundColor: tag.color, color: 'white' }}
+                              className="text-xs"
+                            >
+                              {tag.name}
+                            </Badge>
+                            {tag.description && (
+                              <span className="text-xs text-muted-foreground">
+                                {tag.description}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openTagDialog(tag)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTag(tag)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
 
         </div>
       </div>
+
+      {/* Tag Dialog */}
+      <Dialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTag ? 'Edit Tag' : 'Create New Tag'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingTag
+                ? 'Update the tag name, color, and description.'
+                : 'Create a new tag to categorize your recipes.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tag-name">Tag Name</Label>
+              <Input
+                id="tag-name"
+                value={tagName}
+                onChange={(e) => setTagName(e.target.value)}
+                placeholder="e.g., vegetarian, quick-meal"
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tag-color">Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="tag-color"
+                  type="color"
+                  value={tagColor}
+                  onChange={(e) => setTagColor(e.target.value)}
+                  className="w-12 h-10 rounded border border-input cursor-pointer"
+                />
+                <Input
+                  value={tagColor}
+                  onChange={(e) => setTagColor(e.target.value)}
+                  placeholder="#3b82f6"
+                  className="flex-1"
+                />
+                {tagName && (
+                  <Badge
+                    style={{ backgroundColor: tagColor, color: 'white' }}
+                    className="text-xs whitespace-nowrap"
+                  >
+                    {tagName}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tag-description">Description (Optional)</Label>
+              <Textarea
+                id="tag-description"
+                value={tagDescription}
+                onChange={(e) => setTagDescription(e.target.value)}
+                placeholder="Describe what this tag represents..."
+                className="w-full"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeTagDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveTag}
+              disabled={isAdding || isUpdating || !tagName.trim()}
+            >
+              {isAdding || isUpdating ? 'Saving...' : editingTag ? 'Update Tag' : 'Create Tag'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

@@ -10,6 +10,8 @@ servers:
   - url: https://amehiertzqtbtcjhugql.supabase.co/rest/v1
     description: Supabase REST API (production)
 
+x-user-id: 43af6e15-1b3d-4634-be91-d59cf414a33e
+
 security:
   - apiKeyAuth: []
 
@@ -59,7 +61,7 @@ paths:
     post:
       operationId: saveRecipe
       summary: Create a new recipe in the database
-      description: Inserts a new recipe row.
+      description: Inserts a new recipe row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
       parameters:
         - name: Prefer
           in: header
@@ -258,7 +260,7 @@ paths:
     post:
       operationId: createItem
       summary: Create a new item
-      description: Inserts a new item row.
+      description: Inserts a new item row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
       parameters:
         - name: Prefer
           in: header
@@ -414,7 +416,7 @@ paths:
     post:
       operationId: saveMealLog
       summary: Create a new meal log in the database
-      description: Inserts a new meal log row.
+      description: Inserts a new meal log row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
       parameters:
         - name: Prefer
           in: header

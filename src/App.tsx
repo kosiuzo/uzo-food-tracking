@@ -5,19 +5,28 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { lazy, Suspense } from "react";
+
 import Index from "./pages/Index";
-import Recipes from "./pages/Recipes";
-import RecipeViewer from "./pages/RecipeViewer";
 import Meals from "./pages/Meals";
 import NotFound from "./pages/NotFound";
-import Planner from "./pages/Planner";
-import MealPrepGenerator from "./pages/MealPrepGenerator";
-import Tags from "./pages/Tags";
-import Settings from "./pages/Settings";
-import Analytics from "./pages/Analytics";
 import { AuthCallback } from "./pages/AuthCallback";
 
+const Recipes = lazy(() => import("./pages/Recipes"));
+const RecipeViewer = lazy(() => import("./pages/RecipeViewer"));
+const Planner = lazy(() => import("./pages/Planner"));
+const MealPrepGenerator = lazy(() => import("./pages/MealPrepGenerator"));
+const Tags = lazy(() => import("./pages/Tags"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+
 const queryClient = new QueryClient();
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,21 +40,23 @@ const App = () => (
             v7_relativeSplatPath: true
           }}
         >
-          <Routes>
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-            <Route path="/inventory" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-            <Route path="/recipes/:id" element={<ProtectedRoute><RecipeViewer /></ProtectedRoute>} />
-            <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-            <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/tags" element={<ProtectedRoute><Tags /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/meal-prep-generator" element={<ProtectedRoute><MealPrepGenerator /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+              <Route path="/recipes/:id" element={<ProtectedRoute><RecipeViewer /></ProtectedRoute>} />
+              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+              <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/tags" element={<ProtectedRoute><Tags /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/meal-prep-generator" element={<ProtectedRoute><MealPrepGenerator /></ProtectedRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

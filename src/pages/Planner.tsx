@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, ChefHat, RotateCcw, Utensils, Calendar, Copy, MoreHorizontal, ChevronDown, ChevronRight, Clock, Users, BookOpen, Wand2, CalendarSync, Trash2, Edit } from 'lucide-react';
+import { Plus, ChefHat, RotateCcw, Utensils, Calendar, Copy, MoreHorizontal, ChevronDown, ChevronRight, Clock, Users, Wand2, Trash2, Edit } from 'lucide-react';
 import { AddEditMealPlanBlockDialog } from '../components/AddEditMealPlanBlockDialog';
 import { BlockReuseDialog } from '../components/BlockReuseDialog';
 import { MealPlanBlock } from '../types';
@@ -252,23 +252,6 @@ const Planner = () => {
                     </Button>
                   </Link>
 
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-3 h-12"
-                    onClick={() => setIsMoreActionsOpen(false)}
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    Import from Recipes
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-3 h-12"
-                    onClick={() => setIsMoreActionsOpen(false)}
-                  >
-                    <CalendarSync className="h-4 w-4" />
-                    Duplicate Last Week
-                  </Button>
                 </div>
               </SheetContent>
             </Sheet>

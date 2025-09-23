@@ -1013,6 +1013,24 @@ components:
           type:
             - string
             - 'null'
+        notes:
+          type:
+            - array
+            - 'null'
+          description: Array of note objects with timestamp
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              date:
+                type: string
+                format: date-time
+          example:
+            - text: "Tastes great with coffee"
+              date: "2025-01-15T10:30:00Z"
+            - text: "Price increased"
+              date: "2025-01-20T14:45:00Z"
         created_at:
           type: string
           format: date-time
@@ -1114,6 +1132,19 @@ components:
           type:
             - string
             - 'null'
+        notes:
+          type:
+            - array
+            - 'null'
+          description: Array of note objects with timestamp
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              date:
+                type: string
+                format: date-time
 
     ItemUpdate:
       type: object
@@ -1207,3 +1238,23 @@ components:
           type:
             - string
             - 'null'
+        notes:
+          type:
+            - array
+            - 'null'
+          description: |
+            Array of note objects with timestamp. To append a new note, send the entire existing array plus the new note.
+            Structure: [{"text": "note content", "date": "ISO timestamp"}]
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              date:
+                type: string
+                format: date-time
+          example:
+            - text: "Tastes great with coffee"
+              date: "2025-01-15T10:30:00Z"
+            - text: "Price increased"
+              date: "2025-01-20T14:45:00Z"

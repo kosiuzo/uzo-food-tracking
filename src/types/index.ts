@@ -131,35 +131,6 @@ export interface MealLog {
   created_at: string; // Timestamp when the log entry was created
 }
 
-// New types for the reimagined meal planner
-export interface RecipeRotation {
-  id: number; // Changed from string to match database
-  name: string;
-  recipes: number[]; // Changed from string[] to match database
-  notes?: string;
-  created_at: string; // Added for consistency
-  updated_at: string; // Added for consistency
-}
-
-export interface MealPlanBlock {
-  id: number; // Changed from string to match database
-  name: string;
-  startDay: number; // 0 = Monday, 1 = Tuesday, etc.
-  endDay: number;
-  rotations: RecipeRotation[];
-  snacks?: number[]; // Changed from string[] to match database
-  created_at: string; // Added for consistency
-  updated_at: string; // Added for consistency
-}
-
-export interface WeeklyMealPlan {
-  id: number; // Changed from string to match database
-  weekStart: string; // YYYY-MM-DD
-  blocks: MealPlanBlock[];
-  created_at: string; // Added for consistency
-  updated_at: string; // Added for consistency
-}
-
 // Database row type for meal_logs table
 export interface DbMealLog {
   id: number;

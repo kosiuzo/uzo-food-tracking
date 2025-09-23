@@ -306,14 +306,14 @@ export default function Settings() {
 
             <Card className="p-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium">Signed in as</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {user?.email || 'Not signed in'}
                     </p>
                   </div>
-                  <Button onClick={handleLogout} variant="outline" className="gap-2">
+                  <Button onClick={handleLogout} variant="outline" className="gap-2 w-full sm:w-auto">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>

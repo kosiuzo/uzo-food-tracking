@@ -4,7 +4,7 @@ test.describe('Inventory CRUD Operations', () => {
   const testItemName = `Test Item ${Date.now()}`;
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/inventory');
   });
 
   test('should create a new inventory item', async ({ page }) => {

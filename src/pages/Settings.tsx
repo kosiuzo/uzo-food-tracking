@@ -6,21 +6,25 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Layout } from '../components/Layout';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Target, Save, Tags, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Settings as SettingsIcon, Target, Save, Tags, Plus, Trash2, Edit2, LogOut, User } from 'lucide-react';
 import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, type AppSettings } from '@/lib/settings-constants';
 import { useTags } from '@/hooks/useTags';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthDialog } from '@/components/AuthDialog';
 
 export default function Settings() {
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [calorieInput, setCalorieInput] = useState('');
   const [proteinInput, setProteinInput] = useState('');
   const [carbsInput, setCarbsInput] = useState('');
   const [fatInput, setFatInput] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   // Tag management state
   const { allTags, addTag, updateTag, deleteTag, isAdding, isUpdating, isDeleting } = useTags();
@@ -262,6 +266,22 @@ export default function Settings() {
     }
   };
 
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: 'Error signing out',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Signed out',
+        description: 'You have been signed out successfully.',
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-background">
@@ -276,6 +296,31 @@ export default function Settings() {
 
         {/* Content */}
         <div className="px-4 pt-4 pb-4 space-y-6">
+
+          {/* Account Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              <h2 className="text-base font-semibold">Account</h2>
+            </div>
+
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Signed in as</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {user?.email || 'Not signed in'}
+                    </p>
+                  </div>
+                  <Button onClick={handleLogout} variant="outline" className="gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
 
           {/* Nutrition Goals Section */}
           <div className="space-y-4">

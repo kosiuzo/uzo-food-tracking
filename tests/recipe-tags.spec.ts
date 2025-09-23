@@ -2,8 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Recipe Tags Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the recipes page
-    await page.goto('http://localhost:8080/recipes');
+    await page.goto('/recipes');
     await page.waitForLoadState('networkidle');
   });
 

@@ -38,4 +38,5 @@ playwright-report/
 trace/
 *.trace
 *.zip
+tests/.auth/
 

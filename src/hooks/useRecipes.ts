@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { requireCurrentUserId } from '../lib/auth-helpers';
 import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
 import type { Database } from '../types/database';
 
@@ -148,12 +149,13 @@ export function useRecipes() {
 
 const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selectedTagIds?: string[] }) => {
     try {
+      const userId = await requireCurrentUserId();
       const { selectedTagIds, ...recipeWithoutTags } = recipe;
       const dbRecipe = recipeToDbInsert(recipeWithoutTags);
       
       const { data: recipeData, error: recipeError } = await supabase
         .from('recipes')
-        .insert([dbRecipe])
+        .insert([{ ...dbRecipe, user_id: userId }])
         .select()
         .single();
       

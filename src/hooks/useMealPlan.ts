@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { requireCurrentUserId } from '../lib/auth-helpers';
 import { WeeklyMealPlan, MealPlanBlock, RecipeRotation } from '../types';
 
 export const useMealPlan = () => {
@@ -112,9 +113,10 @@ export const useMealPlan = () => {
         // No plan exists for this week, create a default one
         try {
           // Create a new weekly meal plan
+          const userId = await requireCurrentUserId();
           const { data: weeklyPlanData, error: weeklyError } = await supabase
             .from('weekly_meal_plans')
-            .insert({ week_start: weekStartStr })
+            .insert({ week_start: weekStartStr, user_id: userId })
             .select()
             .single();
 

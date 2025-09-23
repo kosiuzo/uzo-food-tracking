@@ -5,6 +5,14 @@ export async function getCurrentUserId(): Promise<string | null> {
   return user?.id ?? null
 }
 
+export async function requireCurrentUserId(): Promise<string> {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('You must be signed in to perform this action.')
+  }
+  return userId
+}
+
 export async function addUserIdToInsert<T extends Record<string, unknown>>(
   data: T
 ): Promise<T & { user_id?: string }> {

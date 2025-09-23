@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { requireCurrentUserId } from '../lib/auth-helpers';
 import { MealLog, DbMealLog } from '../types';
 import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
@@ -66,11 +67,12 @@ export function useMealLogs() {
 
   const addMealLog = async (mealLog: Omit<MealLog, 'id'>) => {
     try {
+      const userId = await requireCurrentUserId();
       const dbMealLog = mealLogToDbInsert(mealLog);
       
       const { data, error } = await supabase
         .from('meal_logs')
-        .insert([dbMealLog])
+        .insert([{ ...dbMealLog, user_id: userId }])
         .select()
         .single();
       

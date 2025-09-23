@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { requireCurrentUserId } from '../lib/auth-helpers';
 import { FoodItem, DbItem } from '../types';
 import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
 import { searchItems } from '../lib/search';
@@ -116,9 +117,10 @@ export function useFoodInventory() {
         updated_at: now,
       });
 
+      const userId = await requireCurrentUserId();
       const { data, error } = await supabase
         .from('items')
-        .insert([dbItem])
+        .insert([{ ...dbItem, user_id: userId }])
         .select()
         .single();
 

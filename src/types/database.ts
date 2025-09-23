@@ -5,6 +5,7 @@ export interface Database {
         Row: {
           id: number
           name: string
+          user_id?: string | null
           brand: string | null
           category: string | null
           in_stock: boolean | null
@@ -34,6 +35,7 @@ export interface Database {
         Insert: {
           id?: never
           name: string
+          user_id?: string | null
           brand?: string | null
           category?: string | null
           in_stock?: boolean | null
@@ -63,6 +65,7 @@ export interface Database {
         Update: {
           id?: never
           name?: string
+          user_id?: string | null
           brand?: string | null
           category?: string | null
           in_stock?: boolean | null
@@ -94,6 +97,7 @@ export interface Database {
         Row: {
           id: number
           name: string
+          user_id?: string | null
           total_time: number | null
           servings: number | null
           instructions: string | null
@@ -112,6 +116,7 @@ export interface Database {
         Insert: {
           id?: never
           name: string
+          user_id?: string | null
           total_time?: number | null
           servings?: number | null
           instructions?: string | null
@@ -130,6 +135,7 @@ export interface Database {
         Update: {
           id?: never
           name?: string
+          user_id?: string | null
           total_time?: number | null
           servings?: number | null
           instructions?: string | null
@@ -184,6 +190,7 @@ export interface Database {
       meal_logs: {
         Row: {
           id: number
+          user_id?: string | null
           recipe_ids: number[]
           meal_name: string | null
           cooked_at: string | null
@@ -195,6 +202,7 @@ export interface Database {
         }
         Insert: {
           id?: never
+          user_id?: string | null
           recipe_ids: number[]
           meal_name?: string | null
           cooked_at?: string | null
@@ -206,6 +214,7 @@ export interface Database {
         }
         Update: {
           id?: never
+          user_id?: string | null
           recipe_ids?: number[]
           meal_name?: string | null
           cooked_at?: string | null
@@ -220,18 +229,21 @@ export interface Database {
         Row: {
           id: number
           week_start: string
+          user_id?: string | null
           created_at: string | null
           updated_at: string | null
         }
         Insert: {
           id?: never
           week_start: string
+          user_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
         Update: {
           id?: never
           week_start?: string
+          user_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -329,6 +341,7 @@ export interface Database {
         Row: {
           id: number
           name: string
+          user_id?: string | null
           color: string | null
           description: string | null
           created_at: string | null
@@ -337,6 +350,7 @@ export interface Database {
         Insert: {
           id?: never
           name: string
+          user_id?: string | null
           color?: string | null
           description?: string | null
           created_at?: string | null
@@ -345,6 +359,7 @@ export interface Database {
         Update: {
           id?: never
           name?: string
+          user_id?: string | null
           color?: string | null
           description?: string | null
           created_at?: string | null

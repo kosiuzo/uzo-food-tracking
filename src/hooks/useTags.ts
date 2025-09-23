@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { requireCurrentUserId } from '../lib/auth-helpers';
 import { Tag, DbTag } from '../types';
 import { dbTagToTag, tagToDbInsert } from '../lib/type-mappers';
 
@@ -54,9 +55,10 @@ export function useTags() {
   // Add tag mutation
   const addTagMutation = useMutation({
     mutationFn: async (newTag: Omit<Tag, 'id' | 'created_at' | 'updated_at'>) => {
+      const userId = await requireCurrentUserId();
       const { data, error } = await supabase
         .from('tags')
-        .insert([tagToDbInsert(newTag)])
+        .insert([{ ...tagToDbInsert(newTag), user_id: userId }])
         .select()
         .single();
 

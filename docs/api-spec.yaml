@@ -457,6 +457,7 @@ paths:
                     - 1 tbsp soy sauce
                   notes: Weeknight dinner, lots of veggies
                   rating: 4.5
+                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
                   macros:
                     calories: 520
                     protein: 55
@@ -843,6 +844,7 @@ components:
         - items
         - eaten_on
         - macros
+        - user_id
       properties:
         meal_name:
           type: string
@@ -877,6 +879,10 @@ components:
             fat:
               type: integer
           additionalProperties: false
+        user_id:
+          type: string
+          format: uuid
+          description: User ID - defaults to 43af6e15-1b3d-4634-be91-d59cf414a33e (main user) if not provided
 
     MealLogUpdate:
       type: object

@@ -62,20 +62,20 @@ The app uses a sophisticated PostgreSQL schema with the following key tables:
 - `recipes`: Recipe definitions with cost calculations and statistics
 - `recipe_items`: Junction table linking recipes to ingredients with quantities
 - `meal_logs`: Historical meal consumption tracking
-- `weekly_meal_plans`, `meal_plan_blocks`, `recipe_rotations`: Complex meal planning system
+- historical meal planning tables (`weekly_meal_plans`, `meal_plan_blocks`, `recipe_rotations`) remain in the schema but are not surfaced in the current UI
 
 ### Key Features
 1. **Food Inventory Management:** Track food items with nutrition, costs, and stock status
 2. **Recipe Management:** Create recipes with automatic cost calculation and nutrition aggregation
-3. **Meal Planning:** Flexible meal planning with recipe rotations and day-range blocks
-4. **Meal Logging:** Track consumed meals with nutrition and cost analytics
-5. **AI Recipe Generation:** Integration with Hugging Face for recipe generation
+3. **Meal Logging:** Track consumed meals with nutrition and cost analytics
+4. **Analytics:** Visualize trends for nutrition, cost, and food usage
+5. **AI Recipe Generation:** Integration with OpenRouter for recipe inspiration
 
 ### Project Structure
 - `src/components/`: Reusable UI components including dialogs and cards
 - `src/components/ui/`: shadcn/ui component library
-- `src/pages/`: Main application pages (Index, Recipes, Meals, Analytics, Planner, RecipeGenerator)
-- `src/hooks/`: Custom React hooks for data management (useFoodInventory, useMealPlan, etc.)
+- `src/pages/`: Main application pages (Index, Recipes, Meals, Analytics, Settings, Tags, RecipeViewer)
+- `src/hooks/`: Custom React hooks for data management (inventory, recipes, meal logs, tags, analytics)
 - `src/lib/`: Utility functions including Supabase client, calculations, and type mappers
 - `src/types/`: TypeScript type definitions for database entities and app models
 - `supabase/`: Database migrations and schema definitions
@@ -126,7 +126,6 @@ The app uses a sophisticated PostgreSQL schema with the following key tables:
 - The app uses `@` alias for `src/` directory imports
 - Serving units are normalized to volume/weight/package types for consistent calculations
 - Recipe costs are automatically calculated when ingredients change
-- Meal planning supports flexible day ranges and recipe rotations within blocks
 - **Always test responsive behavior across different screen sizes during development**
 - **Use the existing mobile utilities and hooks for consistent mobile behavior**
 

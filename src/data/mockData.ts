@@ -1,5 +1,4 @@
 import { FoodItem, Recipe, MealLog } from '../types';
-import { MealPlanEntry } from '../hooks/useMealPlan';
 
 export const mockFoodItems: FoodItem[] = [
   {
@@ -424,64 +423,4 @@ export const mockMealLogs: MealLog[] = [
     },
     estimated_cost: 16.25,
   },
-];
-
-// Helper function to get dates for meal planning
-const getDateString = (daysFromToday: number) => {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromToday);
-  return date.toISOString().split('T')[0];
-};
-
-export const mockMealPlan: MealPlanEntry[] = [
-  // This week's plan (Monday to Sunday)
-  { id: '1', date: getDateString(-6), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '2', date: getDateString(-6), mealType: 'lunch', recipeId: '2' }, // Grilled Salmon
-  { id: '3', date: getDateString(-6), mealType: 'dinner', recipeId: '5' }, // Chicken Rice Bowl
-  
-  { id: '4', date: getDateString(-5), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '5', date: getDateString(-5), mealType: 'lunch', recipeId: '3' }, // Avocado Toast
-  { id: '6', date: getDateString(-5), mealType: 'dinner', recipeId: '2' }, // Grilled Salmon
-  
-  { id: '7', date: getDateString(-4), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '8', date: getDateString(-4), mealType: 'lunch', recipeId: '5' }, // Chicken Rice Bowl
-  { id: '9', date: getDateString(-4), mealType: 'dinner', recipeId: '3' }, // Avocado Toast
-  
-  { id: '10', date: getDateString(-3), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '11', date: getDateString(-3), mealType: 'lunch', recipeId: '2' }, // Grilled Salmon
-  { id: '12', date: getDateString(-3), mealType: 'dinner', recipeId: '5' }, // Chicken Rice Bowl
-  
-  { id: '13', date: getDateString(-2), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '14', date: getDateString(-2), mealType: 'lunch', recipeId: '3' }, // Avocado Toast
-  { id: '15', date: getDateString(-2), mealType: 'dinner', recipeId: '2' }, // Grilled Salmon
-  
-  { id: '16', date: getDateString(-1), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '17', date: getDateString(-1), mealType: 'lunch', recipeId: '5' }, // Chicken Rice Bowl
-  { id: '18', date: getDateString(-1), mealType: 'dinner', recipeId: '3' }, // Avocado Toast
-  
-  { id: '19', date: getDateString(0), mealType: 'breakfast', recipeId: '1' }, // Today - Banana Smoothie
-  { id: '20', date: getDateString(0), mealType: 'lunch', recipeId: '2' }, // Today - Grilled Salmon
-  { id: '21', date: getDateString(0), mealType: 'dinner', recipeId: '5' }, // Today - Chicken Rice Bowl
-  
-  // Next week's plan
-  { id: '22', date: getDateString(1), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '23', date: getDateString(1), mealType: 'lunch', recipeId: '3' }, // Avocado Toast
-  { id: '24', date: getDateString(1), mealType: 'dinner', recipeId: '2' }, // Grilled Salmon
-  
-  { id: '25', date: getDateString(2), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '26', date: getDateString(2), mealType: 'lunch', recipeId: '5' }, // Chicken Rice Bowl
-  
-  { id: '27', date: getDateString(3), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '28', date: getDateString(3), mealType: 'dinner', recipeId: '3' }, // Avocado Toast
-  
-  { id: '29', date: getDateString(4), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '30', date: getDateString(4), mealType: 'lunch', recipeId: '2' }, // Grilled Salmon
-  { id: '31', date: getDateString(4), mealType: 'dinner', recipeId: '5' }, // Chicken Rice Bowl
-  
-  { id: '32', date: getDateString(5), mealType: 'breakfast', recipeId: '4' }, // Greek Yogurt Parfait
-  { id: '33', date: getDateString(5), mealType: 'lunch', recipeId: '3' }, // Avocado Toast
-  
-  { id: '34', date: getDateString(6), mealType: 'breakfast', recipeId: '1' }, // Banana Smoothie
-  { id: '35', date: getDateString(6), mealType: 'lunch', recipeId: '5' }, // Chicken Rice Bowl
-  { id: '36', date: getDateString(6), mealType: 'dinner', recipeId: '2' }, // Grilled Salmon
 ];

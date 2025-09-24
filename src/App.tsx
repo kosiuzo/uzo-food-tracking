@@ -14,8 +14,6 @@ import { AuthCallback } from "./pages/AuthCallback";
 
 const Recipes = lazy(() => import("./pages/Recipes"));
 const RecipeViewer = lazy(() => import("./pages/RecipeViewer"));
-const Planner = lazy(() => import("./pages/Planner"));
-const MealPrepGenerator = lazy(() => import("./pages/MealPrepGenerator"));
 const Tags = lazy(() => import("./pages/Tags"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -48,11 +46,9 @@ const App = () => (
               <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
               <Route path="/recipes/:id" element={<ProtectedRoute><RecipeViewer /></ProtectedRoute>} />
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-              <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/tags" element={<ProtectedRoute><Tags /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/meal-prep-generator" element={<ProtectedRoute><MealPrepGenerator /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

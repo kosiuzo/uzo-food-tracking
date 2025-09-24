@@ -1,6 +1,6 @@
-# Sample AI System Prompts for Meal Prep Generator
+# Legacy AI System Prompts for Meal Prep Generator
 
-Here are examples of the exact prompts sent to the AI for different scenarios:
+The dedicated meal prep generator has been removed from the app, but these prompts are retained for archival reference. They capture the requests we previously sent to the AI for different scenarios:
 
 ## Example 1: Chicken + Stir-Fry
 **Scenario:** Chicken breast, garlic powder, paprika, onion powder, broccoli, bell peppers, Paleo diet
@@ -132,6 +132,6 @@ Return the recipe in this exact JSON format:
 
 1. Open browser dev tools (F12)
 2. Go to Console tab
-3. Use the meal prep generator
+3. (Legacy) Use the meal prep generator
 4. Look for logs starting with "🤖 AI Prompt" and "🤖 AI Response"
 5. This will show you exactly what's being sent to and received from the AI

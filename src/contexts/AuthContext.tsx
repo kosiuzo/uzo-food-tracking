@@ -6,7 +6,6 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signInWithMagicLink: (email: string) => Promise<{ error: AuthError | null }>
   signInWithPassword: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
 }
@@ -51,16 +50,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithMagicLink = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    return { error }
-  }
-
   const signInWithPassword = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -78,7 +67,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     session,
     loading,
-    signInWithMagicLink,
     signInWithPassword,
     signOut,
   }

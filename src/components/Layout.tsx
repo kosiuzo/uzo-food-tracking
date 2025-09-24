@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { CalendarDays, ChefHat, BookOpen, Menu, Package, Settings, BarChart3 } from 'lucide-react';
+import { ChefHat, BookOpen, Menu, Package, Settings, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DebugPanel } from '@/components/DebugPanel';
@@ -48,12 +48,6 @@ const baseNavigationSections: NavSection[] = [
         label: 'Recipes',
         icon: ChefHat,
         description: 'Build new dishes and reuse favorites.',
-      },
-      {
-        path: '/planner',
-        label: 'Planner',
-        icon: CalendarDays,
-        description: 'Organize your upcoming meals and prep.',
       },
     ],
   },

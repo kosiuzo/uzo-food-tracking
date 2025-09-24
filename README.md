@@ -1,14 +1,15 @@
 # Uzo Food Tracking
 
-A mobile-first PWA for tracking food inventory, recipes, weekly planning, and meal logging. Data is stored in Supabase, with optional AI-assisted recipe and meal-prep generation via OpenRouter.
+A mobile-first PWA for tracking food inventory, recipes, and daily meal logging. Data is stored in Supabase, with optional AI-assisted recipe generation via OpenRouter.
 
 ## Features
 - Manage pantry inventory with nutrition facts, prices, stock, and ratings
 - Full-text search, rich filters, and tag management
 - Create recipes with automatic cost and macro calculations
-- Plan weekly meals (blocks, rotations) and log meals
-- Log by recipe and/or individual items (with costs and macros)
-- AI-assisted recipe and meal prep ideas via OpenRouter
+- Log meals by recipe and/or individual items (with costs and macros)
+- Review nutrition insights and trends through analytics
+- Configure personal goals and preferences in settings
+- AI-assisted recipe ideas via OpenRouter
 - Installable PWA with offline caching for assets
 
 ## Tech Stack
@@ -54,7 +55,7 @@ A mobile-first PWA for tracking food inventory, recipes, weekly planning, and me
 ## Project Structure
 ```
 ├─ src/
-│  ├─ pages/         # Inventory, Recipes, Meals, Planner, Tags, Analytics, MealPrepGenerator
+│  ├─ pages/         # Inventory, Recipes, Meals, Tags, Analytics, Settings
 │  ├─ components/    # UI and domain components
 │  ├─ hooks/         # Data hooks (inventory, recipes, meal logs, tags)
 │  ├─ lib/           # supabase client, utils, constants, search
@@ -84,9 +85,8 @@ PWA service worker registers in production builds (via `vite-plugin-pwa`).
 - Enable AI features by setting `VITE_OPEN_ROUTER_API_KEY` in `.env` (or `.env.local`).
 - The app uses OpenRouter with the `microsoft/mai-ds-r1:free` route by default.
 - See example prompts and parsing behavior in `sample_prompt_example.md`.
-- Relevant entry points:
+- Relevant entry point:
   - `src/components/RecipeGeneratorDialog.tsx` (single recipe generator)
-  - `src/pages/MealPrepGenerator.tsx` (three‑recipe meal prep generator)
 
 If you don’t set the API key, AI actions will show a friendly error and no requests are made.
 
@@ -100,12 +100,6 @@ Recipes
 
 Meal Log
 ![Meal Log](public/screenshots/meals.png)
-
-Planner
-![Planner](public/screenshots/planner.png)
-
-Meal Prep Generator
-![Meal Prep Generator](public/screenshots/meal-prep-generator.png)
 
 PWA Icons: `public/pwa-192x192.png`, `public/pwa-512x512.png`
 

@@ -21,12 +21,6 @@ test.describe('Basic Navigation Tests', () => {
     await expect(page.getByRole('heading', { name: 'Food Inventory' })).toBeVisible();
   });
 
-  test('should navigate to planner page', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: 'Planner' }).click();
-    await expect(page).toHaveURL(/.*planner/);
-  });
-
   test('should navigate to settings page', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Settings' }).click();

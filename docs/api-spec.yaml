@@ -83,6 +83,7 @@ paths:
                 value:
                   name: Simple Scrambled Eggs
                   instructions: Beat eggs, cook in butter, season.
+                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
               fullRecipe:
                 summary: Full recipe with nutrition and ingredients
                 description: Includes optional fields commonly used by the app
@@ -111,6 +112,7 @@ paths:
                   nutrition_source: ai_generated
                   is_favorite: false
                   source_link: https://example.com/stirfry
+                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
               ingredientListArray:
                 summary: Single ingredient must be an array
                 description: Even one ingredient must be wrapped in an array of strings
@@ -119,6 +121,7 @@ paths:
                   instructions: Boil water; add salt.
                   ingredient_list:
                     - salt
+                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
       responses:
         '201':
           description: Recipe created
@@ -657,6 +660,7 @@ components:
       type: object
       required:
         - name
+        - user_id
       properties:
         name:
           type: string
@@ -713,6 +717,10 @@ components:
             - string
             - 'null'
           format: date-time
+        user_id:
+          type: string
+          format: uuid
+          description: User ID that owns the recipe. Typically 43af6e15-1b3d-4634-be91-d59cf414a33e for the primary user.
 
     RecipeUpdate:
       type: object
@@ -1048,6 +1056,7 @@ components:
       type: object
       required:
         - name
+        - user_id
       properties:
         name:
           type: string
@@ -1099,6 +1108,10 @@ components:
           type:
             - string
             - 'null'
+        user_id:
+          type: string
+          format: uuid
+          description: User ID that owns the item. Typically 43af6e15-1b3d-4634-be91-d59cf414a33e for the primary user.
         serving_unit_type:
           type:
             - string

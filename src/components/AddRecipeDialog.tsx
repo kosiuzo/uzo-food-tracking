@@ -22,7 +22,6 @@ interface RecipeFormData {
   total_time_minutes: string;
   ingredients: Array<Omit<RecipeIngredient, 'quantity'> & { quantity: string }>;
   ingredient_list: string[]; // AI-generated ingredient strings
-  nutrition_source: 'calculated' | 'ai_generated' | 'manual';
   nutrition?: {
     calories_per_serving: number;
     protein_per_serving: number;
@@ -52,7 +51,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     total_time_minutes: '',
     ingredients: [],
     ingredient_list: [],
-    nutrition_source: 'calculated',
     notes: '',
     selectedTagIds: [],
   });
@@ -70,7 +68,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: editingRecipe.total_time_minutes?.toString() || '',
         ingredients: editingRecipe.ingredients,
         ingredient_list: editingRecipe.ingredient_list || [],
-        nutrition_source: editingRecipe.nutrition_source || 'calculated',
         nutrition: editingRecipe.nutrition,
         notes: editingRecipe.notes || '',
         selectedTagIds: editingRecipe.tags?.map(tag => tag.id.toString()) || [],
@@ -86,7 +83,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: '',
         ingredients: [],
         ingredient_list: [],
-        nutrition_source: 'calculated',
         notes: '',
         selectedTagIds: [],
       });
@@ -95,10 +91,25 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     }
   }, [editingRecipe, open]);
 
-  // Calculate nutrition based on nutrition source priority
+  // Auto-determine nutrition source and calculate nutrition
+  const getAutoNutritionSource = (): 'calculated' | 'ai_generated' | 'manual' => {
+    // If recipe has ingredient_list, it's AI-generated
+    if (formData.ingredient_list && formData.ingredient_list.length > 0) {
+      return 'ai_generated';
+    }
+    // If recipe has linked ingredients, it's calculated
+    if (formData.ingredients && formData.ingredients.length > 0) {
+      return 'calculated';
+    }
+    // Otherwise, it's manual (no ingredients defined)
+    return 'manual';
+  };
+
   const calculateNutrition = () => {
+    const autoSource = getAutoNutritionSource();
+
     // If recipe has ingredient_list (AI-imported), use stored nutrition with scaling
-    if (formData.nutrition_source === 'ai_generated' && formData.nutrition) {
+    if (autoSource === 'ai_generated' && formData.nutrition) {
       const currentServings = parseInt(formData.servings) || 1;
       const scaleFactor = originalServings / currentServings; // Scale per serving values
 
@@ -109,21 +120,21 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         fat_per_serving: formData.nutrition.fat_per_serving * scaleFactor,
       };
     }
-    
+
     // If recipe has manual nutrition, use stored nutrition
-    if (formData.nutrition_source === 'manual' && formData.nutrition) {
+    if (autoSource === 'manual' && formData.nutrition) {
       return formData.nutrition;
     }
-    
-    // If recipe has linked ingredients (manual), calculate from ingredients  
-    if (formData.nutrition_source === 'calculated' && formData.ingredients.length > 0) {
+
+    // If recipe has linked ingredients (manual), calculate from ingredients
+    if (autoSource === 'calculated' && formData.ingredients.length > 0) {
       const ingredientsWithNumbers = formData.ingredients.map(ing => ({
         ...ing,
         quantity: parseFloat(ing.quantity) || 0
       }));
       return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
     }
-    
+
     // Fallback to stored nutrition or defaults
     return formData.nutrition || {
       calories_per_serving: 0,
@@ -221,7 +232,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         quantity: parseFloat(ing.quantity) || 0
       })),
       ingredient_list: formData.ingredient_list,
-      nutrition_source: formData.nutrition_source,
+      nutrition_source: getAutoNutritionSource(),
       nutrition: calculateNutrition(),
       // Pass selected tag IDs for the parent to handle
       selectedTagIds: formData.selectedTagIds,
@@ -237,7 +248,6 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       total_time_minutes: '',
       ingredients: [],
       ingredient_list: [],
-      nutrition_source: 'calculated',
       notes: '',
       selectedTagIds: [],
     });
@@ -274,7 +284,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="servings">Servings</Label>
-              {formData.nutrition_source === 'ai_generated' ? (
+              {getAutoNutritionSource() === 'ai_generated' ? (
                 <div className="flex items-center gap-2 h-10">
                   <Button
                     type="button"
@@ -452,28 +462,9 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
             )}
           </div>
 
-          {/* Nutrition Source Selection */}
-          <div className="space-y-3">
-            <Label>Nutrition Source</Label>
-            <Select
-              value={formData.nutrition_source}
-              onValueChange={(value: 'calculated' | 'ai_generated' | 'manual') => 
-                setFormData(prev => ({ ...prev, nutrition_source: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select nutrition source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="calculated">Calculated from linked ingredients</SelectItem>
-                <SelectItem value="ai_generated">AI-generated (with ingredient list)</SelectItem>
-                <SelectItem value="manual">Manual entry</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* AI Ingredient List */}
-          {formData.nutrition_source === 'ai_generated' && (
+          {getAutoNutritionSource() === 'ai_generated' && (
             <div className="space-y-3">
               <Label>AI Ingredient List</Label>
               <div className="space-y-2">
@@ -520,7 +511,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           )}
 
           {/* Manual Nutrition Entry */}
-          {formData.nutrition_source === 'manual' && (
+          {getAutoNutritionSource() === 'manual' && (
             <div className="space-y-3">
               <Label>Manual Nutrition (per serving)</Label>
               <div className="grid grid-cols-2 gap-4">

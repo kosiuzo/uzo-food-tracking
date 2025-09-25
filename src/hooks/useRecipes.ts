@@ -5,7 +5,6 @@ import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
 import type { Database } from '../types/database';
 
 type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'] & {
-  recipe_items: { quantity: number | null; unit: string | null; item_id: number }[];
   recipe_tags: { tag_id: number; tags: DbTag }[];
 };
 import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/type-mappers';
@@ -35,11 +34,6 @@ export function useRecipes() {
         .from('recipes')
         .select(`
           *,
-          recipe_items (
-            quantity,
-            unit,
-            item_id
-          ),
           recipe_tags (
             tag_id,
             tags (*)
@@ -59,16 +53,12 @@ export function useRecipes() {
       if (recipesData && recipesData.length > 0) {
         console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
         const mappedRecipes = recipesData.map((dbRecipe: DbRecipeWithRelations) => {
-          const ingredients: RecipeIngredient[] = dbRecipe.recipe_items?.map((ri) => ({
-            item_id: ri.item_id, // Now using number directly
-            quantity: Number(ri.quantity) || 0,
-            unit: ri.unit || '',
-          })) || [];
-          
-          const tags: Tag[] = dbRecipe.recipe_tags?.map((rt) => 
+          const ingredients: RecipeIngredient[] = []; // No more recipe_items table
+
+          const tags: Tag[] = dbRecipe.recipe_tags?.map((rt) =>
             dbTagToTag(rt.tags)
           ) || [];
-          
+
           return dbRecipeToRecipe(dbRecipe, ingredients, tags);
         });
         setRecipes(mappedRecipes);

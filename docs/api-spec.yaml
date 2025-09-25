@@ -9,12 +9,9 @@ info:
 servers:
   - url: https://amehiertzqtbtcjhugql.supabase.co/rest/v1
     description: Supabase REST API (production)
-
 x-user-id: 43af6e15-1b3d-4634-be91-d59cf414a33e
-
 security:
   - apiKeyAuth: []
-
 paths:
   /recipes:
     get:
@@ -41,27 +38,27 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: List of recipes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Recipe'
-        '400':
+                  $ref: "#/components/schemas/Recipe"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     post:
       operationId: saveRecipe
       summary: Create a new recipe in the database
-      description: Inserts a new recipe row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
+      description: Inserts a new recipe row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app
+        - main user).
       parameters:
         - name: Prefer
           in: header
@@ -75,7 +72,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeInsert'
+              $ref: "#/components/schemas/RecipeInsert"
             examples:
               minimalRecipe:
                 summary: Minimal recipe
@@ -83,7 +80,7 @@ paths:
                 value:
                   name: Simple Scrambled Eggs
                   instructions: Beat eggs, cook in butter, season.
-                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
               fullRecipe:
                 summary: Full recipe with nutrition and ingredients
                 description: Includes optional fields commonly used by the app
@@ -112,7 +109,7 @@ paths:
                   nutrition_source: ai_generated
                   is_favorite: false
                   source_link: https://example.com/stirfry
-                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
               ingredientListArray:
                 summary: Single ingredient must be an array
                 description: Even one ingredient must be wrapped in an array of strings
@@ -121,25 +118,24 @@ paths:
                   instructions: Boil water; add salt.
                   ingredient_list:
                     - salt
-                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
       responses:
-        '201':
+        "201":
           description: Recipe created
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Recipe'
-        '400':
+                  $ref: "#/components/schemas/Recipe"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     patch:
       operationId: updateRecipe
       summary: Update a recipe by ID
@@ -163,25 +159,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeUpdate'
+              $ref: "#/components/schemas/RecipeUpdate"
       responses:
-        '200':
+        "200":
           description: Updated recipe rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Recipe'
-        '400':
+                  $ref: "#/components/schemas/Recipe"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     delete:
       operationId: deleteRecipe
       summary: Delete a recipe by ID
@@ -201,23 +196,22 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Deleted recipe rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Recipe'
-        '400':
+                  $ref: "#/components/schemas/Recipe"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
   /items:
     get:
       operationId: getItems
@@ -243,27 +237,27 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: List of items
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Item'
-        '400':
+                  $ref: "#/components/schemas/Item"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     post:
       operationId: createItem
       summary: Create a new item
-      description: Inserts a new item row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
+      description: Inserts a new item row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app -
+        main user).
       parameters:
         - name: Prefer
           in: header
@@ -277,25 +271,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ItemInsert'
+              $ref: "#/components/schemas/ItemInsert"
       responses:
-        '201':
+        "201":
           description: Item created
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Item'
-        '400':
+                  $ref: "#/components/schemas/Item"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     patch:
       operationId: updateItem
       summary: Update an item by ID
@@ -319,25 +312,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ItemUpdate'
+              $ref: "#/components/schemas/ItemUpdate"
       responses:
-        '200':
+        "200":
           description: Updated item rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Item'
-        '400':
+                  $ref: "#/components/schemas/Item"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     delete:
       operationId: deleteItem
       summary: Delete an item by ID
@@ -357,23 +349,22 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Deleted item rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Item'
-        '400':
+                  $ref: "#/components/schemas/Item"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
   /meal_logs:
     get:
       operationId: getMealLogs
@@ -399,27 +390,27 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: List of meal logs
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MealLog'
-        '400':
+                  $ref: "#/components/schemas/MealLog"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     post:
       operationId: saveMealLog
       summary: Create a new meal log in the database
-      description: Inserts a new meal log row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage app - main user).
+      description: Inserts a new meal log row. Uses user_id 43af6e15-1b3d-4634-be91-d59cf414a33e for writes (personal usage
+        app - main user).
       parameters:
         - name: Prefer
           in: header
@@ -433,22 +424,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MealLogInsert'
+              $ref: "#/components/schemas/MealLogInsert"
             examples:
               minimalMealLog:
                 summary: Minimal meal log
                 description: Smallest recommended payload to create a meal log entry
               value:
-                  meal_name: Greek Yogurt Bowl
-                  items:
-                    - 1 cup plain Greek yogurt
-                    - 1/2 cup blueberries
-                  macros:
-                    calories: 210
-                    protein: 20
-                    carbs: 18
-                    fat: 7
-                  eaten_on: 2025-01-15
+                meal_name: Greek Yogurt Bowl
+                items:
+                  - 1 cup plain Greek yogurt
+                  - 1/2 cup blueberries
+                macros:
+                  calories: 210
+                  protein: 20
+                  carbs: 18
+                  fat: 7
+                eaten_on: 2025-01-15
               fullMealLog:
                 summary: Full meal log with macros and notes
                 description: Includes optional fields commonly captured by the app
@@ -460,7 +451,7 @@ paths:
                     - 1 tbsp soy sauce
                   notes: Weeknight dinner, lots of veggies
                   rating: 4.5
-                  user_id: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
                   macros:
                     calories: 520
                     protein: 55
@@ -468,23 +459,22 @@ paths:
                     fat: 18
                   eaten_on: 2025-01-14
       responses:
-        '201':
+        "201":
           description: Meal log created
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MealLog'
-        '400':
+                  $ref: "#/components/schemas/MealLog"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     patch:
       operationId: updateMealLog
       summary: Update a meal log by ID
@@ -508,25 +498,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MealLogUpdate'
+              $ref: "#/components/schemas/MealLogUpdate"
       responses:
-        '200':
+        "200":
           description: Updated meal log rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MealLog'
-        '400':
+                  $ref: "#/components/schemas/MealLog"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
     delete:
       operationId: deleteMealLog
       summary: Delete a meal log by ID
@@ -546,30 +535,28 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Deleted meal log rows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MealLog'
-        '400':
+                  $ref: "#/components/schemas/MealLog"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - apiKeyAuth: []
-
 components:
   securitySchemes:
     apiKeyAuth:
       type: apiKey
       in: header
       name: apikey
-
   schemas:
     ErrorResponse:
       type: object
@@ -596,24 +583,24 @@ components:
         total_time:
           type:
             - integer
-            - 'null'
+            - "null"
         servings:
           type:
             - integer
-            - 'null'
+            - "null"
         instructions:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_per_serving:
           type:
             - object
-            - 'null'
+            - "null"
           additionalProperties: true
         ingredient_list:
           type:
             - array
-            - 'null'
+            - "null"
           description: Array of ingredient names. Must be an array of strings; for a single ingredient use a one-element array.
           items:
             type: string
@@ -623,39 +610,38 @@ components:
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         is_favorite:
           type:
             - boolean
-            - 'null'
+            - "null"
         source_link:
           type:
             - string
-            - 'null'
+            - "null"
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         times_cooked:
           type:
             - integer
-            - 'null'
+            - "null"
         last_cooked:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         created_at:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         updated_at:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
-
     RecipeInsert:
       type: object
       required:
@@ -667,19 +653,19 @@ components:
         instructions:
           type:
             - string
-            - 'null'
+            - "null"
         servings:
           type:
             - integer
-            - 'null'
+            - "null"
         total_time:
           type:
             - integer
-            - 'null'
+            - "null"
         ingredient_list:
           type:
             - array
-            - 'null'
+            - "null"
           description: Array of ingredient names (strings). Do not send a single string or objects.
           items:
             type: string
@@ -690,38 +676,37 @@ components:
         nutrition_per_serving:
           type:
             - object
-            - 'null'
+            - "null"
           additionalProperties: true
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         is_favorite:
           type:
             - boolean
-            - 'null'
+            - "null"
         source_link:
           type:
             - string
-            - 'null'
+            - "null"
         times_cooked:
           type:
             - integer
-            - 'null'
+            - "null"
         last_cooked:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         user_id:
           type: string
           format: uuid
           description: User ID that owns the recipe. Typically 43af6e15-1b3d-4634-be91-d59cf414a33e for the primary user.
-
     RecipeUpdate:
       type: object
       properties:
@@ -730,19 +715,19 @@ components:
         instructions:
           type:
             - string
-            - 'null'
+            - "null"
         servings:
           type:
             - integer
-            - 'null'
+            - "null"
         total_time:
           type:
             - integer
-            - 'null'
+            - "null"
         ingredient_list:
           type:
             - array
-            - 'null'
+            - "null"
           description: Array of ingredient names (strings). Use a one-element array for a single ingredient.
           items:
             type: string
@@ -752,39 +737,38 @@ components:
         nutrition_per_serving:
           type:
             - object
-            - 'null'
+            - "null"
           additionalProperties: true
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         is_favorite:
           type:
             - boolean
-            - 'null'
+            - "null"
         source_link:
           type:
             - string
-            - 'null'
+            - "null"
         times_cooked:
           type:
             - integer
-            - 'null'
+            - "null"
         last_cooked:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         updated_at:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
-
     MealLog:
       type: object
       required:
@@ -802,11 +786,11 @@ components:
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
           format: float
           minimum: 0
           maximum: 5
@@ -830,7 +814,7 @@ components:
         created_at:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         items:
           type: array
@@ -844,7 +828,6 @@ components:
         eaten_on:
           type: string
           format: date
-
     MealLogInsert:
       type: object
       required:
@@ -867,11 +850,11 @@ components:
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
           format: float
           minimum: 0
           maximum: 5
@@ -891,7 +874,6 @@ components:
           type: string
           format: uuid
           description: User ID - defaults to 43af6e15-1b3d-4634-be91-d59cf414a33e (main user) if not provided
-
     MealLogUpdate:
       type: object
       properties:
@@ -908,11 +890,11 @@ components:
         notes:
           type:
             - string
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
           format: float
           minimum: 0
           maximum: 5
@@ -928,7 +910,6 @@ components:
             fat:
               type: integer
           additionalProperties: false
-
     Item:
       type: object
       properties:
@@ -939,98 +920,101 @@ components:
         brand:
           type:
             - string
-            - 'null'
+            - "null"
         category:
           type:
             - string
-            - 'null'
+            - "null"
         in_stock:
           type:
             - boolean
-            - 'null'
+            - "null"
         price:
           type:
             - number
-            - 'null'
+            - "null"
         carbs_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         fat_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         protein_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         calories_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         servings_per_container:
           type:
             - number
-            - 'null'
+            - "null"
         serving_size_grams:
           type:
             - number
-            - 'null'
+            - "null"
         serving_quantity:
           type:
             - number
-            - 'null'
+            - "null"
         serving_unit:
           type:
             - string
-            - 'null'
+            - "null"
         serving_unit_type:
           type:
             - string
-            - 'null'
-          enum: [volume, weight, package]
+            - "null"
+          enum:
+            - volume
+            - weight
+            - package
         image_url:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         barcode:
           type:
             - string
-            - 'null'
+            - "null"
         last_purchased:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         purchase_count:
           type:
             - number
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
         last_edited:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         normalized_name:
           type:
             - string
-            - 'null'
+            - "null"
         ingredients:
           type:
             - string
-            - 'null'
+            - "null"
         notes:
           type:
             - array
-            - 'null'
+            - "null"
           description: Array of note objects with timestamp
           items:
             type: object
@@ -1041,17 +1025,16 @@ components:
                 type: string
                 format: date-time
           example:
-            - text: "Tastes great with coffee"
-              date: "2025-01-15T10:30:00Z"
-            - text: "Price increased"
-              date: "2025-01-20T14:45:00Z"
+            - text: Tastes great with coffee
+              date: 2025-01-15T10:30:00Z
+            - text: Price increased
+              date: 2025-01-20T14:45:00Z
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-
     ItemInsert:
       type: object
       required:
@@ -1063,51 +1046,51 @@ components:
         brand:
           type:
             - string
-            - 'null'
+            - "null"
         category:
           type:
             - string
-            - 'null'
+            - "null"
         in_stock:
           type:
             - boolean
-            - 'null'
+            - "null"
         price:
           type:
             - number
-            - 'null'
+            - "null"
         carbs_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         fat_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         protein_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         calories_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         servings_per_container:
           type:
             - number
-            - 'null'
+            - "null"
         serving_size_grams:
           type:
             - number
-            - 'null'
+            - "null"
         serving_quantity:
           type:
             - number
-            - 'null'
+            - "null"
         serving_unit:
           type:
             - string
-            - 'null'
+            - "null"
         user_id:
           type: string
           format: uuid
@@ -1115,46 +1098,49 @@ components:
         serving_unit_type:
           type:
             - string
-            - 'null'
-          enum: [volume, weight, package]
+            - "null"
+          enum:
+            - volume
+            - weight
+            - package
         image_url:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         barcode:
           type:
             - string
-            - 'null'
+            - "null"
         last_purchased:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         purchase_count:
           type:
             - number
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
         last_edited:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         ingredients:
           type:
             - string
-            - 'null'
+            - "null"
         notes:
           type:
             - array
-            - 'null'
+            - "null"
           description: Array of note objects with timestamp
           items:
             type: object
@@ -1164,7 +1150,6 @@ components:
               date:
                 type: string
                 format: date-time
-
     ItemUpdate:
       type: object
       properties:
@@ -1173,96 +1158,101 @@ components:
         brand:
           type:
             - string
-            - 'null'
+            - "null"
         category:
           type:
             - string
-            - 'null'
+            - "null"
         in_stock:
           type:
             - boolean
-            - 'null'
+            - "null"
         price:
           type:
             - number
-            - 'null'
+            - "null"
         carbs_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         fat_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         protein_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         calories_per_serving:
           type:
             - number
-            - 'null'
+            - "null"
         servings_per_container:
           type:
             - number
-            - 'null'
+            - "null"
         serving_size_grams:
           type:
             - number
-            - 'null'
+            - "null"
         serving_quantity:
           type:
             - number
-            - 'null'
+            - "null"
         serving_unit:
           type:
             - string
-            - 'null'
+            - "null"
         serving_unit_type:
           type:
             - string
-            - 'null'
-          enum: [volume, weight, package]
+            - "null"
+          enum:
+            - volume
+            - weight
+            - package
         image_url:
           type:
             - string
-            - 'null'
+            - "null"
         nutrition_source:
           type:
             - string
-            - 'null'
+            - "null"
         barcode:
           type:
             - string
-            - 'null'
+            - "null"
         last_purchased:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         purchase_count:
           type:
             - number
-            - 'null'
+            - "null"
         rating:
           type:
             - number
-            - 'null'
+            - "null"
         last_edited:
           type:
             - string
-            - 'null'
+            - "null"
           format: date-time
         ingredients:
           type:
             - string
-            - 'null'
+            - "null"
         notes:
           type:
             - array
-            - 'null'
-          description: |
-            Array of note objects with timestamp. To append a new note, send the entire existing array plus the new note.
+            - "null"
+          description: >
+            Array of note objects with timestamp. To append a new note, send the entire existing array plus the new
+            note.
+
             Structure: [{"text": "note content", "date": "ISO timestamp"}]
           items:
             type: object
@@ -1273,7 +1263,7 @@ components:
                 type: string
                 format: date-time
           example:
-            - text: "Tastes great with coffee"
-              date: "2025-01-15T10:30:00Z"
-            - text: "Price increased"
-              date: "2025-01-20T14:45:00Z"
+            - text: Tastes great with coffee
+              date: 2025-01-15T10:30:00Z
+            - text: Price increased
+              date: 2025-01-20T14:45:00Z

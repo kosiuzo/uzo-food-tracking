@@ -13,44 +13,69 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { LogMealDialog } from '../components/LogMealDialog';
 import { MealRelogDialog } from '../components/MealRelogDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { useMealLogs } from '../hooks/useMealLogs';
+import { useMealLogsByDate } from '../hooks/useMealLogsByDate';
+import { useDateNavigation } from '../hooks/useDateNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { logger } from '@/lib/logger';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getTodayLocalDate, getYesterdayLocalDate, getCurrentWeekRange, getLastWeekRange, formatDateStringForDisplay } from '@/lib/utils';
+import { getTodayLocalDate, getYesterdayLocalDate } from '@/lib/utils';
 import { getSettings } from '@/lib/settings-utils';
 
 export default function Meals() {
-  const { mealLogs, addMealLog, addMealLogFromItems, addBatchMealLogsFromItems, updateMealLog, deleteMealLog, reLogMeal, usingMockData, error, loading } = useMealLogs();
   const { toast } = useToast();
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [isRelogDialogOpen, setIsRelogDialogOpen] = useState(false);
   const [editingMealLog, setEditingMealLog] = useState<MealLog | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; mealLog: MealLog | null }>({ open: false, mealLog: null });
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayLocalDate());
-  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [isDateSheetOpen, setIsDateSheetOpen] = useState(false);
+
+  // Date navigation hook
+  const {
+    currentDate,
+    viewMode,
+    dateRange,
+    displayText,
+    canGoNext,
+    goToToday,
+    goToPrevious,
+    goToNext,
+    goToDate,
+    setViewMode,
+    goToLastWeek,
+    goToLastMonth
+  } = useDateNavigation({ initialDate: getTodayLocalDate(), defaultRange: 'day' });
+
+  // Meal logs hook with date-based loading
+  const {
+    mealLogs,
+    loading,
+    error,
+    usingMockData,
+    addMealLog,
+    addMealLogFromItems,
+    addBatchMealLogsFromItems,
+    updateMealLog,
+    deleteMealLog,
+    reLogMeal,
+    getMealLogsForDate,
+    refetch
+  } = useMealLogsByDate({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    autoLoad: true
+  });
   const isMobile = useIsMobile();
 
   // Debug logging (no-op in production)
-  logger.debug('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData });
+  logger.debug('Meals component render:', { loading, mealLogs: mealLogs?.length, error, usingMockData, dateRange });
 
   // Ensure mealLogs is always an array
   const safeMealLogs = Array.isArray(mealLogs) ? mealLogs : [];
 
-  // Filter meals by selected date, date range, or show all if no filter
-  const filteredMeals = selectedDate
-    ? safeMealLogs.filter(log => {
-        return log.eaten_on === selectedDate;
-      })
-    : dateRange
-    ? safeMealLogs.filter(log => {
-        return log.eaten_on >= dateRange.start && log.eaten_on <= dateRange.end;
-      })
-    : safeMealLogs;
-
-  const recentLogs = filteredMeals.slice(0, 20); // Show last 20 meals from filtered results
+  // Meals are already filtered by date range from the hook
+  const filteredMeals = safeMealLogs;
+  const recentLogs = filteredMeals.slice(0, 50); // Show more since we're loading efficiently
 
   const formatDate = (eatenOn: string) => {
     if (!eatenOn) return 'Unknown Date';
@@ -66,6 +91,42 @@ export default function Meals() {
       const date = new Date(eatenOn + 'T00:00:00'); // Add time to avoid timezone issues
       return date.toLocaleDateString();
     }
+  };
+
+  // Navigation handlers
+  const handleQuickDateSelect = (option: string) => {
+    switch (option) {
+      case 'Today':
+        goToToday();
+        setViewMode('day');
+        break;
+      case 'Yesterday': {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        goToDate(yesterday.toISOString().split('T')[0]);
+        setViewMode('day');
+        break;
+      }
+      case 'This Week':
+        goToToday();
+        setViewMode('week');
+        break;
+      case 'Last Week':
+        goToLastWeek();
+        break;
+    }
+    setIsDateSheetOpen(false);
+  };
+
+  const handleDatePickerChange = (date: string) => {
+    goToDate(date);
+    setViewMode('day');
+  };
+
+  const clearDateFilter = () => {
+    goToToday();
+    setViewMode('day');
+    setIsDateSheetOpen(false);
   };
 
   const handleDeleteMealLog = async () => {
@@ -131,15 +192,7 @@ export default function Meals() {
   const fatPercent = Math.min((totalFat / fatTarget) * 100, 100);
 
   const getDateLabel = () => {
-    if (selectedDate === getTodayLocalDate()) return 'Today ▾';
-    if (selectedDate === getYesterdayLocalDate()) return 'Yesterday ▾';
-    if (dateRange) {
-      if (JSON.stringify(dateRange) === JSON.stringify(getCurrentWeekRange())) return 'This Week ▾';
-      if (JSON.stringify(dateRange) === JSON.stringify(getLastWeekRange())) return 'Last Week ▾';
-      return `${formatDateStringForDisplay(dateRange.start)} - ${formatDateStringForDisplay(dateRange.end)} ▾`;
-    }
-    if (selectedDate) return `${formatDateStringForDisplay(selectedDate)} ▾`;
-    return 'All Time ▾';
+    return `${displayText} ▾`;
   };
 
   return (
@@ -161,9 +214,60 @@ export default function Meals() {
 
               <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[80vh]" : ""}>
                 <SheetHeader>
-                  <SheetTitle>Filter by Date</SheetTitle>
+                  <SheetTitle>Navigate by Date</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-6 mt-6">
+                  {/* Navigation Controls */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Navigate</h4>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToPrevious}
+                        className="flex-1"
+                      >
+                        ← Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToToday}
+                        className="flex-1"
+                      >
+                        Today
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToNext}
+                        disabled={!canGoNext}
+                        className="flex-1"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* View Mode */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">View mode</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['day', 'week', 'month'] as const).map(mode => (
+                        <Button
+                          key={mode}
+                          variant={viewMode === mode ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setViewMode(mode)}
+                          className="capitalize"
+                        >
+                          {mode}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Select */}
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Quick select</h4>
                     <div className="grid grid-cols-2 gap-2">
@@ -171,22 +275,8 @@ export default function Meals() {
                         <Button
                           key={option}
                           variant="outline"
-                          onClick={() => {
-                            if (option === "Today") {
-                              setSelectedDate(getTodayLocalDate());
-                              setDateRange(null);
-                            } else if (option === "Yesterday") {
-                              setSelectedDate(getYesterdayLocalDate());
-                              setDateRange(null);
-                            } else if (option === "This Week") {
-                              setSelectedDate('');
-                              setDateRange(getCurrentWeekRange());
-                            } else if (option === "Last Week") {
-                              setSelectedDate('');
-                              setDateRange(getLastWeekRange());
-                            }
-                            setIsDateSheetOpen(false);
-                          }}
+                          size="sm"
+                          onClick={() => handleQuickDateSelect(option)}
                         >
                           {option}
                         </Button>
@@ -194,15 +284,13 @@ export default function Meals() {
                     </div>
                   </div>
 
+                  {/* Date Picker */}
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Pick a date</h4>
                     <Input
                       type="date"
-                      value={selectedDate}
-                      onChange={(e) => {
-                        setSelectedDate(e.target.value);
-                        setDateRange(null);
-                      }}
+                      value={currentDate}
+                      onChange={(e) => handleDatePickerChange(e.target.value)}
                     />
                   </div>
 
@@ -215,13 +303,9 @@ export default function Meals() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        setSelectedDate('');
-                        setDateRange(null);
-                        setIsDateSheetOpen(false);
-                      }}
+                      onClick={clearDateFilter}
                     >
-                      Clear
+                      Today
                     </Button>
                   </div>
                 </div>
@@ -596,7 +680,7 @@ export default function Meals() {
         <MealRelogDialog
           open={isRelogDialogOpen}
           onOpenChange={setIsRelogDialogOpen}
-          mealLogs={safeMealLogs}
+          mealLogs={filteredMeals}
           onRelogMeal={handleReLogMeal}
         />
 

@@ -1,236 +1,185 @@
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Target, Calendar, Award, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layout } from '../components/Layout';
-import { useMealLogs } from '../hooks/useMealLogs';
-import { MealLog } from '../types';
+import { supabase } from '../lib/supabase';
+
+interface AnalyticsData {
+  daily_averages: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    days_count: number;
+  };
+  weekly_averages: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    weeks_count: number;
+  };
+  monthly_averages: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    months_count: number;
+  };
+  calorie_extremes: {
+    highest: { date: string; calories: number } | null;
+    lowest: { date: string; calories: number } | null;
+  };
+  summary: {
+    total_meals: number;
+    days_with_data: number;
+  };
+}
+
+interface DailyCache {
+  date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  meals_count: number;
+}
+
+interface WeeklyCache {
+  week_start: string;
+  avg_calories: number;
+  avg_protein: number;
+  avg_carbs: number;
+  avg_fat: number;
+  days_with_data: number;
+}
+
+interface MonthlyCache {
+  month_start: string;
+  avg_calories: number;
+  avg_protein: number;
+  avg_carbs: number;
+  avg_fat: number;
+  days_with_data: number;
+}
 
 export default function Analytics() {
-  const { mealLogs, usingMockData, loading, error } = useMealLogs();
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [recentDays, setRecentDays] = useState<DailyCache[]>([]);
+  const [recentWeeks, setRecentWeeks] = useState<WeeklyCache[]>([]);
+  const [recentMonths, setRecentMonths] = useState<MonthlyCache[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<'all' | 30 | 60 | 90>(30);
 
-  // Helper function to get week start (Monday)
-  const getWeekStart = (date: Date) => {
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
-    const monday = new Date(date.setDate(diff));
-    return monday.toISOString().split('T')[0];
-  };
+  // Helper function to build cache queries with optional date filtering
+  const buildCacheQuery = useCallback((tableName: string, orderField: string) => {
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    let query = supabase.from(tableName).select('*');
 
-  // Helper function to get month start
-  const getMonthStart = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
-  };
-
-  // Group meals by week and month
-  const groupMealsByPeriod = () => {
-    const weeklyGroups: Record<string, MealLog[]> = {};
-    const monthlyGroups: Record<string, MealLog[]> = {};
-
-    mealLogs.forEach(log => {
-      const logDate = new Date(log.eaten_on + 'T00:00:00');
-
-      // Group by week (Monday start)
-      const weekStart = getWeekStart(new Date(logDate));
-      if (!weeklyGroups[weekStart]) {
-        weeklyGroups[weekStart] = [];
-      }
-      weeklyGroups[weekStart].push(log);
-
-      // Group by month
-      const monthStart = getMonthStart(logDate);
-      if (!monthlyGroups[monthStart]) {
-        monthlyGroups[monthStart] = [];
-      }
-      monthlyGroups[monthStart].push(log);
-    });
-
-    return { weeklyGroups, monthlyGroups };
-  };
-
-  const { weeklyGroups, monthlyGroups } = groupMealsByPeriod();
-
-  // Group meals by individual days
-  const groupMealsByDay = () => {
-    const dailyGroups: Record<string, MealLog[]> = {};
-
-    mealLogs.forEach(log => {
-      const date = log.eaten_on;
-      if (!dailyGroups[date]) {
-        dailyGroups[date] = [];
-      }
-      dailyGroups[date].push(log);
-    });
-
-    return dailyGroups;
-  };
-
-  const dailyGroups = groupMealsByDay();
-
-  // Calculate nutrition stats for grouped periods
-  const calculatePeriodAverages = (groups: Record<string, MealLog[]>) => {
-    const periods = Object.entries(groups).map(([periodStart, logs]) => {
-      // Calculate daily totals for this period
-      const dailyTotals: Record<string, { calories: number; protein: number; carbs: number; fat: number }> = {};
-
-      logs.forEach(log => {
-        const date = log.eaten_on;
-        if (!dailyTotals[date]) {
-          dailyTotals[date] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-        }
-        dailyTotals[date].calories += log.macros.calories;
-        dailyTotals[date].protein += log.macros.protein;
-        dailyTotals[date].carbs += log.macros.carbs;
-        dailyTotals[date].fat += log.macros.fat;
-      });
-
-      // Calculate averages for this period
-      const dailyValues = Object.values(dailyTotals);
-      const daysCount = dailyValues.length;
-
-      if (daysCount === 0) {
-        return {
-          periodStart,
-          avgCalories: 0,
-          avgProtein: 0,
-          avgCarbs: 0,
-          avgFat: 0,
-          daysWithData: 0
-        };
-      }
-
-      const totals = dailyValues.reduce(
-        (acc, day) => ({
-          calories: acc.calories + day.calories,
-          protein: acc.protein + day.protein,
-          carbs: acc.carbs + day.carbs,
-          fat: acc.fat + day.fat,
-        }),
-        { calories: 0, protein: 0, carbs: 0, fat: 0 }
-      );
-
-      return {
-        periodStart,
-        avgCalories: totals.calories / daysCount,
-        avgProtein: totals.protein / daysCount,
-        avgCarbs: totals.carbs / daysCount,
-        avgFat: totals.fat / daysCount,
-        daysWithData: daysCount
-      };
-    });
-
-    // Calculate overall averages across all periods
-    if (periods.length === 0) {
-      return {
-        periods: [],
-        overallAvg: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-        periodsCount: 0
-      };
+    if (bypassAuth) {
+      query = query.eq('user_id', 'e57888be-f990-4cd4-85ad-a519be335938');
     }
 
-    const overallTotals = periods.reduce(
-      (acc, period) => ({
-        calories: acc.calories + period.avgCalories,
-        protein: acc.protein + period.avgProtein,
-        carbs: acc.carbs + period.avgCarbs,
-        fat: acc.fat + period.avgFat,
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    );
+    if (selectedPeriod !== 'all') {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - (selectedPeriod - 1));
+      const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
 
-    return {
-      periods: periods.sort((a, b) => b.periodStart.localeCompare(a.periodStart)), // Most recent first
-      overallAvg: {
-        calories: overallTotals.calories / periods.length,
-        protein: overallTotals.protein / periods.length,
-        carbs: overallTotals.carbs / periods.length,
-        fat: overallTotals.fat / periods.length,
-      },
-      periodsCount: periods.length
-    };
-  };
-
-  // Calculate daily totals (simpler since each "period" is one day)
-  const calculateDailyTotals = (groups: Record<string, MealLog[]>) => {
-    const days = Object.entries(groups).map(([date, logs]) => {
-      const totals = logs.reduce(
-        (acc, log) => ({
-          calories: acc.calories + log.macros.calories,
-          protein: acc.protein + log.macros.protein,
-          carbs: acc.carbs + log.macros.carbs,
-          fat: acc.fat + log.macros.fat,
-        }),
-        { calories: 0, protein: 0, carbs: 0, fat: 0 }
-      );
-
-      return {
-        date,
-        calories: totals.calories,
-        protein: totals.protein,
-        carbs: totals.carbs,
-        fat: totals.fat,
-        mealsCount: logs.length
-      };
-    });
-
-    // Calculate overall averages
-    if (days.length === 0) {
-      return {
-        days: [],
-        overallAvg: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-        daysCount: 0
-      };
+      if (tableName === 'daily_analytics_cache') {
+        query = query.gte('date', cutoffDateStr);
+      } else if (tableName === 'weekly_analytics_cache') {
+        query = query.gte('week_start', cutoffDateStr);
+      } else if (tableName === 'monthly_analytics_cache') {
+        query = query.gte('month_start', cutoffDateStr);
+      }
     }
 
-    const overallTotals = days.reduce(
-      (acc, day) => ({
-        calories: acc.calories + day.calories,
-        protein: acc.protein + day.protein,
-        carbs: acc.carbs + day.carbs,
-        fat: acc.fat + day.fat,
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    return query.order(orderField, { ascending: false }).limit(
+      tableName === 'daily_analytics_cache' ? 7 :
+      tableName === 'weekly_analytics_cache' ? 4 : 2
     );
+  }, [selectedPeriod]);
 
-    return {
-      days: days.sort((a, b) => b.date.localeCompare(a.date)), // Most recent first
-      overallAvg: {
-        calories: overallTotals.calories / days.length,
-        protein: overallTotals.protein / days.length,
-        carbs: overallTotals.carbs / days.length,
-        fat: overallTotals.fat / days.length,
-      },
-      daysCount: days.length
-    };
-  };
+  const loadAnalyticsData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const dailyAnalytics = calculateDailyTotals(dailyGroups);
-  const weeklyAnalytics = calculatePeriodAverages(weeklyGroups);
-  const monthlyAnalytics = calculatePeriodAverages(monthlyGroups);
+      console.log('🔄 Loading analytics data from cache system...');
 
-  // Find highest and lowest calorie days
-  const getCalorieExtremes = (logs: MealLog[]) => {
-    if (logs.length === 0) return { highest: null, lowest: null };
+      // Check if we're in bypass mode and need to pass user_id
+      const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+      const rpcParams = bypassAuth
+        ? {
+            p_user_id: 'e57888be-f990-4cd4-85ad-a519be335938',
+            ...(selectedPeriod !== 'all' && { p_days_back: selectedPeriod })
+          }
+        : {
+            ...(selectedPeriod !== 'all' && { p_days_back: selectedPeriod })
+          };
 
-    // Group by date and sum calories per day
-    const dailyCalories = logs.reduce((acc, log) => {
-      const date = log.eaten_on;
-      acc[date] = (acc[date] || 0) + log.macros.calories;
-      return acc;
-    }, {} as Record<string, number>);
+      // Load all data in parallel
+      const [
+        analyticsResult,
+        recentDaysResult,
+        recentWeeksResult,
+        recentMonthsResult
+      ] = await Promise.all([
+        // Get aggregated analytics from RPC
+        supabase.rpc('get_analytics_data', rpcParams),
 
-    const entries = Object.entries(dailyCalories);
-    if (entries.length === 0) return { highest: null, lowest: null };
+        // Get recent days from cache table
+        buildCacheQuery('daily_analytics_cache', 'date'),
 
-    const sorted = entries.sort(([,a], [,b]) => b - a);
+        // Get recent weeks from cache table
+        buildCacheQuery('weekly_analytics_cache', 'week_start'),
 
-    return {
-      highest: { date: sorted[0][0], calories: sorted[0][1] },
-      lowest: { date: sorted[sorted.length - 1][0], calories: sorted[sorted.length - 1][1] }
-    };
-  };
+        // Get recent months from cache table
+        buildCacheQuery('monthly_analytics_cache', 'month_start')
+      ]);
 
-  const calorieExtremes = getCalorieExtremes(mealLogs);
+      // Check for errors
+      if (analyticsResult.error) {
+        throw new Error(`Analytics RPC error: ${analyticsResult.error.message}`);
+      }
+      if (recentDaysResult.error) {
+        throw new Error(`Recent days error: ${recentDaysResult.error.message}`);
+      }
+      if (recentWeeksResult.error) {
+        throw new Error(`Recent weeks error: ${recentWeeksResult.error.message}`);
+      }
+      if (recentMonthsResult.error) {
+        throw new Error(`Recent months error: ${recentMonthsResult.error.message}`);
+      }
+
+      console.log('✅ Analytics data loaded successfully');
+      console.log('📊 Analytics summary:', analyticsResult.data);
+      console.log('📅 Recent days:', recentDaysResult.data?.length);
+      console.log('📅 Recent weeks:', recentWeeksResult.data?.length);
+      console.log('📅 Recent months:', recentMonthsResult.data?.length);
+
+      setAnalytics(analyticsResult.data);
+      setRecentDays(recentDaysResult.data || []);
+      setRecentWeeks(recentWeeksResult.data || []);
+      setRecentMonths(recentMonthsResult.data || []);
+      setUsingMockData(false);
+
+    } catch (error) {
+      console.error('❌ Error loading analytics:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
+      // TODO: Could fallback to mock data here if needed
+      setUsingMockData(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedPeriod, buildCacheQuery]);
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [selectedPeriod, loadAnalyticsData]);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -256,6 +205,12 @@ export default function Analytics() {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
+  // Get period label for display
+  const getPeriodLabel = () => {
+    if (selectedPeriod === 'all') return 'All Time';
+    return `Last ${selectedPeriod} Days`;
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -263,6 +218,29 @@ export default function Analytics() {
         <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">Your food tracking insights</p>
+        </div>
+
+        {/* Period Filter Buttons */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Time Period</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: 30 as const, label: '30 Days' },
+              { value: 60 as const, label: '60 Days' },
+              { value: 90 as const, label: '90 Days' },
+              { value: 'all' as const, label: 'All Time' }
+            ].map((period) => (
+              <Button
+                key={period.value}
+                variant={selectedPeriod === period.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPeriod(period.value)}
+                className="min-w-[80px]"
+              >
+                {period.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -279,12 +257,12 @@ export default function Analytics() {
         {error && !usingMockData && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-800">Error loading analytics data: {error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={loadAnalyticsData}
               className="mt-2"
               variant="outline"
             >
-              Reload Page
+              Retry
             </Button>
           </div>
         )}
@@ -295,7 +273,7 @@ export default function Analytics() {
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-amber-500"></div>
               <p className="text-sm text-amber-800">
-                <strong>Demo Mode:</strong> Showing sample analytics with realistic data. 
+                <strong>Demo Mode:</strong> Showing sample analytics with realistic data.
                 Connect to Supabase to see your real food tracking insights and history.
               </p>
             </div>
@@ -303,44 +281,44 @@ export default function Analytics() {
         )}
 
         {/* Content when not loading */}
-        {!loading && (
+        {!loading && analytics && (
           <>
-            {/* Daily Nutrition Totals */}
+            {/* Daily Nutrition Averages */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Daily Averages ({dailyAnalytics.daysCount} days)
+                Daily Averages ({analytics.daily_averages.days_count} days) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{Math.round(dailyAnalytics.overallAvg.calories)}</div>
+                  <div className="text-2xl font-bold text-blue-600">{analytics.daily_averages.calories}</div>
                   <div className="text-sm text-muted-foreground">Avg Calories/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{Math.round(dailyAnalytics.overallAvg.protein)}g</div>
+                  <div className="text-2xl font-bold text-green-600">{analytics.daily_averages.protein}g</div>
                   <div className="text-sm text-muted-foreground">Avg Protein/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">{Math.round(dailyAnalytics.overallAvg.carbs)}g</div>
+                  <div className="text-2xl font-bold text-orange-600">{analytics.daily_averages.carbs}g</div>
                   <div className="text-sm text-muted-foreground">Avg Carbs/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{Math.round(dailyAnalytics.overallAvg.fat)}g</div>
+                  <div className="text-2xl font-bold text-purple-600">{analytics.daily_averages.fat}g</div>
                   <div className="text-sm text-muted-foreground">Avg Fat/Day</div>
                 </Card>
               </div>
 
               {/* Recent days breakdown */}
-              {dailyAnalytics.days.length > 0 && (
+              {recentDays.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Recent Days</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Recent 7 Days</h3>
                   <div className="space-y-2">
-                    {dailyAnalytics.days.slice(0, 7).map((day) => (
+                    {recentDays.map((day) => (
                       <Card key={day.date} className="p-3">
                         <div className="flex justify-between items-center">
                           <div className="text-sm font-medium">{formatDate(day.date)}</div>
-                          <div className="text-sm text-muted-foreground">{day.mealsCount} meals</div>
+                          <div className="text-sm text-muted-foreground">{day.meals_count} meals</div>
                         </div>
                         <div className="grid grid-cols-4 gap-4 mt-2 text-xs">
                           <div className="text-center">
@@ -371,54 +349,54 @@ export default function Analytics() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Weekly Averages ({weeklyAnalytics.periodsCount} weeks)
+                Weekly Averages ({analytics.weekly_averages.weeks_count} weeks) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{Math.round(weeklyAnalytics.overallAvg.calories)}</div>
+                  <div className="text-2xl font-bold text-blue-600">{analytics.weekly_averages.calories}</div>
                   <div className="text-sm text-muted-foreground">Avg Calories/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{Math.round(weeklyAnalytics.overallAvg.protein)}g</div>
+                  <div className="text-2xl font-bold text-green-600">{analytics.weekly_averages.protein}g</div>
                   <div className="text-sm text-muted-foreground">Avg Protein/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">{Math.round(weeklyAnalytics.overallAvg.carbs)}g</div>
+                  <div className="text-2xl font-bold text-orange-600">{analytics.weekly_averages.carbs}g</div>
                   <div className="text-sm text-muted-foreground">Avg Carbs/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{Math.round(weeklyAnalytics.overallAvg.fat)}g</div>
+                  <div className="text-2xl font-bold text-purple-600">{analytics.weekly_averages.fat}g</div>
                   <div className="text-sm text-muted-foreground">Avg Fat/Day</div>
                 </Card>
               </div>
 
               {/* Recent weeks breakdown */}
-              {weeklyAnalytics.periods.length > 0 && (
+              {recentWeeks.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Recent Weeks</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Recent 4 Weeks</h3>
                   <div className="space-y-2">
-                    {weeklyAnalytics.periods.slice(0, 3).map((week) => (
-                      <Card key={week.periodStart} className="p-3">
+                    {recentWeeks.map((week) => (
+                      <Card key={week.week_start} className="p-3">
                         <div className="flex justify-between items-center">
-                          <div className="text-sm font-medium">{formatWeekPeriod(week.periodStart)}</div>
-                          <div className="text-sm text-muted-foreground">{week.daysWithData} days</div>
+                          <div className="text-sm font-medium">{formatWeekPeriod(week.week_start)}</div>
+                          <div className="text-sm text-muted-foreground">{week.days_with_data} days</div>
                         </div>
                         <div className="grid grid-cols-4 gap-4 mt-2 text-xs">
                           <div className="text-center">
-                            <div className="font-medium text-blue-600">{Math.round(week.avgCalories)}</div>
+                            <div className="font-medium text-blue-600">{Math.round(week.avg_calories)}</div>
                             <div className="text-muted-foreground">cal</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-green-600">{Math.round(week.avgProtein)}g</div>
+                            <div className="font-medium text-green-600">{Math.round(week.avg_protein)}g</div>
                             <div className="text-muted-foreground">protein</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-orange-600">{Math.round(week.avgCarbs)}g</div>
+                            <div className="font-medium text-orange-600">{Math.round(week.avg_carbs)}g</div>
                             <div className="text-muted-foreground">carbs</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-purple-600">{Math.round(week.avgFat)}g</div>
+                            <div className="font-medium text-purple-600">{Math.round(week.avg_fat)}g</div>
                             <div className="text-muted-foreground">fat</div>
                           </div>
                         </div>
@@ -433,54 +411,54 @@ export default function Analytics() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                Monthly Averages ({monthlyAnalytics.periodsCount} months)
+                Monthly Averages ({analytics.monthly_averages.months_count} months) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{Math.round(monthlyAnalytics.overallAvg.calories)}</div>
+                  <div className="text-2xl font-bold text-blue-600">{analytics.monthly_averages.calories}</div>
                   <div className="text-sm text-muted-foreground">Avg Calories/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{Math.round(monthlyAnalytics.overallAvg.protein)}g</div>
+                  <div className="text-2xl font-bold text-green-600">{analytics.monthly_averages.protein}g</div>
                   <div className="text-sm text-muted-foreground">Avg Protein/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">{Math.round(monthlyAnalytics.overallAvg.carbs)}g</div>
+                  <div className="text-2xl font-bold text-orange-600">{analytics.monthly_averages.carbs}g</div>
                   <div className="text-sm text-muted-foreground">Avg Carbs/Day</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{Math.round(monthlyAnalytics.overallAvg.fat)}g</div>
+                  <div className="text-2xl font-bold text-purple-600">{analytics.monthly_averages.fat}g</div>
                   <div className="text-sm text-muted-foreground">Avg Fat/Day</div>
                 </Card>
               </div>
 
               {/* Recent months breakdown */}
-              {monthlyAnalytics.periods.length > 0 && (
+              {recentMonths.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Recent Months</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Recent 2 Months</h3>
                   <div className="space-y-2">
-                    {monthlyAnalytics.periods.slice(0, 3).map((month) => (
-                      <Card key={month.periodStart} className="p-3">
+                    {recentMonths.map((month) => (
+                      <Card key={month.month_start} className="p-3">
                         <div className="flex justify-between items-center">
-                          <div className="text-sm font-medium">{formatMonthPeriod(month.periodStart)}</div>
-                          <div className="text-sm text-muted-foreground">{month.daysWithData} days</div>
+                          <div className="text-sm font-medium">{formatMonthPeriod(month.month_start)}</div>
+                          <div className="text-sm text-muted-foreground">{month.days_with_data} days</div>
                         </div>
                         <div className="grid grid-cols-4 gap-4 mt-2 text-xs">
                           <div className="text-center">
-                            <div className="font-medium text-blue-600">{Math.round(month.avgCalories)}</div>
+                            <div className="font-medium text-blue-600">{Math.round(month.avg_calories)}</div>
                             <div className="text-muted-foreground">cal</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-green-600">{Math.round(month.avgProtein)}g</div>
+                            <div className="font-medium text-green-600">{Math.round(month.avg_protein)}g</div>
                             <div className="text-muted-foreground">protein</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-orange-600">{Math.round(month.avgCarbs)}g</div>
+                            <div className="font-medium text-orange-600">{Math.round(month.avg_carbs)}g</div>
                             <div className="text-muted-foreground">carbs</div>
                           </div>
                           <div className="text-center">
-                            <div className="font-medium text-purple-600">{Math.round(month.avgFat)}g</div>
+                            <div className="font-medium text-purple-600">{Math.round(month.avg_fat)}g</div>
                             <div className="text-muted-foreground">fat</div>
                           </div>
                         </div>
@@ -499,7 +477,7 @@ export default function Analytics() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {calorieExtremes.highest && (
+                {analytics.calorie_extremes.highest && (
                   <Card className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-red-100 rounded-full">
@@ -507,18 +485,18 @@ export default function Analytics() {
                       </div>
                       <div className="flex-1">
                         <div className="text-lg font-bold text-red-600">
-                          {Math.round(calorieExtremes.highest.calories)} calories
+                          {analytics.calorie_extremes.highest.calories} calories
                         </div>
                         <div className="text-sm text-muted-foreground">Highest Day</div>
                         <div className="text-xs text-muted-foreground">
-                          {formatDate(calorieExtremes.highest.date)}
+                          {formatDate(analytics.calorie_extremes.highest.date)}
                         </div>
                       </div>
                     </div>
                   </Card>
                 )}
 
-                {calorieExtremes.lowest && (
+                {analytics.calorie_extremes.lowest && (
                   <Card className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-full">
@@ -526,18 +504,18 @@ export default function Analytics() {
                       </div>
                       <div className="flex-1">
                         <div className="text-lg font-bold text-blue-600">
-                          {Math.round(calorieExtremes.lowest.calories)} calories
+                          {analytics.calorie_extremes.lowest.calories} calories
                         </div>
                         <div className="text-sm text-muted-foreground">Lowest Day</div>
                         <div className="text-xs text-muted-foreground">
-                          {formatDate(calorieExtremes.lowest.date)}
+                          {formatDate(analytics.calorie_extremes.lowest.date)}
                         </div>
                       </div>
                     </div>
                   </Card>
                 )}
 
-                {!calorieExtremes.highest && !calorieExtremes.lowest && (
+                {!analytics.calorie_extremes.highest && !analytics.calorie_extremes.lowest && (
                   <Card className="p-4 col-span-full text-center">
                     <div className="text-muted-foreground">No meal data available</div>
                     <div className="text-sm text-muted-foreground mt-1">
@@ -557,13 +535,11 @@ export default function Analytics() {
 
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-indigo-600">{mealLogs.length}</div>
+                  <div className="text-2xl font-bold text-indigo-600">{analytics.summary.total_meals}</div>
                   <div className="text-sm text-muted-foreground">Total Meals Logged</div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {new Set(mealLogs.map(log => log.eaten_on)).size}
-                  </div>
+                  <div className="text-2xl font-bold text-emerald-600">{analytics.summary.days_with_data}</div>
                   <div className="text-sm text-muted-foreground">Days with Data</div>
                 </Card>
               </div>

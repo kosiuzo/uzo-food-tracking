@@ -10,8 +10,9 @@ import { Card } from '@/components/ui/card';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useInventorySearch } from '../hooks/useInventorySearch';
-import { useTags, useRecipeTagManagement } from '../hooks/useTags';
-import { Recipe, RecipeIngredient, Tag } from '../types';
+import { Recipe, RecipeIngredient } from '../types';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 // Form-specific type that allows string quantities during editing
@@ -42,7 +43,7 @@ interface AddRecipeDialogProps {
 export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: AddRecipeDialogProps) {
   const { toast } = useToast();
   const { allItems } = useInventorySearch();
-  const { allTags } = useTags();
+  // Tags are now stored directly on recipes as text[]
   
   const [formData, setFormData] = useState<RecipeFormData>({
     name: '',
@@ -57,6 +58,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [originalServings, setOriginalServings] = useState<number>(1); // Track original servings for AI recipes
+  const [tagInput, setTagInput] = useState('');
 
   // Update form data when editingRecipe changes
   useEffect(() => {
@@ -70,7 +72,8 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         ingredient_list: editingRecipe.ingredient_list || [],
         nutrition: editingRecipe.nutrition,
         notes: editingRecipe.notes || '',
-        selectedTagIds: editingRecipe.tags?.map(tag => tag.id.toString()) || [],
+        // Map existing tags (objects) to plain names for the free-typed input
+        selectedTagIds: editingRecipe.tags?.map(tag => tag.name) || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id.toString()));
       setOriginalServings(editingRecipe.servings); // Track original servings for scaling
@@ -88,8 +91,27 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       });
       setSelectedIngredientIds([]);
       setOriginalServings(1);
+      setTagInput('');
     }
   }, [editingRecipe, open]);
+
+  // Helpers for tag input (comma/enter to add, click X to remove)
+  const addTag = (raw: string) => {
+    const value = raw.trim();
+    if (!value) return;
+    setFormData(prev => ({
+      ...prev,
+      selectedTagIds: Array.from(new Set([...(prev.selectedTagIds || []), value]))
+    }));
+    setTagInput('');
+  };
+
+  const removeTag = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedTagIds: (prev.selectedTagIds || []).filter(t => t !== name)
+    }));
+  };
 
   // Auto-determine nutrition source and calculate nutrition
   const getAutoNutritionSource = (): 'calculated' | 'ai_generated' | 'manual' => {
@@ -253,6 +275,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     });
     setSelectedIngredientIds([]);
     setOriginalServings(1);
+    setTagInput('');
 
     toast({
       title: "Recipe added",
@@ -343,15 +366,36 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
           <div className="space-y-2">
             <Label>Tags</Label>
-            <MultiSelect
-              options={allTags.map(tag => ({ label: tag.name, value: tag.id.toString() }))}
-              onValueChange={(values) => setFormData(prev => ({ ...prev, selectedTagIds: values }))}
-              defaultValue={formData.selectedTagIds}
-              placeholder="Select tags..."
-              maxCount={8}
-            />
+            <div className="flex flex-wrap gap-2">
+              {formData.selectedTagIds?.map((tag) => (
+                <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                  {tag}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${tag}`}
+                    onClick={() => removeTag(tag)}
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+                    e.preventDefault();
+                    addTag(tagInput);
+                  }
+                }}
+                onBlur={() => addTag(tagInput)}
+                placeholder="Type a tag and press Enter"
+                className="w-auto min-w-[180px] flex-1"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              Organize your recipes with tags like "paleo", "gluten-free", "breakfast", "main-dish", etc.
+              Free-type tags. Examples: paleo, gluten-free, breakfast, main-dish
             </p>
           </div>
 

@@ -188,17 +188,29 @@ vi.mock('../lib/supabase', () => ({
       }
       
       // Default mock for other tables
-      return {
-        select: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({
+      const mockQueryBuilder = {
+        order: vi.fn(() => ({
+          limit: vi.fn(() => Promise.resolve({
             data: [],
             error: null,
           })),
-          single: vi.fn(() => Promise.resolve({
-            data: null,
-            error: null,
-          })),
+          ...mockQueryBuilder
         })),
+        single: vi.fn(() => Promise.resolve({
+          data: null,
+          error: null,
+        })),
+        gte: vi.fn(() => mockQueryBuilder),
+        lte: vi.fn(() => mockQueryBuilder),
+        eq: vi.fn(() => mockQueryBuilder),
+        limit: vi.fn(() => Promise.resolve({
+          data: [],
+          error: null,
+        })),
+      };
+
+      return {
+        select: vi.fn(() => mockQueryBuilder),
         insert: vi.fn(() => ({
           select: vi.fn(() => ({
             single: vi.fn(() => Promise.resolve({
@@ -228,6 +240,35 @@ vi.mock('../lib/supabase', () => ({
           })),
         })),
       };
+    }),
+    rpc: vi.fn((functionName) => {
+      // Mock different RPC functions
+      if (functionName === 'get_analytics_data') {
+        return Promise.resolve({
+          data: {
+            total_meals: 0,
+            total_cost: 0,
+            avg_calories: 0,
+            avg_protein: 0,
+            avg_carbs: 0,
+            avg_fat: 0
+          },
+          error: null
+        });
+      }
+
+      if (functionName === 'recalculate_recipe_cost') {
+        return Promise.resolve({
+          data: { success: true },
+          error: null
+        });
+      }
+
+      // Default RPC mock
+      return Promise.resolve({
+        data: null,
+        error: null
+      });
     }),
   },
 }));

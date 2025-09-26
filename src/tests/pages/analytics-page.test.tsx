@@ -40,7 +40,6 @@ describe('Analytics Page', () => {
     renderWithProviders(<Analytics />);
 
     expect(screen.getByText('Analytics')).toBeInTheDocument();
-    // UI no longer has "Top Categories"; check a stable section instead
-    expect(screen.getByText('Summary')).toBeInTheDocument();
+    expect(screen.getByText('Your food tracking insights')).toBeInTheDocument();
   });
 });

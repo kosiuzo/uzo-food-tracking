@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Target, Calendar, Award, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,12 +74,8 @@ export default function Analytics() {
   const [usingMockData, setUsingMockData] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'all' | 30 | 60 | 90>(30);
 
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [selectedPeriod]);
-
   // Helper function to build cache queries with optional date filtering
-  const buildCacheQuery = (tableName: string, orderField: string) => {
+  const buildCacheQuery = useCallback((tableName: string, orderField: string) => {
     const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
     let query = supabase.from(tableName).select('*');
 
@@ -105,9 +101,9 @@ export default function Analytics() {
       tableName === 'daily_analytics_cache' ? 7 :
       tableName === 'weekly_analytics_cache' ? 4 : 2
     );
-  };
+  }, [selectedPeriod]);
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -179,7 +175,11 @@ export default function Analytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod, buildCacheQuery]);
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [selectedPeriod, loadAnalyticsData]);
 
   // Format date for display
   const formatDate = (dateString: string) => {

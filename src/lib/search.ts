@@ -1,5 +1,6 @@
 import React from 'react';
 import { supabase } from './supabase';
+import { getCurrentUserId } from './auth-helpers';
 import { FoodItem, Recipe, Tag, MealLog } from '../types';
 import type { Database } from '../types/database';
 import { dbItemToFoodItem, dbRecipeToRecipe, dbTagToTag, dbMealLogToMealLog } from './type-mappers';
@@ -284,32 +285,70 @@ export async function searchMealLogs(
   } = options;
 
   try {
-    let supabaseQuery = supabase
-      .from('meal_logs')
-      .select('*', { count: 'exact' });
+    const userId = await getCurrentUserId();
+    const trimmed = query.trim();
 
-    if (query.trim()) {
-      // Search by meal name or notes (no full-text search on meal_logs yet)
-      supabaseQuery = supabaseQuery.or(`meal_name.ilike.%${query}%,notes.ilike.%${query}%`);
+    // Base query builder
+    const base = supabase
+      .from('meal_logs')
+      .select('*', { count: 'exact' })
+      .order('eaten_on', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    let items: MealLog[] = [];
+    let total = 0;
+
+    if (!trimmed) {
+      // No query: just return latest
+      const q = userId ? base.eq('user_id', userId) : base;
+      const { data, error, count } = await q;
+      if (error) throw error;
+      items = (data || []).map(dbMealLogToMealLog);
+      total = count || items.length;
+    } else {
+      // 1) Try Full-Text Search (FTS) via search_vector
+      const ftsQuery = userId
+        ? base.textSearch('search_vector', trimmed, { type: 'websearch', config: 'english' }).eq('user_id', userId)
+        : base.textSearch('search_vector', trimmed, { type: 'websearch', config: 'english' });
+
+      const { data: ftsDataRaw, error: ftsError, count: ftsCount } = await ftsQuery;
+      let ftsData = ftsDataRaw;
+
+      if (ftsError) {
+        // If FTS errors (e.g., column missing), fall back to trigram/ILIKE
+        ftsData = null;
+      }
+
+      if (ftsData && ftsData.length > 0) {
+        items = ftsData.map(dbMealLogToMealLog);
+        total = ftsCount || items.length;
+      } else {
+        // 2) Fallback: substring match (trigram-backed) on meal_name and notes
+        const like = `%${trimmed}%`;
+        const likeQuery = userId
+          ? base.or(`meal_name.ilike.${like},notes.ilike.${like}`).eq('user_id', userId)
+          : base.or(`meal_name.ilike.${like},notes.ilike.${like}`);
+
+        const { data: likeData, error: likeError, count: likeCount } = await likeQuery;
+        if (likeError) throw likeError;
+        items = (likeData || []).map(dbMealLogToMealLog);
+        total = likeCount || items.length;
+      }
     }
 
-    // Apply sorting
-    const sortField = sortBy === 'relevance' ? 'created_at' : sortBy;
-    supabaseQuery = supabaseQuery.order(sortField, { ascending: sortOrder === 'asc' });
+    // Apply client-side sorting if explicitly requested by non-default fields
+    if (sortBy && sortBy !== 'created_at') {
+      const ascending = sortOrder === 'asc';
+      if (sortBy === 'meal_name') {
+        items.sort((a, b) => a.meal_name.localeCompare(b.meal_name) * (ascending ? 1 : -1));
+      } else if (sortBy === 'eaten_on') {
+        items.sort((a, b) => ((a.eaten_on > b.eaten_on ? 1 : a.eaten_on < b.eaten_on ? -1 : 0) * (ascending ? 1 : -1)));
+      }
+      // Other sort fields are not applicable for MealLog; rely on DB ordering
+    }
 
-    supabaseQuery = supabaseQuery.limit(limit);
-
-    const { data, error, count } = await supabaseQuery;
-
-    if (error) throw error;
-
-    const mealLogs = (data || []).map(dbMealLogToMealLog);
-    
-    return {
-      items: mealLogs,
-      total: count || 0,
-      hasMore: (count || 0) > mealLogs.length
-    };
+    return { items, total, hasMore: total > items.length };
   } catch (error) {
     console.error('Search meal logs error:', error);
     throw error;

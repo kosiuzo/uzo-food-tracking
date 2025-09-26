@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { getTodayLocalDate } from '@/lib/utils';
+import { useDebounce, searchMealLogs } from '@/lib/search';
 
 interface MealRelogDialogProps {
   open: boolean;
@@ -26,8 +27,12 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
   const [eatenOn, setEatenOn] = useState(getTodayLocalDate());
   const [isRelogging, setIsRelogging] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [serverResults, setServerResults] = useState<MealLog[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const { toast } = useToast();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -82,6 +87,37 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
       document.removeEventListener('focusin', handleFocus);
     };
   }, [open]);
+
+  // Server-side search (FTS + trigram) with debouncing; fallback to client filtering on error
+  useEffect(() => {
+    let canceled = false;
+    const run = async () => {
+      setSearchError(null);
+      if (!debouncedQuery || debouncedQuery.trim().length === 0) {
+        setServerResults([]);
+        setIsSearching(false);
+        return;
+      }
+      try {
+        setIsSearching(true);
+        const { items } = await searchMealLogs(debouncedQuery, { limit: 50 });
+        if (!canceled) {
+          setServerResults(items);
+        }
+      } catch (e) {
+        if (!canceled) {
+          setSearchError(e instanceof Error ? e.message : 'Search failed');
+          setServerResults([]);
+        }
+      } finally {
+        if (!canceled) setIsSearching(false);
+      }
+    };
+    run();
+    return () => {
+      canceled = true;
+    };
+  }, [debouncedQuery]);
 
   // Filter meals based on search query
   const filteredMeals = mealLogs.filter(meal =>
@@ -184,14 +220,16 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
           {/* Search Results */}
           {searchQuery && (
             <div className="space-y-2">
-              <Label>Search Results ({uniqueMeals.length} meals)</Label>
+              <Label>
+                Search Results ({(serverResults.length || uniqueMeals.length)}) meals
+              </Label>
               <div className={`${isKeyboardVisible ? 'max-h-32' : 'max-h-64'} overflow-y-auto space-y-2`}>
-                {uniqueMeals.length === 0 ? (
+                {(serverResults.length > 0 ? serverResults : uniqueMeals).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No meals found matching "{searchQuery}"
                   </p>
                 ) : (
-                  uniqueMeals.map((meal) => (
+                  (serverResults.length > 0 ? serverResults : uniqueMeals).map((meal) => (
                     <Card
                       key={meal.id}
                       className={`p-3 cursor-pointer transition-colors ${

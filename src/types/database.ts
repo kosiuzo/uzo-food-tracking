@@ -8,21 +8,7 @@ export interface Database {
           user_id?: string | null
           brand: string | null
           category: string | null
-          in_stock: boolean | null
-          price: number | null
-          carbs_per_serving: number | null
-          fat_per_serving: number | null
-          protein_per_serving: number | null
-          calories_per_serving: number | null
-          servings_per_container: number | null
-          serving_size_grams: number | null
-          serving_quantity: number | null
-          serving_unit: string | null
-          serving_unit_type: 'volume' | 'weight' | 'package' | null
           image_url: string | null
-          nutrition_source: string | null
-          barcode: string | null
-          last_purchased: string | null
           purchase_count: number | null
           rating: number | null
           last_edited: string | null
@@ -38,21 +24,7 @@ export interface Database {
           user_id?: string | null
           brand?: string | null
           category?: string | null
-          in_stock?: boolean | null
-          price?: number | null
-          carbs_per_serving?: number | null
-          fat_per_serving?: number | null
-          protein_per_serving?: number | null
-          calories_per_serving?: number | null
-          servings_per_container?: number | null
-          serving_size_grams?: number | null
-          serving_quantity?: number | null
-          serving_unit?: string | null
-          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
-          nutrition_source?: string | null
-          barcode?: string | null
-          last_purchased?: string | null
           purchase_count?: number | null
           rating?: number | null
           last_edited?: string | null
@@ -68,21 +40,7 @@ export interface Database {
           user_id?: string | null
           brand?: string | null
           category?: string | null
-          in_stock?: boolean | null
-          price?: number | null
-          carbs_per_serving?: number | null
-          fat_per_serving?: number | null
-          protein_per_serving?: number | null
-          calories_per_serving?: number | null
-          servings_per_container?: number | null
-          serving_size_grams?: number | null
-          serving_quantity?: number | null
-          serving_unit?: string | null
-          serving_unit_type?: 'volume' | 'weight' | 'package' | null
           image_url?: string | null
-          nutrition_source?: string | null
-          barcode?: string | null
-          last_purchased?: string | null
           purchase_count?: number | null
           rating?: number | null
           last_edited?: string | null
@@ -148,41 +106,6 @@ export interface Database {
           feedback?: { text: string; date: string }[] | null
           times_cooked?: number | null
           last_cooked?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      recipe_items: {
-        Row: {
-          recipe_id: number
-          item_id: number
-          quantity: number | null
-          unit: string | null
-          cost_per_unit: number | null
-          total_cost: number | null
-          cost_calculated_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          recipe_id: number
-          item_id: number
-          quantity?: number | null
-          unit?: string | null
-          cost_per_unit?: number | null
-          total_cost?: number | null
-          cost_calculated_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          recipe_id?: number
-          item_id?: number
-          quantity?: number | null
-          unit?: string | null
-          cost_per_unit?: number | null
-          total_cost?: number | null
-          cost_calculated_at?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -435,12 +358,6 @@ export interface Database {
           p_recipe_id: number
         }
         Returns: void
-      }
-      calculate_recipe_cost: {
-        Args: {
-          p_recipe_id: number
-        }
-        Returns: number
       }
     }
     Enums: {

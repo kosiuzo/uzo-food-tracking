@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { requireCurrentUserId } from '../lib/auth-helpers';
-import { Recipe, RecipeIngredient, Tag, DbTag } from '../types';
+import { Recipe, RecipeIngredient } from '../types';
 import type { Database } from '../types/database';
 
-type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'] & {
-  recipe_items: { quantity: number | null; unit: string | null; item_id: number }[];
-  recipe_tags: { tag_id: number; tags: DbTag }[];
-};
-import { dbRecipeToRecipe, recipeToDbInsert, dbTagToTag } from '../lib/type-mappers';
+type DbRecipeWithRelations = Database['public']['Tables']['recipes']['Row'];
+import { dbRecipeToRecipe, recipeToDbInsert } from '../lib/type-mappers';
 import { searchRecipes } from '../lib/search';
 import { mockRecipes } from '../data/mockData';
 
@@ -33,18 +30,7 @@ export function useRecipes() {
       // Try to connect to Supabase first
       const { data: recipesData, error: recipesError } = await supabase
         .from('recipes')
-        .select(`
-          *,
-          recipe_items (
-            quantity,
-            unit,
-            item_id
-          ),
-          recipe_tags (
-            tag_id,
-            tags (*)
-          )
-        `)
+        .select('*')
         .order('name');
       
       if (recipesError) {
@@ -59,17 +45,7 @@ export function useRecipes() {
       if (recipesData && recipesData.length > 0) {
         console.log('✅ Loaded data from Supabase:', recipesData.length, 'recipes');
         const mappedRecipes = recipesData.map((dbRecipe: DbRecipeWithRelations) => {
-          const ingredients: RecipeIngredient[] = dbRecipe.recipe_items?.map((ri) => ({
-            item_id: ri.item_id, // Now using number directly
-            quantity: Number(ri.quantity) || 0,
-            unit: ri.unit || '',
-          })) || [];
-          
-          const tags: Tag[] = dbRecipe.recipe_tags?.map((rt) => 
-            dbTagToTag(rt.tags)
-          ) || [];
-          
-          return dbRecipeToRecipe(dbRecipe, ingredients, tags);
+          return dbRecipeToRecipe(dbRecipe);
         });
         setRecipes(mappedRecipes);
         setUsingMockData(false);
@@ -151,61 +127,32 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selected
     try {
       const userId = await requireCurrentUserId();
       const { selectedTagIds, ...recipeWithoutTags } = recipe;
-      const dbRecipe = recipeToDbInsert(recipeWithoutTags);
-      
+
+      // Convert selectedTagIds to tag names if provided, otherwise use existing tags
+      let tagsToStore: string[] = [];
+      if (selectedTagIds && selectedTagIds.length > 0) {
+        // For now, treat selectedTagIds as tag names (strings) since we're consolidating
+        tagsToStore = selectedTagIds;
+      } else if (recipeWithoutTags.tags) {
+        tagsToStore = recipeWithoutTags.tags.map(tag => tag.name);
+      }
+
+      const dbRecipe = recipeToDbInsert({ ...recipeWithoutTags, tags: tagsToStore.map(name => ({ name, id: 0, color: '#3b82f6', created_at: '', updated_at: '' })) });
+
       const { data: recipeData, error: recipeError } = await supabase
         .from('recipes')
         .insert([{ ...dbRecipe, user_id: userId }])
         .select()
         .single();
-      
+
       if (recipeError) throw recipeError;
-      
-      // Insert recipe ingredients
-      if (recipeWithoutTags.ingredients.length > 0) {
-        const recipeIngredients = recipeWithoutTags.ingredients.map(ingredient => ({
-          recipe_id: recipeData.id,
-          item_id: ingredient.item_id, // Already a number
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-        }));
-        
-        const { error: ingredientsError } = await supabase
-          .from('recipe_items')
-          .insert(recipeIngredients);
-        
-        if (ingredientsError) throw ingredientsError;
-      }
-      
-      // Insert recipe tags
-      if (selectedTagIds && selectedTagIds.length > 0) {
-        const recipeTags = selectedTagIds.map(tagId => ({
-          recipe_id: recipeData.id,
-          tag_id: typeof tagId === 'string' ? parseInt(tagId) : tagId, // Handle both string and number IDs during transition
-        }));
-        
-        const { error: tagsError } = await supabase
-          .from('recipe_tags')
-          .insert(recipeTags);
-        
-        if (tagsError) throw tagsError;
-      }
-      
-      // Calculate recipe cost after ingredients are inserted
-      try {
-        await supabase.rpc('calculate_recipe_cost', { p_recipe_id: recipeData.id });
-        // Refetch all recipes to get the updated cost values
-        await loadRecipes();
-        // Find and return the newly created recipe with correct costs
-        const updatedRecipe = recipes.find(r => r.id === recipeData.id);
-        return updatedRecipe || dbRecipeToRecipe(recipeData, recipe.ingredients);
-      } catch (costError) {
-        console.warn('Failed to calculate recipe cost:', costError);
-        // Fall back to adding without cost calculation
-        const newRecipe = dbRecipeToRecipe(recipeData, recipe.ingredients);
-        setRecipes(prev => [...prev, newRecipe]);
-        return newRecipe;
-      }
+
+      // Note: recipe_items table has been removed. Ingredients are now stored in ingredient_list text array
+
+      // Reload recipes to get the updated data
+      await loadRecipes();
+      const newRecipe = recipes.find(r => r.id === recipeData.id) || dbRecipeToRecipe(recipeData);
+      return newRecipe;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add recipe');
       throw err;
@@ -217,10 +164,10 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
     try {
       const { selectedTagIds, ...updatesWithoutTags } = updates;
       console.log('📝 Updates includes ingredients?', !!updatesWithoutTags.ingredients, 'Ingredient count:', updatesWithoutTags.ingredients?.length);
-      
+
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
       const nutritionToSave = updatesWithoutTags.nutrition;
-      
+
       // Build update object with only provided fields to avoid resetting existing data
       const updateData: Partial<Database['public']['Tables']['recipes']['Update']> = {};
 
@@ -235,63 +182,27 @@ const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTag
       if (updatesWithoutTags.notes !== undefined) updateData.notes = updatesWithoutTags.notes;
       if (updatesWithoutTags.feedback !== undefined) updateData.feedback = updatesWithoutTags.feedback as unknown as Record<string, unknown>[];
 
+      // Handle tags update
+      if (selectedTagIds !== undefined) {
+        // Convert selectedTagIds to tag names (treating them as strings)
+        updateData.tags = selectedTagIds;
+      } else if (updatesWithoutTags.tags !== undefined) {
+        // Convert tag objects to tag name strings
+        updateData.tags = updatesWithoutTags.tags.map(tag => tag.name);
+      }
+
       // Update recipe
       const { error: recipeError } = await supabase
         .from('recipes')
         .update(updateData)
         .eq('id', id);
-      
+
       if (recipeError) throw recipeError;
-      
-      // Update tags if provided
-      if (selectedTagIds !== undefined) {
-        // Delete existing tags
-        await supabase
-          .from('recipe_tags')
-          .delete()
-          .eq('recipe_id', id);
-        
-        // Insert new tags
-        if (selectedTagIds.length > 0) {
-          const recipeTags = selectedTagIds.map(tagId => ({
-            recipe_id: id,
-            tag_id: typeof tagId === 'string' ? parseInt(tagId) : tagId, // Handle both string and number IDs during transition
-          }));
-          
-          const { error: tagsError } = await supabase
-            .from('recipe_tags')
-            .insert(recipeTags);
-          
-          if (tagsError) throw tagsError;
-        }
-      }
-      
-      // Update ingredients if provided
-      if (updatesWithoutTags.ingredients) {
-        // Delete existing ingredients
-        await supabase
-          .from('recipe_items')
-          .delete()
-          .eq('recipe_id', id);
-        
-        // Insert new ingredients
-        if (updatesWithoutTags.ingredients.length > 0) {
-          const recipeIngredients = updatesWithoutTags.ingredients.map(ingredient => ({
-            recipe_id: id,
-            item_id: ingredient.item_id, // Already a number
-            quantity: ingredient.quantity,
-            unit: ingredient.unit,
-          }));
-          
-          const { error: ingredientsError } = await supabase
-            .from('recipe_items')
-            .insert(recipeIngredients);
-          
-          if (ingredientsError) throw ingredientsError;
-        }
-      }
-      
-      // Reload recipes to get the updated data including tags
+
+      // Note: recipe_items table has been removed. Ingredients are now stored in ingredient_list text array
+      // Ingredients update is handled above in updateData.ingredient_list
+
+      // Reload recipes to get the updated data
       await loadRecipes();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update recipe');

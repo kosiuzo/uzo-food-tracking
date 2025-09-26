@@ -10,8 +10,9 @@ import { Card } from '@/components/ui/card';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useInventorySearch } from '../hooks/useInventorySearch';
-import { useTags, useRecipeTagManagement } from '../hooks/useTags';
-import { Recipe, RecipeIngredient, Tag } from '../types';
+import { Recipe, RecipeIngredient } from '../types';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 import { calculateRecipeNutrition, UNIT_TO_TYPE } from '../lib/servingUnitUtils';
 
 // Form-specific type that allows string quantities during editing
@@ -22,7 +23,6 @@ interface RecipeFormData {
   total_time_minutes: string;
   ingredients: Array<Omit<RecipeIngredient, 'quantity'> & { quantity: string }>;
   ingredient_list: string[]; // AI-generated ingredient strings
-  nutrition_source: 'calculated' | 'ai_generated' | 'manual';
   nutrition?: {
     calories_per_serving: number;
     protein_per_serving: number;
@@ -43,7 +43,7 @@ interface AddRecipeDialogProps {
 export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: AddRecipeDialogProps) {
   const { toast } = useToast();
   const { allItems } = useInventorySearch();
-  const { allTags } = useTags();
+  // Tags are now stored directly on recipes as text[]
   
   const [formData, setFormData] = useState<RecipeFormData>({
     name: '',
@@ -52,13 +52,13 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
     total_time_minutes: '',
     ingredients: [],
     ingredient_list: [],
-    nutrition_source: 'calculated',
     notes: '',
     selectedTagIds: [],
   });
 
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<string[]>([]);
   const [originalServings, setOriginalServings] = useState<number>(1); // Track original servings for AI recipes
+  const [tagInput, setTagInput] = useState('');
 
   // Update form data when editingRecipe changes
   useEffect(() => {
@@ -70,10 +70,10 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: editingRecipe.total_time_minutes?.toString() || '',
         ingredients: editingRecipe.ingredients,
         ingredient_list: editingRecipe.ingredient_list || [],
-        nutrition_source: editingRecipe.nutrition_source || 'calculated',
         nutrition: editingRecipe.nutrition,
         notes: editingRecipe.notes || '',
-        selectedTagIds: editingRecipe.tags?.map(tag => tag.id.toString()) || [],
+        // Map existing tags (objects) to plain names for the free-typed input
+        selectedTagIds: editingRecipe.tags?.map(tag => tag.name) || [],
       });
       setSelectedIngredientIds(editingRecipe.ingredients.map(ing => ing.item_id.toString()));
       setOriginalServings(editingRecipe.servings); // Track original servings for scaling
@@ -86,19 +86,52 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         total_time_minutes: '',
         ingredients: [],
         ingredient_list: [],
-        nutrition_source: 'calculated',
         notes: '',
         selectedTagIds: [],
       });
       setSelectedIngredientIds([]);
       setOriginalServings(1);
+      setTagInput('');
     }
   }, [editingRecipe, open]);
 
-  // Calculate nutrition based on nutrition source priority
+  // Helpers for tag input (comma/enter to add, click X to remove)
+  const addTag = (raw: string) => {
+    const value = raw.trim();
+    if (!value) return;
+    setFormData(prev => ({
+      ...prev,
+      selectedTagIds: Array.from(new Set([...(prev.selectedTagIds || []), value]))
+    }));
+    setTagInput('');
+  };
+
+  const removeTag = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedTagIds: (prev.selectedTagIds || []).filter(t => t !== name)
+    }));
+  };
+
+  // Auto-determine nutrition source and calculate nutrition
+  const getAutoNutritionSource = (): 'calculated' | 'ai_generated' | 'manual' => {
+    // If recipe has ingredient_list, it's AI-generated
+    if (formData.ingredient_list && formData.ingredient_list.length > 0) {
+      return 'ai_generated';
+    }
+    // If recipe has linked ingredients, it's calculated
+    if (formData.ingredients && formData.ingredients.length > 0) {
+      return 'calculated';
+    }
+    // Otherwise, it's manual (no ingredients defined)
+    return 'manual';
+  };
+
   const calculateNutrition = () => {
+    const autoSource = getAutoNutritionSource();
+
     // If recipe has ingredient_list (AI-imported), use stored nutrition with scaling
-    if (formData.nutrition_source === 'ai_generated' && formData.nutrition) {
+    if (autoSource === 'ai_generated' && formData.nutrition) {
       const currentServings = parseInt(formData.servings) || 1;
       const scaleFactor = originalServings / currentServings; // Scale per serving values
 
@@ -109,21 +142,21 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         fat_per_serving: formData.nutrition.fat_per_serving * scaleFactor,
       };
     }
-    
+
     // If recipe has manual nutrition, use stored nutrition
-    if (formData.nutrition_source === 'manual' && formData.nutrition) {
+    if (autoSource === 'manual' && formData.nutrition) {
       return formData.nutrition;
     }
-    
-    // If recipe has linked ingredients (manual), calculate from ingredients  
-    if (formData.nutrition_source === 'calculated' && formData.ingredients.length > 0) {
+
+    // If recipe has linked ingredients (manual), calculate from ingredients
+    if (autoSource === 'calculated' && formData.ingredients.length > 0) {
       const ingredientsWithNumbers = formData.ingredients.map(ing => ({
         ...ing,
         quantity: parseFloat(ing.quantity) || 0
       }));
       return calculateRecipeNutrition(ingredientsWithNumbers, parseInt(formData.servings) || 1, allItems);
     }
-    
+
     // Fallback to stored nutrition or defaults
     return formData.nutrition || {
       calories_per_serving: 0,
@@ -221,7 +254,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
         quantity: parseFloat(ing.quantity) || 0
       })),
       ingredient_list: formData.ingredient_list,
-      nutrition_source: formData.nutrition_source,
+      nutrition_source: getAutoNutritionSource(),
       nutrition: calculateNutrition(),
       // Pass selected tag IDs for the parent to handle
       selectedTagIds: formData.selectedTagIds,
@@ -237,12 +270,12 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
       total_time_minutes: '',
       ingredients: [],
       ingredient_list: [],
-      nutrition_source: 'calculated',
       notes: '',
       selectedTagIds: [],
     });
     setSelectedIngredientIds([]);
     setOriginalServings(1);
+    setTagInput('');
 
     toast({
       title: "Recipe added",
@@ -274,7 +307,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="servings">Servings</Label>
-              {formData.nutrition_source === 'ai_generated' ? (
+              {getAutoNutritionSource() === 'ai_generated' ? (
                 <div className="flex items-center gap-2 h-10">
                   <Button
                     type="button"
@@ -333,15 +366,36 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
 
           <div className="space-y-2">
             <Label>Tags</Label>
-            <MultiSelect
-              options={allTags.map(tag => ({ label: tag.name, value: tag.id.toString() }))}
-              onValueChange={(values) => setFormData(prev => ({ ...prev, selectedTagIds: values }))}
-              defaultValue={formData.selectedTagIds}
-              placeholder="Select tags..."
-              maxCount={8}
-            />
+            <div className="flex flex-wrap gap-2">
+              {formData.selectedTagIds?.map((tag) => (
+                <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                  {tag}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${tag}`}
+                    onClick={() => removeTag(tag)}
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+                    e.preventDefault();
+                    addTag(tagInput);
+                  }
+                }}
+                onBlur={() => addTag(tagInput)}
+                placeholder="Type a tag and press Enter"
+                className="w-auto min-w-[180px] flex-1"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              Organize your recipes with tags like "paleo", "gluten-free", "breakfast", "main-dish", etc.
+              Free-type tags. Examples: paleo, gluten-free, breakfast, main-dish
             </p>
           </div>
 
@@ -452,28 +506,9 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
             )}
           </div>
 
-          {/* Nutrition Source Selection */}
-          <div className="space-y-3">
-            <Label>Nutrition Source</Label>
-            <Select
-              value={formData.nutrition_source}
-              onValueChange={(value: 'calculated' | 'ai_generated' | 'manual') => 
-                setFormData(prev => ({ ...prev, nutrition_source: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select nutrition source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="calculated">Calculated from linked ingredients</SelectItem>
-                <SelectItem value="ai_generated">AI-generated (with ingredient list)</SelectItem>
-                <SelectItem value="manual">Manual entry</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* AI Ingredient List */}
-          {formData.nutrition_source === 'ai_generated' && (
+          {getAutoNutritionSource() === 'ai_generated' && (
             <div className="space-y-3">
               <Label>AI Ingredient List</Label>
               <div className="space-y-2">
@@ -520,7 +555,7 @@ export function AddRecipeDialog({ open, onOpenChange, onSave, editingRecipe }: A
           )}
 
           {/* Manual Nutrition Entry */}
-          {formData.nutrition_source === 'manual' && (
+          {getAutoNutritionSource() === 'manual' && (
             <div className="space-y-3">
               <Label>Manual Nutrition (per serving)</Label>
               <div className="grid grid-cols-2 gap-4">

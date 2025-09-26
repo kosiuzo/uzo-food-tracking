@@ -15,14 +15,12 @@ import { AddRecipeDialog } from '../components/AddRecipeDialog';
 import { RecipeGeneratorDialog } from '../components/RecipeGeneratorDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useRecipes } from '../hooks/useRecipes';
-import { useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Recipe } from '../types';
 
 export default function Recipes() {
   const { recipes, searchQuery, setSearchQuery, performSearch, addRecipe, updateRecipe, toggleFavorite, deleteRecipe, usingMockData, error } = useRecipes();
-  const { allTags } = useTags();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -40,6 +38,18 @@ export default function Recipes() {
   const [timeFilter, setTimeFilter] = useState('Any');
   const [servingsFilter, setServingsFilter] = useState('Any');
   const [sortBy, setSortBy] = useState('A–Z');
+
+  // Extract all unique tags from recipes for filtering
+  const allTagsFromRecipes = recipes.reduce((acc: {label: string, value: string}[], recipe) => {
+    if (recipe.tags) {
+      recipe.tags.forEach(tag => {
+        if (!acc.find(t => t.value === tag.name)) {
+          acc.push({ label: tag.name, value: tag.name });
+        }
+      });
+    }
+    return acc;
+  }, []);
 
   // Predefined tag options for quick filtering
   const predefinedTags = ['All', 'Chicken', 'Ground Beef', 'Salmon', 'Steak', 'Baking'];
@@ -84,8 +94,8 @@ export default function Recipes() {
 
       // Multi-select tag filter (from filter sheet)
       if (selectedTagIds.length > 0) {
-        const hasSelectedTag = selectedTagIds.some(tagId =>
-          recipe.tags?.some(tag => tag.id === tagId)
+        const hasSelectedTag = selectedTagIds.some(tagName =>
+          recipe.tags?.some(tag => tag.name === tagName)
         );
         if (!hasSelectedTag) return false;
       }
@@ -175,9 +185,9 @@ export default function Recipes() {
   const handleRecipeGenerated = async (generatedRecipe: Omit<Recipe, 'id' | 'is_favorite'> & { tagIds?: string[] }) => {
     try {
       const { tagIds, ...recipeData } = generatedRecipe;
-      await addRecipe({ 
-        ...recipeData, 
-        selectedTagIds: tagIds 
+      await addRecipe({
+        ...recipeData,
+        selectedTagIds: tagIds // Now these are tag names, not IDs
       });
       toast({
         title: 'AI Recipe Added!',
@@ -270,7 +280,7 @@ export default function Recipes() {
               <div className="space-y-3">
                 <label className="text-sm font-medium">Tags</label>
                 <MultiSelect
-                  options={allTags.map(tag => ({ label: tag.name, value: tag.id }))}
+                  options={allTagsFromRecipes}
                   onValueChange={setSelectedTagIds}
                   defaultValue={selectedTagIds}
                   placeholder="Select tags..."

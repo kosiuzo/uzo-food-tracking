@@ -38,11 +38,7 @@ interface UseInventorySearchResult {
   addItem: (item: Omit<FoodItem, 'id' | 'last_edited' | 'created_at' | 'updated_at'>) => Promise<FoodItem>;
   updateItem: (id: number, updates: Partial<FoodItem>) => Promise<void>;
   deleteItem: (id: number) => Promise<void>;
-  toggleStock: (id: number) => Promise<void>;
   refetch: () => Promise<void>;
-  
-  // Stats
-  outOfStockItems: FoodItem[];
 }
 
 export function useInventorySearch(): UseInventorySearchResult {
@@ -119,18 +115,15 @@ export function useInventorySearch(): UseInventorySearchResult {
         matchesSearch = nameMatch || brandMatch || categoryMatch || ingredientsMatch;
       }
       
-      // Apply filters
+      // Apply filters (removed stock filter since in_stock field was removed)
       const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      const matchesStock = stockFilter === 'all' || 
-                          (stockFilter === 'in-stock' && item.in_stock) ||
-                          (stockFilter === 'out-of-stock' && !item.in_stock);
       const matchesRating = ratingFilter === 'all' ||
                            (ratingFilter === 'unrated' && !item.rating) ||
                            (ratingFilter !== 'unrated' && item.rating === parseInt(ratingFilter));
-      
-      return matchesSearch && matchesCategory && matchesStock && matchesRating;
+
+      return matchesSearch && matchesCategory && matchesRating;
     });
-  }, [allItems, mockItems, debouncedSearchQuery, usingMockData, categoryFilter, stockFilter, ratingFilter]);
+  }, [allItems, mockItems, debouncedSearchQuery, usingMockData, categoryFilter, ratingFilter]);
 
   // Derive categories from current items
   const categories = useMemo(() => {
@@ -146,9 +139,7 @@ export function useInventorySearch(): UseInventorySearchResult {
     (usingMockData ? 'Using mock data - database connection unavailable' :
      itemsError instanceof Error ? itemsError.message : 'Failed to load items') : null;
 
-  // Stats
-  const outOfStockItems = useMemo(() => 
-    items.filter(item => !item.in_stock), [items]);
+  // Stats - outOfStockItems removed since in_stock field was removed
 
   // Actions
   const addItem = async (itemData: Omit<FoodItem, 'id' | 'last_edited' | 'created_at' | 'updated_at'>) => {
@@ -231,31 +222,20 @@ export function useInventorySearch(): UseInventorySearchResult {
         return;
       }
 
-      // Update in Supabase
+      // Update in Supabase - only map fields that exist in new schema
       const now = new Date().toISOString();
       const updateData: Record<string, unknown> = {};
-      
-      // Map updates to database fields
+
+      // Map updates to database fields (only existing fields)
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.brand !== undefined) updateData.brand = updates.brand || null;
       if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.in_stock !== undefined) updateData.in_stock = updates.in_stock;
-      if (updates.price !== undefined) updateData.price = updates.price || null;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url || null;
       if (updates.rating !== undefined) updateData.rating = updates.rating || null;
-      if (updates.serving_size !== undefined) updateData.serving_size_grams = updates.serving_size || null;
-      if (updates.serving_quantity !== undefined) updateData.serving_quantity = updates.serving_quantity || null;
-      if (updates.serving_unit !== undefined) updateData.serving_unit = updates.serving_unit || null;
-      if (updates.serving_unit_type !== undefined) updateData.serving_unit_type = updates.serving_unit_type || null;
       if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients || null;
       if (updates.notes !== undefined) updateData.notes = updates.notes || null;
 
-      if (updates.nutrition) {
-        if (updates.nutrition.calories_per_serving !== undefined) updateData.calories_per_serving = updates.nutrition.calories_per_serving || null;
-        if (updates.nutrition.carbs_per_serving !== undefined) updateData.carbs_per_serving = updates.nutrition.carbs_per_serving || null;
-        if (updates.nutrition.fat_per_serving !== undefined) updateData.fat_per_serving = updates.nutrition.fat_per_serving || null;
-        if (updates.nutrition.protein_per_serving !== undefined) updateData.protein_per_serving = updates.nutrition.protein_per_serving || null;
-      }
+      // Removed fields: in_stock, price, serving_*, nutrition fields
       
       updateData.last_edited = now;
       
@@ -300,12 +280,7 @@ export function useInventorySearch(): UseInventorySearchResult {
     }
   };
 
-  const toggleStock = async (id: number) => {
-    const item = items.find(item => item.id === id);
-    if (item) {
-      await updateItem(id, { in_stock: !item.in_stock });
-    }
-  };
+  // toggleStock function removed since in_stock field was removed from schema
 
   return {
     // Data
@@ -332,10 +307,6 @@ export function useInventorySearch(): UseInventorySearchResult {
     addItem,
     updateItem,
     deleteItem,
-    toggleStock,
     refetch: refetchItems,
-    
-    // Stats
-    outOfStockItems,
   };
 }

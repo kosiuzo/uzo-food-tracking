@@ -182,8 +182,8 @@ CREATE TRIGGER trigger_update_analytics_cache
   FOR EACH ROW
   EXECUTE FUNCTION update_analytics_cache();
 
--- 9. Create RPC function to get analytics data (simplified - recent periods queried directly)
-CREATE OR REPLACE FUNCTION get_analytics_data(p_days_back INTEGER DEFAULT 30)
+-- 9. Create RPC function to get analytics data with optional date filtering
+CREATE OR REPLACE FUNCTION get_analytics_data(p_days_back INTEGER DEFAULT NULL, p_user_id UUID DEFAULT NULL)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -191,97 +191,107 @@ AS $$
 DECLARE
   result JSONB;
   current_user_id UUID;
+  date_filter_condition TEXT;
 BEGIN
-  -- Get current user ID
-  current_user_id := auth.uid();
+  -- Get current user ID - use provided user_id for dev mode, otherwise auth.uid()
+  IF p_user_id IS NOT NULL THEN
+    current_user_id := p_user_id;
+  ELSE
+    current_user_id := auth.uid();
+  END IF;
 
   IF current_user_id IS NULL THEN
     RAISE EXCEPTION 'User must be authenticated';
   END IF;
 
-  -- Build simplified analytics JSON with only aggregated data
-  -- Note: recent_days, recent_weeks, recent_months are queried directly from frontend
-  SELECT jsonb_build_object(
-    'daily_averages', (
+  -- Build date filter condition only if p_days_back is provided
+  -- Use >= with exact interval to get last N calendar days
+  IF p_days_back IS NOT NULL THEN
+    date_filter_condition := ' AND date >= CURRENT_DATE - INTERVAL ''' || (p_days_back - 1) || ' days''';
+  ELSE
+    date_filter_condition := '';
+  END IF;
+
+  -- Build simplified analytics JSON with optional date filtering
+  EXECUTE 'SELECT jsonb_build_object(
+    ''daily_averages'', (
       SELECT jsonb_build_object(
-        'calories', COALESCE(ROUND(AVG(calories), 0), 0),
-        'protein', COALESCE(ROUND(AVG(protein), 0), 0),
-        'carbs', COALESCE(ROUND(AVG(carbs), 0), 0),
-        'fat', COALESCE(ROUND(AVG(fat), 0), 0),
-        'days_count', COUNT(*)
+        ''calories'', COALESCE(ROUND(AVG(calories), 0), 0),
+        ''protein'', COALESCE(ROUND(AVG(protein), 0), 0),
+        ''carbs'', COALESCE(ROUND(AVG(carbs), 0), 0),
+        ''fat'', COALESCE(ROUND(AVG(fat), 0), 0),
+        ''days_count'', COUNT(*)
       )
       FROM daily_analytics_cache
-      WHERE user_id = current_user_id
-        AND date >= CURRENT_DATE - INTERVAL '1 day' * p_days_back
+      WHERE user_id = $1' || date_filter_condition || '
     ),
 
-    'weekly_averages', (
+    ''weekly_averages'', (
       SELECT jsonb_build_object(
-        'calories', COALESCE(ROUND(AVG(avg_calories), 0), 0),
-        'protein', COALESCE(ROUND(AVG(avg_protein), 0), 0),
-        'carbs', COALESCE(ROUND(AVG(avg_carbs), 0), 0),
-        'fat', COALESCE(ROUND(AVG(avg_fat), 0), 0),
-        'weeks_count', COUNT(*)
+        ''calories'', COALESCE(ROUND(AVG(avg_calories), 0), 0),
+        ''protein'', COALESCE(ROUND(AVG(avg_protein), 0), 0),
+        ''carbs'', COALESCE(ROUND(AVG(avg_carbs), 0), 0),
+        ''fat'', COALESCE(ROUND(AVG(avg_fat), 0), 0),
+        ''weeks_count'', COUNT(*)
       )
       FROM weekly_analytics_cache
-      WHERE user_id = current_user_id
-        AND week_start >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '1 day' * p_days_back)
+      WHERE user_id = $1' || CASE WHEN p_days_back IS NOT NULL THEN ' AND week_start >= DATE_TRUNC(''week'', CURRENT_DATE - INTERVAL ''' || (p_days_back - 1) || ' days'')' ELSE '' END || '
     ),
 
-    'monthly_averages', (
+    ''monthly_averages'', (
       SELECT jsonb_build_object(
-        'calories', COALESCE(ROUND(AVG(avg_calories), 0), 0),
-        'protein', COALESCE(ROUND(AVG(avg_protein), 0), 0),
-        'carbs', COALESCE(ROUND(AVG(avg_carbs), 0), 0),
-        'fat', COALESCE(ROUND(AVG(avg_fat), 0), 0),
-        'months_count', COUNT(*)
+        ''calories'', COALESCE(ROUND(AVG(avg_calories), 0), 0),
+        ''protein'', COALESCE(ROUND(AVG(avg_protein), 0), 0),
+        ''carbs'', COALESCE(ROUND(AVG(avg_carbs), 0), 0),
+        ''fat'', COALESCE(ROUND(AVG(avg_fat), 0), 0),
+        ''months_count'', COUNT(*)
       )
       FROM monthly_analytics_cache
-      WHERE user_id = current_user_id
-        AND month_start >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 day' * p_days_back)
+      WHERE user_id = $1' || CASE WHEN p_days_back IS NOT NULL THEN ' AND month_start >= DATE_TRUNC(''month'', CURRENT_DATE - INTERVAL ''' || (p_days_back - 1) || ' days'')' ELSE '' END || '
     ),
 
-    'calorie_extremes', (
+    ''calorie_extremes'', (
       SELECT jsonb_build_object(
-        'highest', (
+        ''highest'', (
           SELECT jsonb_build_object(
-            'date', date,
-            'calories', ROUND(calories, 0)
+            ''date'', date,
+            ''calories'', ROUND(calories, 0)
           )
           FROM daily_analytics_cache
-          WHERE user_id = current_user_id
+          WHERE user_id = $1' || date_filter_condition || '
           ORDER BY calories DESC
           LIMIT 1
         ),
-        'lowest', (
+        ''lowest'', (
           SELECT jsonb_build_object(
-            'date', date,
-            'calories', ROUND(calories, 0)
+            ''date'', date,
+            ''calories'', ROUND(calories, 0)
           )
           FROM daily_analytics_cache
-          WHERE user_id = current_user_id
+          WHERE user_id = $1' || date_filter_condition || '
           ORDER BY calories ASC
           LIMIT 1
         )
       )
     ),
 
-    'summary', (
+    ''summary'', (
       SELECT jsonb_build_object(
-        'total_meals', (
+        ''total_meals'', (
           SELECT COALESCE(SUM(meals_count), 0)
           FROM daily_analytics_cache
-          WHERE user_id = current_user_id
+          WHERE user_id = $1' || date_filter_condition || '
         ),
-        'days_with_data', (
+        ''days_with_data'', (
           SELECT COUNT(*)
           FROM daily_analytics_cache
-          WHERE user_id = current_user_id
+          WHERE user_id = $1' || date_filter_condition || '
         )
       )
     )
-
-  ) INTO result;
+  )'
+  INTO result
+  USING current_user_id;
 
   RETURN result;
 END;

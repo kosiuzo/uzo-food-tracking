@@ -72,10 +72,40 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<'all' | 30 | 60 | 90>(30);
 
   useEffect(() => {
     loadAnalyticsData();
-  }, []);
+  }, [selectedPeriod]);
+
+  // Helper function to build cache queries with optional date filtering
+  const buildCacheQuery = (tableName: string, orderField: string) => {
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    let query = supabase.from(tableName).select('*');
+
+    if (bypassAuth) {
+      query = query.eq('user_id', 'e57888be-f990-4cd4-85ad-a519be335938');
+    }
+
+    if (selectedPeriod !== 'all') {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - (selectedPeriod - 1));
+      const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
+
+      if (tableName === 'daily_analytics_cache') {
+        query = query.gte('date', cutoffDateStr);
+      } else if (tableName === 'weekly_analytics_cache') {
+        query = query.gte('week_start', cutoffDateStr);
+      } else if (tableName === 'monthly_analytics_cache') {
+        query = query.gte('month_start', cutoffDateStr);
+      }
+    }
+
+    return query.order(orderField, { ascending: false }).limit(
+      tableName === 'daily_analytics_cache' ? 7 :
+      tableName === 'weekly_analytics_cache' ? 4 : 2
+    );
+  };
 
   const loadAnalyticsData = async () => {
     try {
@@ -83,6 +113,17 @@ export default function Analytics() {
       setError(null);
 
       console.log('🔄 Loading analytics data from cache system...');
+
+      // Check if we're in bypass mode and need to pass user_id
+      const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+      const rpcParams = bypassAuth
+        ? {
+            p_user_id: 'e57888be-f990-4cd4-85ad-a519be335938',
+            ...(selectedPeriod !== 'all' && { p_days_back: selectedPeriod })
+          }
+        : {
+            ...(selectedPeriod !== 'all' && { p_days_back: selectedPeriod })
+          };
 
       // Load all data in parallel
       const [
@@ -92,28 +133,16 @@ export default function Analytics() {
         recentMonthsResult
       ] = await Promise.all([
         // Get aggregated analytics from RPC
-        supabase.rpc('get_analytics_data', { p_days_back: 30 }),
+        supabase.rpc('get_analytics_data', rpcParams),
 
-        // Get recent 7 days from cache table
-        supabase
-          .from('daily_analytics_cache')
-          .select('*')
-          .order('date', { ascending: false })
-          .limit(7),
+        // Get recent days from cache table
+        buildCacheQuery('daily_analytics_cache', 'date'),
 
-        // Get recent 4 weeks from cache table
-        supabase
-          .from('weekly_analytics_cache')
-          .select('*')
-          .order('week_start', { ascending: false })
-          .limit(4),
+        // Get recent weeks from cache table
+        buildCacheQuery('weekly_analytics_cache', 'week_start'),
 
-        // Get recent 2 months from cache table
-        supabase
-          .from('monthly_analytics_cache')
-          .select('*')
-          .order('month_start', { ascending: false })
-          .limit(2)
+        // Get recent months from cache table
+        buildCacheQuery('monthly_analytics_cache', 'month_start')
       ]);
 
       // Check for errors
@@ -176,6 +205,12 @@ export default function Analytics() {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
+  // Get period label for display
+  const getPeriodLabel = () => {
+    if (selectedPeriod === 'all') return 'All Time';
+    return `Last ${selectedPeriod} Days`;
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -183,6 +218,29 @@ export default function Analytics() {
         <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">Your food tracking insights</p>
+        </div>
+
+        {/* Period Filter Buttons */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Time Period</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: 30 as const, label: '30 Days' },
+              { value: 60 as const, label: '60 Days' },
+              { value: 90 as const, label: '90 Days' },
+              { value: 'all' as const, label: 'All Time' }
+            ].map((period) => (
+              <Button
+                key={period.value}
+                variant={selectedPeriod === period.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPeriod(period.value)}
+                className="min-w-[80px]"
+              >
+                {period.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -229,7 +287,7 @@ export default function Analytics() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Daily Averages ({analytics.daily_averages.days_count} days)
+                Daily Averages ({analytics.daily_averages.days_count} days) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -291,7 +349,7 @@ export default function Analytics() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Weekly Averages ({analytics.weekly_averages.weeks_count} weeks)
+                Weekly Averages ({analytics.weekly_averages.weeks_count} weeks) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -353,7 +411,7 @@ export default function Analytics() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                Monthly Averages ({analytics.monthly_averages.months_count} months)
+                Monthly Averages ({analytics.monthly_averages.months_count} months) - {getPeriodLabel()}
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

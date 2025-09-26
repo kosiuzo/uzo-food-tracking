@@ -8,7 +8,7 @@ export const DEFAULT_SETTINGS = {
   carbsTarget: 100,
   fatTarget: 100,
   calorieTargetEnabled: false,
-  proteinTargetEnabled: true,
+  proteinTargetEnabled: false,
   carbsTargetEnabled: false,
   fatTargetEnabled: false,
 };

@@ -19,23 +19,23 @@ export function dbItemToFoodItem(dbItem: DbItemRow): FoodItem {
     name: dbItem.name,
     brand: dbItem.brand || undefined,
     category: dbItem.category || 'Uncategorized',
-    in_stock: dbItem.in_stock ?? true,
-    price: dbItem.price || undefined,
-    serving_size: dbItem.serving_size_grams || undefined,
-    serving_quantity: dbItem.serving_quantity || undefined,
-    serving_unit: dbItem.serving_unit || undefined,
-    serving_unit_type: dbItem.serving_unit_type || undefined,
+    in_stock: true, // Default to in stock since in_stock field was removed from schema
+    price: undefined, // Price fields were removed from schema
+    serving_size: undefined, // Serving fields were removed from schema
+    serving_quantity: undefined,
+    serving_unit: undefined,
+    serving_unit_type: undefined,
     image_url: dbItem.image_url || undefined,
     ingredients: dbItem.ingredients || undefined,
     notes: (dbItem.notes as { text: string; date: string }[]) || [],
     nutrition: {
-      calories_per_serving: dbItem.calories_per_serving || 0,
-      protein_per_serving: dbItem.protein_per_serving || 0,
-      carbs_per_serving: dbItem.carbs_per_serving || 0,
-      fat_per_serving: dbItem.fat_per_serving || 0,
-      fiber_per_serving: 0, // Note: fiber not stored in DB yet
+      calories_per_serving: 0, // Nutrition fields were removed from schema
+      protein_per_serving: 0,
+      carbs_per_serving: 0,
+      fat_per_serving: 0,
+      fiber_per_serving: 0,
     },
-    last_purchased: dbItem.last_purchased || undefined,
+    last_purchased: undefined, // last_purchased field was removed
     rating: dbItem.rating || undefined,
     last_edited: dbItem.last_edited || dbItem.updated_at,
     created_at: dbItem.created_at,
@@ -51,21 +51,12 @@ export function foodItemToDbInsert(item: Partial<FoodItem>): Database['public'][
     name: item.name!,
     brand: item.brand || null,
     category: item.category || null,
-    in_stock: item.in_stock ?? true,
-    price: item.price || null,
-    serving_size_grams: item.serving_size || null,
-    serving_quantity: item.serving_quantity || null,
-    serving_unit: item.serving_unit || null,
-    serving_unit_type: item.serving_unit_type || null,
     image_url: item.image_url || null,
     ingredients: item.ingredients || null,
-    calories_per_serving: item.nutrition?.calories_per_serving || null,
-    protein_per_serving: item.nutrition?.protein_per_serving || null,
-    carbs_per_serving: item.nutrition?.carbs_per_serving || null,
-    fat_per_serving: item.nutrition?.fat_per_serving || null,
     rating: item.rating || null,
-    last_purchased: item.last_purchased || null,
     notes: item.notes || null,
+    // Removed fields: in_stock, price, serving_*, nutrition fields, last_purchased
+    // purchase_count and normalized_name are auto-handled by database
   };
 }
 
@@ -73,19 +64,28 @@ export function foodItemToDbInsert(item: Partial<FoodItem>): Database['public'][
  * Convert database recipe row to application Recipe
  */
 export function dbRecipeToRecipe(
-  dbRecipe: DbRecipeRow, 
-  ingredients: Array<{item_id: number, quantity: number, unit: string}> = [], 
-  tags: Tag[] = []
+  dbRecipe: DbRecipeRow,
+  ingredients: Array<{item_id: number, quantity: number, unit: string}> = []
 ): Recipe {
   const nutrition = (dbRecipe.nutrition_per_serving as Record<string, number>) || {};
-  
+
+  // Convert tags array to Tag objects with simple structure
+  const tags: Tag[] = (dbRecipe.tags || []).map((tagName: string, index: number) => ({
+    id: index + 1, // Simple index-based ID for display purposes
+    name: tagName,
+    color: '#3b82f6', // Default color
+    description: undefined,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }));
+
   return {
     id: dbRecipe.id,
     name: dbRecipe.name,
     instructions: dbRecipe.instructions || '',
     servings: dbRecipe.servings || 1,
     total_time_minutes: dbRecipe.total_time || undefined,
-    ingredients: ingredients,
+    ingredients: [], // No longer using recipe_items table - ingredients stored as text array
     ingredient_list: dbRecipe.ingredient_list || undefined,
     nutrition_source: (dbRecipe.nutrition_source as 'calculated' | 'ai_generated' | 'manual') || 'calculated',
     nutrition: {
@@ -125,6 +125,7 @@ export function recipeToDbInsert(recipe: Partial<Recipe>): Database['public']['T
     is_favorite: recipe.is_favorite || false,
     notes: recipe.notes || null,
     feedback: recipe.feedback || null,
+    tags: recipe.tags ? recipe.tags.map(tag => tag.name) : [],
   };
 }
 

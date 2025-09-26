@@ -203,11 +203,11 @@ export default function Meals() {
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-1.5">
 
           {/* Action Row */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
             {/* Date Pill */}
             <Sheet open={isDateSheetOpen} onOpenChange={setIsDateSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="secondary" className="gap-2 rounded-full h-10">
+                <Button variant="secondary" className="gap-2 rounded-full h-10 w-full sm:w-auto">
                   {getDateLabel()}
                 </Button>
               </SheetTrigger>
@@ -317,7 +317,7 @@ export default function Meals() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                   aria-label="Meal actions"
                 >
                   <Plus className="h-4 w-4" />

@@ -17,10 +17,10 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "oas:validate": "swagger-cli validate docs/openapi-3.0.yaml",
-    "oas:bundle": "redocly bundle docs/openapi-3.0.yaml -o docs/openapi-3.1.bundle.yaml",
-    "oas:lint": "redocly lint docs/openapi-3.0.yaml",
-    "oas:spectral": "spectral lint docs/openapi-3.0.yaml",
+    "oas:validate": "swagger-cli validate docs/openapi-3.1.yaml",
+    "oas:bundle": "redocly bundle docs/openapi-3.1.yaml -o docs/openapi-3.1.bundle.yaml",
+    "oas:lint": "redocly lint docs/openapi-3.1.yaml",
+    "oas:spectral": "spectral lint docs/openapi-3.1.yaml --ruleset spectral:oas",
     "oas:all": "npm run oas:validate && npm run oas:lint && npm run oas:spectral"
   },
   "dependencies": {

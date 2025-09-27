@@ -346,7 +346,7 @@ paths:
           required: true
           description: PostgREST filter syntax, e.g. id=eq.123
           schema:
-            type: string
+            type: integer
           example: eq.123
       requestBody:
         required: true
@@ -451,12 +451,60 @@ paths:
         - apiKeyAuth: []
     patch:
       operationId: updateRecipe
+      summary: Update a recipe
+      description: Updates an existing recipe entry. Include only the fields you want to update.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123
+          schema:
+            type: string
+          example: eq.123
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/recipes"
+              $ref: "#/components/schemas/recipes_update"
+            examples:
+              updateName:
+                summary: Update recipe name
+                description: Update just the name for a recipe
+                value:
+                  name: Updated Chicken Stir Fry
+              updateFavorite:
+                summary: Mark as favorite
+                description: Update the favorite status of a recipe
+                value:
+                  is_favorite: true
+              updateNotes:
+                summary: Update notes
+                description: Update recipe notes and cooking feedback
+                value:
+                  notes: Added more vegetables, very satisfying meal
+                  times_cooked: 5
+              fullUpdate:
+                summary: Full recipe update
+                description: Update multiple fields including instructions and nutrition
+                value:
+                  name: Enhanced Chicken Stir Fry
+                  total_time: 25
+                  servings: 4
+                  instructions: Heat oil, cook chicken, add vegetables, season with soy sauce
+                  is_favorite: true
+                  notes: Family favorite recipe, very healthy
+                  ingredient_list:
+                    - 1 lb chicken breast
+                    - 2 cups mixed vegetables
+                    - 2 tbsp soy sauce
       responses:
         "204":
           description: No Content
@@ -527,12 +575,54 @@ paths:
         - apiKeyAuth: []
     patch:
       operationId: updateItem
+      summary: Update an item
+      description: Updates an existing food item entry. Include only the fields you want to update.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123
+          schema:
+            type: string
+          example: eq.123
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/items"
+              $ref: "#/components/schemas/items_update"
+            examples:
+              updateName:
+                summary: Update item name
+                description: Update just the name for an item
+                value:
+                  name: Updated Chicken Breast
+              updateNutrition:
+                summary: Update nutrition info
+                description: Update nutrition information for an item
+                value:
+                  nutrition_per_serving:
+                    calories: 165
+                    protein: 31
+                    carbs: 0
+                    fat: 3.6
+              fullUpdate:
+                summary: Full item update
+                description: Update multiple fields including category and notes
+                value:
+                  name: Premium Organic Chicken Breast
+                  category: Protein
+                  brand: Organic Valley
+                  notes:
+                    - High quality protein source
+                    - Good for meal prep
       responses:
         "204":
           description: No Content
@@ -574,6 +664,9 @@ paths:
   /rpc/bulk_insert_items:
     post:
       operationId: bulkInsertItems
+      summary: Bulk insert multiple food items
+      description: Use when user wants to add multiple food items at once like "add these grocery items", "import my shopping
+        list". More efficient than individual POST requests for 3+ items. Each item needs at least a name.
       requestBody:
         required: true
         content:
@@ -606,6 +699,9 @@ paths:
   /rpc/bulk_insert_recipes:
     post:
       operationId: bulkInsertRecipes
+      summary: Bulk insert multiple recipes
+      description: Use when user wants to add multiple recipes at once like "add these meal prep recipes", "import my dinner
+        recipes". More efficient than individual POST requests for 3+ recipes. Each recipe needs at least a name.
       requestBody:
         required: true
         content:
@@ -982,6 +1078,102 @@ components:
           type: string
           format: uuid
           example: 43af6e15-1b3d-4634-be91-d59cf414a33e
+    items_update:
+      type: object
+      description: Schema for updating items. All fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          example: Updated Chicken Breast
+        brand:
+          type: string
+          example: Organic Valley
+        category:
+          type: string
+          example: Protein
+        image_url:
+          type: string
+          example: https://example.com/chicken.jpg
+        ingredients:
+          type: string
+          example: Organic chicken breast
+        purchase_count:
+          type: integer
+          example: 5
+        rating:
+          type: integer
+          example: 4
+        notes:
+          type: array
+          items:
+            type: object
+          example:
+            - High quality protein source
+            - Good for meal prep
+        nutrition_per_serving:
+          type: object
+          example:
+            calories: 165
+            protein: 31
+            carbs: 0
+            fat: 3.6
+    recipes_update:
+      type: object
+      description: Schema for updating recipes. All fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          example: Updated Chicken Stir Fry
+        total_time:
+          type: integer
+          example: 25
+        servings:
+          type: integer
+          example: 4
+        instructions:
+          type: string
+          example: Heat oil, cook chicken, add vegetables, season with soy sauce
+        nutrition_per_serving:
+          type: object
+          example:
+            calories: 520
+            protein: 45
+            carbs: 35
+            fat: 18
+        is_favorite:
+          type: boolean
+          example: true
+        source_link:
+          type: string
+          example: https://example.com/recipe
+        notes:
+          type: string
+          example: Family favorite recipe, very healthy
+        times_cooked:
+          type: integer
+          example: 5
+        ingredient_list:
+          type: array
+          items:
+            type: string
+          example:
+            - 1 lb chicken breast
+            - 2 cups mixed vegetables
+            - 2 tbsp soy sauce
+        nutrition_source:
+          type: string
+          example: calculated
+        feedback:
+          type: array
+          items:
+            type: object
+        tags:
+          type: array
+          items:
+            type: string
+          example:
+            - healthy
+            - quick
     analytics_data:
       type: object
       properties:

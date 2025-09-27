@@ -16,6 +16,9 @@ paths:
   /weekly_analytics_cache:
     get:
       operationId: getWeeklyAnalyticsCache
+      summary: Get weekly nutrition averages and trends
+      description: Use when user asks "show my weekly nutrition trends", "average calories per week", "how did I eat this week
+        vs last week". Shows weekly averages and days with data. Perfect for trend analysis.
       parameters:
         - name: user_id
           in: query
@@ -58,6 +61,10 @@ paths:
   /daily_analytics_cache:
     get:
       operationId: getDailyAnalyticsCache
+      summary: Get daily nutrition summaries (macros per day)
+      description: Use when user asks "show my macros for each day", "how many calories did I eat yesterday", "my daily
+        nutrition breakdown". Pre-calculated daily totals - much faster than summing meal_logs. Filter by date for
+        specific days.
       parameters:
         - name: user_id
           in: query
@@ -100,6 +107,9 @@ paths:
   /monthly_analytics_cache:
     get:
       operationId: getMonthlyAnalyticsCache
+      summary: Get monthly nutrition averages and long-term patterns
+      description: Use when user asks "show my monthly nutrition patterns", "how did I eat this month", "monthly macro
+        averages". Best for long-term tracking and monthly comparisons.
       parameters:
         - name: user_id
           in: query
@@ -142,9 +152,9 @@ paths:
   /meal_logs:
     get:
       operationId: getMealLogs
-      summary: Get meal logs with search capabilities
-      description: Retrieves meal logs with search support. Use search_vector for full-text search (fts.chicken&vegetables),
-        meal_name/notes for pattern matching (ilike.*pattern*), and standard filters for exact matches.
+      summary: Find and retrieve specific meals
+      description: 'Find specific meals by ingredients/content. Use search_vector=fts.chicken for "meals with chicken". For
+        re-logging: GET original meal, POST with new eaten_on. For analytics use cache endpoints instead.'
       parameters:
         - name: user_id
           in: query
@@ -158,65 +168,84 @@ paths:
         - name: eaten_on
           in: query
           required: false
+          description: Use when user asks for meals from specific dates like "what did I eat yesterday", "meals from last week".
+            Use eq.2025-01-15 for exact date, gte.2025-01-01 for "since January".
           schema:
             type: string
             format: date
+          examples:
+            exact_date:
+              summary: Specific date
+              value: eq.2025-01-15
+              description: "Meals eaten on January 15th. Query: ?eaten_on=eq.2025-01-15"
+            since_date:
+              summary: Since date
+              value: gte.2025-01-01
+              description: "Meals since January 1st. Query: ?eaten_on=gte.2025-01-01"
+            date_range:
+              summary: Date range
+              value: gte.2025-01-01&eaten_on=lte.2025-01-31
+              description: Meals in January. Combine with &eaten_on=lte.2025-01-31
         - name: meal_name
           in: query
           required: false
-          description: Search meal names with exact match or pattern matching
+          description: Use when user asks for meals by exact name like "show me Greek Yogurt Bowl" (use eq.) or partial name like
+            "meals with chicken in the name" (use ilike.*chicken*)
           schema:
             type: string
           examples:
             exact_match:
               summary: Exact match
-              value: "eq.Greek Yogurt Bowl"
+              value: eq.Greek Yogurt Bowl
               description: "Find meals with exact name 'Greek Yogurt Bowl'. Query: ?meal_name=eq.Greek Yogurt Bowl"
             fuzzy_search:
               summary: Fuzzy search
-              value: "ilike.*chicken*"
+              value: ilike.*chicken*
               description: "Find meal names containing 'chicken' (case-insensitive). Query: ?meal_name=ilike.*chicken*"
             starts_with:
               summary: Starts with
-              value: "ilike.Breakfast*"
+              value: ilike.Breakfast*
               description: "Find meals starting with 'Breakfast'. Query: ?meal_name=ilike.Breakfast*"
         - name: search_vector
           in: query
           required: false
-          description: Full-text search across meal content (meal_name, notes, items). Supports AND (&), OR (|), NOT (!) operators to help with semantic searches
+          description: 'Use for semantic food searches like "meals with chicken", "breakfast with eggs", "dinner without meat".
+            Searches across meal names, ingredients, and notes. Format: fts.chicken for single ingredient,
+            fts.chicken&vegetables for AND, fts.breakfast|lunch for OR.'
           schema:
             type: string
           examples:
             and_search:
               summary: AND search
-              value: "fts.chicken&vegetables"
+              value: fts.chicken&vegetables
               description: "Find meals containing both 'chicken' AND 'vegetables'. Query: ?search_vector=fts.chicken&vegetables"
             or_search:
               summary: OR search
-              value: "fts.breakfast|lunch"
+              value: fts.breakfast|lunch
               description: "Find meals containing 'breakfast' OR 'lunch'. Query: ?search_vector=fts.breakfast|lunch"
             not_search:
               summary: NOT search
-              value: "fts.chicken&!fried"
+              value: fts.chicken&!fried
               description: "Find chicken meals that are NOT fried. Query: ?search_vector=fts.chicken&!fried"
         - name: notes
           in: query
           required: false
-          description: Search in meal notes with pattern matching
+          description: Use when user asks about meal context like "meals I marked as healthy", "dinners I enjoyed", "meals with
+            notes about being tasty". Searches user comments and notes.
           schema:
             type: string
           examples:
             contains:
               summary: Contains text
-              value: "ilike.*dinner*"
+              value: ilike.*dinner*
               description: "Find meals with notes containing 'dinner'. Query: ?notes=ilike.*dinner*"
             healthy_meals:
               summary: Healthy meals
-              value: "ilike.*healthy*"
+              value: ilike.*healthy*
               description: "Find meals with 'healthy' in notes. Query: ?notes=ilike.*healthy*"
             not_empty:
               summary: Has notes
-              value: "not.is.null"
+              value: not.is.null
               description: "Find meals that have notes (not empty). Query: ?notes=not.is.null"
         - name: select
           in: query
@@ -243,9 +272,10 @@ paths:
         - apiKeyAuth: []
     post:
       operationId: createMealLog
-      summary: Create a new meal log
-      description: Inserts a new meal log entry. Requires meal_name, items array, eaten_on date, and macros object with
-        nutrition data.
+      summary: Log a new meal or re-log an existing one
+      description: "Use when user says \"log this meal\", \"I ate chicken again\", or \"re-log yesterday's dinner\". For
+        re-logging: first GET the original meal from meal_logs, copy the meal_name/items/macros, then POST with new
+        eaten_on date. Always include complete macros object with calories, protein, carbs, fat."
       requestBody:
         required: true
         content:
@@ -513,6 +543,9 @@ paths:
   /rpc/get_analytics_data:
     get:
       operationId: getAnalyticsData
+      summary: Get comprehensive analytics (daily, weekly, monthly combined)
+      description: Use when user asks for "complete nutrition overview", "all my analytics", or wants daily/weekly/monthly
+        data in one call. Returns combined analytics data structure. Use specific cache endpoints for targeted queries.
       parameters:
         - name: p_user_id
           in: query

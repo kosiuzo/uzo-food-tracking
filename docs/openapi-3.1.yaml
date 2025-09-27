@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  description: "Uzo Food Tracking API - Simplified for Custom GPT"
+  description: Uzo Food Tracking API - Simplified for Custom GPT
   title: Uzo Food Tracking API
   version: 13.0.4
   license:
@@ -23,8 +23,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: week_start
           in: query
           required: false
@@ -54,7 +55,6 @@ paths:
         - Analytics
       security:
         - apiKeyAuth: []
-
   /daily_analytics_cache:
     get:
       operationId: getDailyAnalyticsCache
@@ -65,8 +65,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: date
           in: query
           required: false
@@ -96,7 +97,6 @@ paths:
         - Analytics
       security:
         - apiKeyAuth: []
-
   /monthly_analytics_cache:
     get:
       operationId: getMonthlyAnalyticsCache
@@ -107,8 +107,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: month_start
           in: query
           required: false
@@ -138,10 +139,12 @@ paths:
         - Analytics
       security:
         - apiKeyAuth: []
-
   /meal_logs:
     get:
       operationId: getMealLogs
+      summary: Get meal logs with search capabilities
+      description: Retrieves meal logs with search support. Use search_vector for full-text search (fts.chicken&vegetables),
+        meal_name/notes for pattern matching (ilike.*pattern*), and standard filters for exact matches.
       parameters:
         - name: user_id
           in: query
@@ -149,8 +152,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: eaten_on
           in: query
           required: false
@@ -160,8 +164,60 @@ paths:
         - name: meal_name
           in: query
           required: false
+          description: Search meal names with exact match or pattern matching
           schema:
             type: string
+          examples:
+            exact_match:
+              summary: Exact match
+              value: "eq.Greek Yogurt Bowl"
+              description: "Find meals with exact name 'Greek Yogurt Bowl'. Query: ?meal_name=eq.Greek Yogurt Bowl"
+            fuzzy_search:
+              summary: Fuzzy search
+              value: "ilike.*chicken*"
+              description: "Find meal names containing 'chicken' (case-insensitive). Query: ?meal_name=ilike.*chicken*"
+            starts_with:
+              summary: Starts with
+              value: "ilike.Breakfast*"
+              description: "Find meals starting with 'Breakfast'. Query: ?meal_name=ilike.Breakfast*"
+        - name: search_vector
+          in: query
+          required: false
+          description: Full-text search across meal content (meal_name, notes, items). Supports AND (&), OR (|), NOT (!) operators to help with semantic searches
+          schema:
+            type: string
+          examples:
+            and_search:
+              summary: AND search
+              value: "fts.chicken&vegetables"
+              description: "Find meals containing both 'chicken' AND 'vegetables'. Query: ?search_vector=fts.chicken&vegetables"
+            or_search:
+              summary: OR search
+              value: "fts.breakfast|lunch"
+              description: "Find meals containing 'breakfast' OR 'lunch'. Query: ?search_vector=fts.breakfast|lunch"
+            not_search:
+              summary: NOT search
+              value: "fts.chicken&!fried"
+              description: "Find chicken meals that are NOT fried. Query: ?search_vector=fts.chicken&!fried"
+        - name: notes
+          in: query
+          required: false
+          description: Search in meal notes with pattern matching
+          schema:
+            type: string
+          examples:
+            contains:
+              summary: Contains text
+              value: "ilike.*dinner*"
+              description: "Find meals with notes containing 'dinner'. Query: ?notes=ilike.*dinner*"
+            healthy_meals:
+              summary: Healthy meals
+              value: "ilike.*healthy*"
+              description: "Find meals with 'healthy' in notes. Query: ?notes=ilike.*healthy*"
+            not_empty:
+              summary: Has notes
+              value: "not.is.null"
+              description: "Find meals that have notes (not empty). Query: ?notes=not.is.null"
         - name: select
           in: query
           required: false
@@ -187,27 +243,114 @@ paths:
         - apiKeyAuth: []
     post:
       operationId: createMealLog
+      summary: Create a new meal log
+      description: Inserts a new meal log entry. Requires meal_name, items array, eaten_on date, and macros object with
+        nutrition data.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/meal_logs"
+            examples:
+              minimalMealLog:
+                summary: Minimal meal log
+                description: Smallest recommended payload to create a meal log entry
+                value:
+                  meal_name: Greek Yogurt Bowl
+                  items:
+                    - 1 cup plain Greek yogurt
+                    - 1/2 cup blueberries
+                  macros:
+                    calories: 210
+                    protein: 20
+                    carbs: 18
+                    fat: 7
+                  eaten_on: 2025-01-15
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
+              fullMealLog:
+                summary: Full meal log with rating and notes
+                description: Includes optional fields commonly captured by the app
+                value:
+                  meal_name: Spicy Chicken Stir Fry
+                  items:
+                    - 8 oz chicken breast
+                    - 1 cup mixed vegetables
+                    - 1 tbsp soy sauce
+                  notes: Weeknight dinner, lots of veggies
+                  rating: 4.5
+                  macros:
+                    calories: 520
+                    protein: 55
+                    carbs: 32
+                    fat: 18
+                  eaten_on: 2025-01-14
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
       responses:
         "201":
           description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/meal_logs"
       tags:
         - Meal Logs
       security:
         - apiKeyAuth: []
     patch:
       operationId: updateMealLog
+      summary: Update a meal log
+      description: Updates an existing meal log entry. Include only the fields you want to update.
+      parameters:
+        - name: Prefer
+          in: header
+          required: false
+          description: Ask PostgREST to return changed rows.
+          schema:
+            type: string
+            example: return=representation
+        - name: id
+          in: query
+          required: true
+          description: PostgREST filter syntax, e.g. id=eq.123
+          schema:
+            type: string
+          example: eq.123
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/meal_logs"
+              $ref: "#/components/schemas/meal_logs_update"
+            examples:
+              updateRating:
+                summary: Update meal rating
+                description: Update just the rating for a meal
+                value:
+                  rating: 5
+              updateMacros:
+                summary: Update macros
+                description: Update nutrition information for a meal
+                value:
+                  macros:
+                    calories: 550
+                    protein: 60
+                    carbs: 35
+                    fat: 20
+              fullUpdate:
+                summary: Full meal update
+                description: Update multiple fields including notes and rating
+                value:
+                  meal_name: Updated Chicken Stir Fry
+                  notes: Added extra vegetables, very filling
+                  rating: 4.8
+                  macros:
+                    calories: 580
+                    protein: 58
+                    carbs: 38
+                    fat: 22
       responses:
         "204":
           description: No Content
@@ -215,7 +358,6 @@ paths:
         - Meal Logs
       security:
         - apiKeyAuth: []
-
   /recipes:
     get:
       operationId: getRecipes
@@ -226,8 +368,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: name
           in: query
           required: false
@@ -291,7 +434,6 @@ paths:
         - Recipes
       security:
         - apiKeyAuth: []
-
   /items:
     get:
       operationId: getItems
@@ -302,8 +444,9 @@ paths:
           description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
-          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
+            enum:
+              - eq.43af6e15-1b3d-4634-be91-d59cf414a33e
+          example: eq.43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: name
           in: query
           required: false
@@ -367,7 +510,6 @@ paths:
         - Items
       security:
         - apiKeyAuth: []
-
   /rpc/get_analytics_data:
     get:
       operationId: getAnalyticsData
@@ -375,11 +517,11 @@ paths:
         - name: p_user_id
           in: query
           required: false
-          description: "User ID parameter for RPC function"
+          description: User ID parameter for RPC function
           schema:
             type: string
             format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
         - name: p_days_back
           in: query
           required: false
@@ -396,7 +538,6 @@ paths:
         - Analytics
       security:
         - apiKeyAuth: []
-
   /rpc/bulk_insert_items:
     post:
       operationId: bulkInsertItems
@@ -429,7 +570,6 @@ paths:
         - Bulk Operations
       security:
         - apiKeyAuth: []
-
   /rpc/bulk_insert_recipes:
     post:
       operationId: bulkInsertRecipes
@@ -462,10 +602,12 @@ paths:
         - Bulk Operations
       security:
         - apiKeyAuth: []
-
   /rpc/bulk_insert_meal_logs:
     post:
       operationId: bulkInsertMealLogs
+      summary: Bulk insert multiple meal logs
+      description: Insert multiple meal log entries in a single operation. Each meal log must include meal_name, items,
+        macros, and eaten_on.
       requestBody:
         required: true
         content:
@@ -479,6 +621,33 @@ paths:
                     $ref: "#/components/schemas/meal_logs"
               required:
                 - meal_logs_data
+            example:
+              meal_logs_data:
+                - meal_name: Breakfast Bowl
+                  items:
+                    - 1 cup oatmeal
+                    - 1/2 cup blueberries
+                    - 1 tbsp honey
+                  macros:
+                    calories: 320
+                    protein: 12
+                    carbs: 65
+                    fat: 6
+                  eaten_on: 2025-01-15
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
+                - meal_name: Lunch Salad
+                  items:
+                    - 2 cups mixed greens
+                    - 4 oz grilled chicken
+                    - 1/4 cup feta cheese
+                  macros:
+                    calories: 280
+                    protein: 35
+                    carbs: 8
+                    fat: 12
+                  eaten_on: 2025-01-15
+                  rating: 4
+                  user_id: 43af6e15-1b3d-4634-be91-d59cf414a33e
       responses:
         "200":
           description: OK
@@ -495,7 +664,6 @@ paths:
         - Bulk Operations
       security:
         - apiKeyAuth: []
-
 components:
   securitySchemes:
     apiKeyAuth:
@@ -509,7 +677,7 @@ components:
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
         week_start:
           type: string
           format: date
@@ -526,14 +694,13 @@ components:
         updated_at:
           type: string
           format: date-time
-
     daily_analytics_cache:
       type: object
       properties:
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
         date:
           type: string
           format: date
@@ -550,14 +717,13 @@ components:
         updated_at:
           type: string
           format: date-time
-
     monthly_analytics_cache:
       type: object
       properties:
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
         month_start:
           type: string
           format: date
@@ -574,39 +740,119 @@ components:
         updated_at:
           type: string
           format: date-time
-
     meal_logs:
       type: object
       required:
         - meal_name
         - items
         - eaten_on
+        - macros
+        - user_id
       properties:
         id:
           type: integer
         meal_name:
           type: string
+          example: Greek Yogurt Bowl
         notes:
           type: string
+          example: Weeknight dinner, lots of veggies
         rating:
           type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          example: 4.5
         macros:
           type: object
+          description: Macronutrient totals for the meal. Keys should be numeric values in grams (except calories).
+          properties:
+            calories:
+              type: integer
+              example: 520
+            protein:
+              type: integer
+              example: 45
+            carbs:
+              type: integer
+              example: 50
+            fat:
+              type: integer
+              example: 18
+          additionalProperties: false
+          example:
+            calories: 520
+            protein: 45
+            carbs: 50
+            fat: 18
         created_at:
           type: string
           format: date-time
         items:
           type: array
+          description: Free-form list of meal components supplied by the user.
           items:
             type: string
+          minItems: 1
+          example:
+            - 8 oz chicken breast
+            - 1 cup mixed vegetables
+            - 1 tbsp soy sauce
         eaten_on:
           type: string
           format: date
+          example: 2025-01-14
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
-
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
+    meal_logs_update:
+      type: object
+      description: Schema for updating meal logs. All fields are optional for partial updates.
+      properties:
+        meal_name:
+          type: string
+          example: Updated Chicken Stir Fry
+        notes:
+          type: string
+          example: Added extra vegetables, very filling
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          example: 4.8
+        macros:
+          type: object
+          description: Macronutrient totals for the meal. Keys should be numeric values in grams (except calories).
+          properties:
+            calories:
+              type: integer
+              example: 580
+            protein:
+              type: integer
+              example: 58
+            carbs:
+              type: integer
+              example: 38
+            fat:
+              type: integer
+              example: 22
+          additionalProperties: false
+        items:
+          type: array
+          description: Free-form list of meal components supplied by the user.
+          items:
+            type: string
+          minItems: 1
+          example:
+            - 8 oz chicken breast (updated)
+            - 1.5 cups mixed vegetables
+            - 1 tbsp soy sauce
+        eaten_on:
+          type: string
+          format: date
+          example: 2025-01-14
     recipes:
       type: object
       required:
@@ -657,12 +903,11 @@ components:
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
         tags:
           type: array
           items:
             type: string
-
     items:
       type: object
       required:
@@ -703,8 +948,7 @@ components:
         user_id:
           type: string
           format: uuid
-          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
-
+          example: 43af6e15-1b3d-4634-be91-d59cf414a33e
     analytics_data:
       type: object
       properties:

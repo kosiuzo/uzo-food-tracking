@@ -1,0 +1,700 @@
+openapi: 3.1.0
+info:
+  description: "Uzo Food Tracking API - Simplified for Custom GPT"
+  title: Uzo Food Tracking API
+  version: 13.0.4
+servers:
+  - url: https://amehiertzqtbtcjhugql.supabase.co:443
+paths:
+  /weekly_analytics_cache:
+    get:
+      operationId: getWeeklyAnalyticsCache
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: week_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/weekly_analytics_cache"
+      tags:
+        - Analytics
+
+  /daily_analytics_cache:
+    get:
+      operationId: getDailyAnalyticsCache
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/daily_analytics_cache"
+      tags:
+        - Analytics
+
+  /monthly_analytics_cache:
+    get:
+      operationId: getMonthlyAnalyticsCache
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: month_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/monthly_analytics_cache"
+      tags:
+        - Analytics
+
+  /meal_logs:
+    get:
+      operationId: getMealLogs
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: eaten_on
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: meal_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/meal_logs"
+      tags:
+        - Meal Logs
+    post:
+      operationId: createMealLog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/meal_logs"
+      responses:
+        "201":
+          description: Created
+      tags:
+        - Meal Logs
+    patch:
+      operationId: updateMealLog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/meal_logs"
+      responses:
+        "204":
+          description: No Content
+      tags:
+        - Meal Logs
+
+  /recipes:
+    get:
+      operationId: getRecipes
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: is_favorite
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipes"
+      tags:
+        - Recipes
+    post:
+      operationId: createRecipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/recipes"
+      responses:
+        "201":
+          description: Created
+      tags:
+        - Recipes
+    patch:
+      operationId: updateRecipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/recipes"
+      responses:
+        "204":
+          description: No Content
+      tags:
+        - Recipes
+
+  /items:
+    get:
+      operationId: getItems
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: select
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/items"
+      tags:
+        - Items
+    post:
+      operationId: createItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/items"
+      responses:
+        "201":
+          description: Created
+      tags:
+        - Items
+    patch:
+      operationId: updateItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/items"
+      responses:
+        "204":
+          description: No Content
+      tags:
+        - Items
+
+  /rpc/get_analytics_data:
+    get:
+      operationId: getAnalyticsData
+      parameters:
+        - name: p_user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: p_days_back
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/analytics_data"
+      tags:
+        - Analytics
+
+  /rpc/bulk_insert_items:
+    post:
+      operationId: bulkInsertItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items_data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/items"
+              required:
+                - items_data
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+      tags:
+        - Bulk Operations
+
+  /rpc/bulk_insert_recipes:
+    post:
+      operationId: bulkInsertRecipes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipes_data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/recipes"
+              required:
+                - recipes_data
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+      tags:
+        - Bulk Operations
+
+  /rpc/bulk_insert_meal_logs:
+    post:
+      operationId: bulkInsertMealLogs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meal_logs_data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/meal_logs"
+              required:
+                - meal_logs_data
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+      tags:
+        - Bulk Operations
+
+components:
+  schemas:
+    weekly_analytics_cache:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        week_start:
+          type: string
+          format: date
+        avg_calories:
+          type: number
+        avg_protein:
+          type: number
+        avg_carbs:
+          type: number
+        avg_fat:
+          type: number
+        days_with_data:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    daily_analytics_cache:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        calories:
+          type: number
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        meals_count:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    monthly_analytics_cache:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        month_start:
+          type: string
+          format: date
+        avg_calories:
+          type: number
+        avg_protein:
+          type: number
+        avg_carbs:
+          type: number
+        avg_fat:
+          type: number
+        days_with_data:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    meal_logs:
+      type: object
+      required:
+        - meal_name
+        - items
+        - eaten_on
+      properties:
+        id:
+          type: integer
+        meal_name:
+          type: string
+        notes:
+          type: string
+        rating:
+          type: number
+        macros:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            type: string
+        eaten_on:
+          type: string
+          format: date
+        user_id:
+          type: string
+          format: uuid
+
+    recipes:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        total_time:
+          type: integer
+        servings:
+          type: integer
+        instructions:
+          type: string
+        nutrition_per_serving:
+          type: object
+        is_favorite:
+          type: boolean
+          default: false
+        source_link:
+          type: string
+        notes:
+          type: string
+        times_cooked:
+          type: integer
+          default: 0
+        last_cooked:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        ingredient_list:
+          type: array
+          items:
+            type: string
+        nutrition_source:
+          type: string
+          default: calculated
+        feedback:
+          type: array
+          items:
+            type: object
+        user_id:
+          type: string
+          format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+
+    items:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        brand:
+          type: string
+        category:
+          type: string
+        image_url:
+          type: string
+        ingredients:
+          type: string
+        purchase_count:
+          type: integer
+          default: 0
+        rating:
+          type: integer
+        last_edited:
+          type: string
+          format: date-time
+        normalized_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        notes:
+          type: array
+          items:
+            type: object
+        user_id:
+          type: string
+          format: uuid
+
+    analytics_data:
+      type: object
+      properties:
+        daily_data:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              calories:
+                type: number
+              protein:
+                type: number
+              carbs:
+                type: number
+              fat:
+                type: number
+              meals_count:
+                type: integer
+        weekly_data:
+          type: array
+          items:
+            type: object
+            properties:
+              week_start:
+                type: string
+                format: date
+              avg_calories:
+                type: number
+              avg_protein:
+                type: number
+              avg_carbs:
+                type: number
+              avg_fat:
+                type: number
+              days_with_data:
+                type: integer
+        monthly_data:
+          type: array
+          items:
+            type: object
+            properties:
+              month_start:
+                type: string
+                format: date
+              avg_calories:
+                type: number
+              avg_protein:
+                type: number
+              avg_carbs:
+                type: number
+              avg_fat:
+                type: number
+              days_with_data:
+                type: integer

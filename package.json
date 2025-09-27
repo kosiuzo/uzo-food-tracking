@@ -16,7 +16,12 @@
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "oas:validate": "swagger-cli validate docs/openapi-3.0.yaml",
+    "oas:bundle": "redocly bundle docs/openapi-3.0.yaml -o docs/openapi-3.1.bundle.yaml",
+    "oas:lint": "redocly lint docs/openapi-3.0.yaml",
+    "oas:spectral": "spectral lint docs/openapi-3.0.yaml",
+    "oas:all": "npm run oas:validate && npm run oas:lint && npm run oas:spectral"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -66,6 +71,7 @@
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
+    "swagger2openapi": "^7.0.8",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
@@ -96,6 +102,9 @@
     "typescript-eslint": "^8.38.0",
     "vite": "^7.1.1",
     "vite-plugin-pwa": "^1.0.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@apidevtools/swagger-cli": "^4.0.4",
+    "@redocly/cli": "^1.27.2",
+    "@stoplight/spectral-cli": "^6.11.1"
   }
 }

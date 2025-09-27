@@ -3,8 +3,15 @@ info:
   description: "Uzo Food Tracking API - Simplified for Custom GPT"
   title: Uzo Food Tracking API
   version: 13.0.4
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
-  - url: https://amehiertzqtbtcjhugql.supabase.co:443
+  - url: https://amehiertzqtbtcjhugql.supabase.co/rest/v1
+    description: Supabase REST API (production)
+x-user-id: 43af6e15-1b3d-4634-be91-d59cf414a33e
+security:
+  - apiKeyAuth: []
 paths:
   /weekly_analytics_cache:
     get:
@@ -12,10 +19,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: week_start
           in: query
           required: false
@@ -43,6 +52,8 @@ paths:
                   $ref: "#/components/schemas/weekly_analytics_cache"
       tags:
         - Analytics
+      security:
+        - apiKeyAuth: []
 
   /daily_analytics_cache:
     get:
@@ -50,10 +61,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: date
           in: query
           required: false
@@ -81,6 +94,8 @@ paths:
                   $ref: "#/components/schemas/daily_analytics_cache"
       tags:
         - Analytics
+      security:
+        - apiKeyAuth: []
 
   /monthly_analytics_cache:
     get:
@@ -88,10 +103,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: month_start
           in: query
           required: false
@@ -119,6 +136,8 @@ paths:
                   $ref: "#/components/schemas/monthly_analytics_cache"
       tags:
         - Analytics
+      security:
+        - apiKeyAuth: []
 
   /meal_logs:
     get:
@@ -126,10 +145,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: eaten_on
           in: query
           required: false
@@ -162,6 +183,8 @@ paths:
                   $ref: "#/components/schemas/meal_logs"
       tags:
         - Meal Logs
+      security:
+        - apiKeyAuth: []
     post:
       operationId: createMealLog
       requestBody:
@@ -175,6 +198,8 @@ paths:
           description: Created
       tags:
         - Meal Logs
+      security:
+        - apiKeyAuth: []
     patch:
       operationId: updateMealLog
       requestBody:
@@ -188,6 +213,8 @@ paths:
           description: No Content
       tags:
         - Meal Logs
+      security:
+        - apiKeyAuth: []
 
   /recipes:
     get:
@@ -195,10 +222,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: name
           in: query
           required: false
@@ -230,6 +259,8 @@ paths:
                   $ref: "#/components/schemas/recipes"
       tags:
         - Recipes
+      security:
+        - apiKeyAuth: []
     post:
       operationId: createRecipe
       requestBody:
@@ -243,6 +274,8 @@ paths:
           description: Created
       tags:
         - Recipes
+      security:
+        - apiKeyAuth: []
     patch:
       operationId: updateRecipe
       requestBody:
@@ -256,6 +289,8 @@ paths:
           description: No Content
       tags:
         - Recipes
+      security:
+        - apiKeyAuth: []
 
   /items:
     get:
@@ -263,10 +298,12 @@ paths:
       parameters:
         - name: user_id
           in: query
-          required: false
+          required: true
+          description: "Filter by user ID to get data for the specific user. Always use: eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
           schema:
             type: string
-            format: uuid
+            enum: ["eq.43af6e15-1b3d-4634-be91-d59cf414a33e"]
+          example: "eq.43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: name
           in: query
           required: false
@@ -298,6 +335,8 @@ paths:
                   $ref: "#/components/schemas/items"
       tags:
         - Items
+      security:
+        - apiKeyAuth: []
     post:
       operationId: createItem
       requestBody:
@@ -311,6 +350,8 @@ paths:
           description: Created
       tags:
         - Items
+      security:
+        - apiKeyAuth: []
     patch:
       operationId: updateItem
       requestBody:
@@ -324,6 +365,8 @@ paths:
           description: No Content
       tags:
         - Items
+      security:
+        - apiKeyAuth: []
 
   /rpc/get_analytics_data:
     get:
@@ -332,9 +375,11 @@ paths:
         - name: p_user_id
           in: query
           required: false
+          description: "User ID parameter for RPC function"
           schema:
             type: string
             format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
         - name: p_days_back
           in: query
           required: false
@@ -349,6 +394,8 @@ paths:
                 $ref: "#/components/schemas/analytics_data"
       tags:
         - Analytics
+      security:
+        - apiKeyAuth: []
 
   /rpc/bulk_insert_items:
     post:
@@ -380,6 +427,8 @@ paths:
                     type: integer
       tags:
         - Bulk Operations
+      security:
+        - apiKeyAuth: []
 
   /rpc/bulk_insert_recipes:
     post:
@@ -411,6 +460,8 @@ paths:
                     type: integer
       tags:
         - Bulk Operations
+      security:
+        - apiKeyAuth: []
 
   /rpc/bulk_insert_meal_logs:
     post:
@@ -442,8 +493,15 @@ paths:
                     type: integer
       tags:
         - Bulk Operations
+      security:
+        - apiKeyAuth: []
 
 components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
   schemas:
     weekly_analytics_cache:
       type: object
@@ -451,6 +509,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
         week_start:
           type: string
           format: date
@@ -474,6 +533,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
         date:
           type: string
           format: date
@@ -497,6 +557,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
         month_start:
           type: string
           format: date
@@ -544,6 +605,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
 
     recipes:
       type: object
@@ -595,6 +657,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
         tags:
           type: array
           items:
@@ -640,6 +703,7 @@ components:
         user_id:
           type: string
           format: uuid
+          example: "43af6e15-1b3d-4634-be91-d59cf414a33e"
 
     analytics_data:
       type: object

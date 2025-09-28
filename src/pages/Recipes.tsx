@@ -410,15 +410,8 @@ export default function Recipes() {
             {filteredRecipes.map(recipe => (
               <Card key={recipe.id} className="border rounded-xl hover:shadow-sm transition-shadow">
                 <div className="flex gap-3 p-4 items-start">
-                  {/* Clickable area: thumbnail + content */}
-                  <Link to={`/recipes/${recipe.id}`} className="flex gap-3 flex-1 min-w-0 items-start">
-                    {/* Thumbnail */}
-                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-                      <div className="h-full w-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
-                        <ChefHat className="h-6 w-6 text-orange-600" />
-                      </div>
-                    </div>
-
+                  {/* Clickable area: content */}
+                  <Link to={`/recipes/${recipe.id}`} className="flex-1 min-w-0">
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       {/* Title */}

@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MealLog } from '../types';
 import { logger } from '@/lib/logger';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getTodayLocalDate, getYesterdayLocalDate } from '@/lib/utils';
+import { getTodayLocalDate, getYesterdayLocalDate, formatAppDateForDisplay, shiftAppDate } from '@/lib/utils';
 import { getSettings } from '@/lib/settings-utils';
 
 export default function Meals() {
@@ -87,9 +87,7 @@ export default function Meals() {
     } else if (eatenOn === yesterdayLocal) {
       return 'Yesterday';
     } else {
-      // Format the date string for display
-      const date = new Date(eatenOn + 'T00:00:00'); // Add time to avoid timezone issues
-      return date.toLocaleDateString();
+      return formatAppDateForDisplay(eatenOn);
     }
   };
 
@@ -101,9 +99,8 @@ export default function Meals() {
         setViewMode('day');
         break;
       case 'Yesterday': {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        goToDate(yesterday.toISOString().split('T')[0]);
+        const yesterday = shiftAppDate(getTodayLocalDate(), { days: -1 });
+        goToDate(yesterday);
         setViewMode('day');
         break;
       }

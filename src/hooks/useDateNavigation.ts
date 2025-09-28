@@ -1,4 +1,11 @@
 import { useState, useMemo } from 'react';
+import {
+  getTodayLocalDate,
+  formatAppDateForDisplay,
+  shiftAppDate,
+  parseAppDate,
+  formatDateToIsoString
+} from '@/lib/utils';
 
 export interface DateNavigationOptions {
   initialDate?: string;
@@ -6,7 +13,7 @@ export interface DateNavigationOptions {
 }
 
 export function useDateNavigation({
-  initialDate = new Date().toISOString().split('T')[0],
+  initialDate = getTodayLocalDate(),
   defaultRange = 'week'
 }: DateNavigationOptions = {}) {
   const [currentDate, setCurrentDate] = useState(initialDate);
@@ -14,17 +21,18 @@ export function useDateNavigation({
 
   // Helper function to get week start (Monday)
   const getWeekStart = (date: string) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    return d.toISOString().split('T')[0];
+    const d = parseAppDate(date);
+    const day = d.getUTCDay();
+    const diff = d.getUTCDate() - day + (day === 0 ? -6 : 1);
+    d.setUTCDate(diff);
+    return formatDateToIsoString(d);
   };
 
   // Helper function to get month start
   const getMonthStart = (date: string) => {
-    const d = new Date(date);
-    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+    const d = parseAppDate(date);
+    d.setUTCDate(1);
+    return formatDateToIsoString(d);
   };
 
   // Calculate the date range based on current date and view mode
@@ -38,22 +46,22 @@ export function useDateNavigation({
 
       case 'week': {
         const weekStart = getWeekStart(currentDate);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
+        const weekEnd = parseAppDate(weekStart);
+        weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
         return {
           startDate: weekStart,
-          endDate: weekEnd.toISOString().split('T')[0]
+          endDate: formatDateToIsoString(weekEnd)
         };
       }
 
       case 'month': {
         const monthStart = getMonthStart(currentDate);
-        const monthEnd = new Date(monthStart);
-        monthEnd.setMonth(monthEnd.getMonth() + 1);
-        monthEnd.setDate(monthEnd.getDate() - 1);
+        const monthEnd = parseAppDate(monthStart);
+        monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1);
+        monthEnd.setUTCDate(monthEnd.getUTCDate() - 1);
         return {
           startDate: monthStart,
-          endDate: monthEnd.toISOString().split('T')[0]
+          endDate: formatDateToIsoString(monthEnd)
         };
       }
 
@@ -67,39 +75,39 @@ export function useDateNavigation({
 
   // Navigation functions
   const goToToday = () => {
-    setCurrentDate(new Date().toISOString().split('T')[0]);
+    setCurrentDate(getTodayLocalDate());
   };
 
   const goToPrevious = () => {
-    const d = new Date(currentDate);
+    const d = parseAppDate(currentDate);
     switch (viewMode) {
       case 'day':
-        d.setDate(d.getDate() - 1);
+        d.setUTCDate(d.getUTCDate() - 1);
         break;
       case 'week':
-        d.setDate(d.getDate() - 7);
+        d.setUTCDate(d.getUTCDate() - 7);
         break;
       case 'month':
-        d.setMonth(d.getMonth() - 1);
+        d.setUTCMonth(d.getUTCMonth() - 1);
         break;
     }
-    setCurrentDate(d.toISOString().split('T')[0]);
+    setCurrentDate(formatDateToIsoString(d));
   };
 
   const goToNext = () => {
-    const d = new Date(currentDate);
+    const d = parseAppDate(currentDate);
     switch (viewMode) {
       case 'day':
-        d.setDate(d.getDate() + 1);
+        d.setUTCDate(d.getUTCDate() + 1);
         break;
       case 'week':
-        d.setDate(d.getDate() + 7);
+        d.setUTCDate(d.getUTCDate() + 7);
         break;
       case 'month':
-        d.setMonth(d.getMonth() + 1);
+        d.setUTCMonth(d.getUTCMonth() + 1);
         break;
     }
-    setCurrentDate(d.toISOString().split('T')[0]);
+    setCurrentDate(formatDateToIsoString(d));
   };
 
   const goToDate = (date: string) => {
@@ -108,48 +116,50 @@ export function useDateNavigation({
 
   // Quick navigation to common time periods
   const goToLastWeek = () => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    setCurrentDate(d.toISOString().split('T')[0]);
+    const d = parseAppDate(getTodayLocalDate());
+    d.setUTCDate(d.getUTCDate() - 7);
+    setCurrentDate(formatDateToIsoString(d));
     setViewMode('week');
   };
 
   const goToLastMonth = () => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    setCurrentDate(d.toISOString().split('T')[0]);
+    const d = parseAppDate(getTodayLocalDate());
+    d.setUTCMonth(d.getUTCMonth() - 1);
+    setCurrentDate(formatDateToIsoString(d));
     setViewMode('month');
   };
 
   const goToLast30Days = () => {
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
+    const endDate = getTodayLocalDate();
+    const startDate = shiftAppDate(endDate, { days: -30 });
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate
+      startDate,
+      endDate
     };
   };
 
   const goToLast3Months = () => {
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 3);
+    const endDate = getTodayLocalDate();
+    const start = parseAppDate(endDate);
+    start.setUTCMonth(start.getUTCMonth() - 3);
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate
+      startDate: formatDateToIsoString(start),
+      endDate
     };
   };
 
   // Format display text for current range
   const getDisplayText = () => {
     const formatDate = (dateStr: string) => {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        weekday: viewMode === 'day' ? 'long' : undefined,
+      const options: Intl.DateTimeFormatOptions = {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-      });
+      };
+      if (viewMode === 'day') {
+        options.weekday = 'long';
+      }
+      return formatAppDateForDisplay(dateStr, options);
     };
 
     switch (viewMode) {
@@ -158,11 +168,11 @@ export function useDateNavigation({
 
       case 'week': {
         const { startDate, endDate } = dateRange;
-        const startFormatted = new Date(startDate).toLocaleDateString('en-US', {
+        const startFormatted = formatAppDateForDisplay(startDate, {
           month: 'short',
           day: 'numeric'
         });
-        const endFormatted = new Date(endDate).toLocaleDateString('en-US', {
+        const endFormatted = formatAppDateForDisplay(endDate, {
           month: 'short',
           day: 'numeric',
           year: 'numeric'
@@ -171,7 +181,7 @@ export function useDateNavigation({
       }
 
       case 'month':
-        return new Date(currentDate).toLocaleDateString('en-US', {
+        return formatAppDateForDisplay(currentDate, {
           year: 'numeric',
           month: 'long'
         });
@@ -183,7 +193,7 @@ export function useDateNavigation({
 
   // Check if we can navigate (don't go into the future)
   const canGoNext = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalDate();
     return dateRange.endDate < today;
   };
 

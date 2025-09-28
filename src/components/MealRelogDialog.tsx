@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MealLog } from '../types';
-import { getTodayLocalDate } from '@/lib/utils';
+import { getTodayLocalDate, formatAppDateForDisplay } from '@/lib/utils';
 import { useDebounce, searchMealLogs } from '@/lib/search';
 
 interface MealRelogDialogProps {
@@ -183,8 +183,7 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
     const today = getTodayLocalDate();
     if (dateString === today) return 'Today';
 
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString();
+    return formatAppDateForDisplay(dateString);
   };
 
   const steps = [

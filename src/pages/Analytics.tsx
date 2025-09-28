@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
+import { formatAppDateForDisplay, parseAppDate, formatDateToIsoString } from '@/lib/utils';
 
 interface AnalyticsData {
   daily_averages: {
@@ -183,7 +184,7 @@ export default function Analytics() {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return formatAppDateForDisplay(dateString, {
       weekday: 'short',
       month: 'short',
       day: 'numeric'
@@ -192,17 +193,23 @@ export default function Analytics() {
 
   // Format week period for display
   const formatWeekPeriod = (weekStart: string) => {
-    const start = new Date(weekStart);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
+    const start = formatAppDateForDisplay(weekStart, {
+      month: 'short',
+      day: 'numeric'
+    });
+    const endDate = parseAppDate(weekStart);
+    endDate.setUTCDate(endDate.getUTCDate() + 6);
+    const end = formatAppDateForDisplay(formatDateToIsoString(endDate), {
+      month: 'short',
+      day: 'numeric'
+    });
 
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return `${start} - ${end}`;
   };
 
   // Format month period for display
   const formatMonthPeriod = (monthStart: string) => {
-    const date = new Date(monthStart);
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return formatAppDateForDisplay(monthStart, { month: 'long', year: 'numeric' });
   };
 
   // Get period label for display

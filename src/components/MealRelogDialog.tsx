@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Clock, Plus, Minus } from 'lucide-react';
+import { Search, Clock, Plus, Minus, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { MealLog } from '../types';
 import { getTodayLocalDate } from '@/lib/utils';
 import { useDebounce, searchMealLogs } from '@/lib/search';
@@ -20,6 +21,7 @@ interface MealRelogDialogProps {
 }
 
 export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: MealRelogDialogProps) {
+  const [currentStep, setCurrentStep] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMeal, setSelectedMeal] = useState<MealLog | null>(null);
   const [multiplier, setMultiplier] = useState(1);
@@ -31,12 +33,14 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
   const [serverResults, setServerResults] = useState<MealLog[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (!open) {
+      setCurrentStep(1);
       setSearchQuery('');
       setSelectedMeal(null);
       setMultiplier(1);
@@ -183,246 +187,444 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
     return date.toLocaleDateString();
   };
 
+  const steps = [
+    { number: 1, title: 'Find Meal', description: 'Search and select a meal' },
+    { number: 2, title: 'Adjust', description: 'Set quantity and date' },
+    { number: 3, title: 'Confirm', description: 'Review and re-log' }
+  ];
+
+  const canProceedToStep2 = selectedMeal !== null;
+  const canProceedToStep3 = selectedMeal !== null && multiplier > 0;
+
+  const handleNext = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {steps.map((step, index) => (
+        <div key={step.number} className="flex items-center">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              currentStep === step.number
+                ? 'bg-primary text-primary-foreground'
+                : currentStep > step.number
+                ? 'bg-green-500 text-white'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {currentStep > step.number ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              step.number
+            )}
+          </div>
+          {index < steps.length - 1 && (
+            <div
+              className={`w-8 h-0.5 mx-2 ${
+                currentStep > step.number ? 'bg-green-500' : 'bg-muted'
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold mb-2">Find a Meal to Re-log</h3>
+        <p className="text-sm text-muted-foreground">
+          Search for a previously logged meal
+        </p>
+      </div>
+
+      {/* Search Section */}
+      <div className="space-y-3">
+        <Label htmlFor="meal-search">Search Meals</Label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            id="meal-search"
+            placeholder="Search by meal name or ingredient..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`pl-10 ${isMobile ? 'h-12' : ''}`}
+            autoComplete="off"
+            inputMode="search"
+          />
+        </div>
+      </div>
+
+      {/* Search Results */}
+      {searchQuery && (
+        <div className="space-y-3">
+          <Label>
+            Search Results ({(serverResults.length || uniqueMeals.length)}) meals
+          </Label>
+          <div className={`${isMobile ? 'max-h-64' : 'max-h-72'} overflow-y-auto space-y-2`}>
+            {(serverResults.length > 0 ? serverResults : uniqueMeals).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No meals found matching "{searchQuery}"
+              </p>
+            ) : (
+              (serverResults.length > 0 ? serverResults : uniqueMeals).map((meal) => (
+                <Card
+                  key={meal.id}
+                  className={`p-3 cursor-pointer transition-colors ${
+                    selectedMeal?.id === meal.id
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                      : 'hover:bg-muted/50'
+                  }`}
+                  onClick={() => handleMealSelect(meal)}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-medium text-sm">{meal.meal_name}</h4>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {formatDate(meal.eaten_on)}
+                      </div>
+                    </div>
+
+                    {/* Items */}
+                    {meal.items && meal.items.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {meal.items.slice(0, 3).map((item, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {item.length > 15 ? item.substring(0, 15) + '...' : item}
+                          </Badge>
+                        ))}
+                        {meal.items.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{meal.items.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Nutrition */}
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                      <span>{meal.macros?.calories?.toFixed(0) || 0} cal</span>
+                      <span>P: {meal.macros?.protein?.toFixed(1) || 0}g</span>
+                      <span>C: {meal.macros?.carbs?.toFixed(1) || 0}g</span>
+                      <span>F: {meal.macros?.fat?.toFixed(1) || 0}g</span>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Instructions */}
+      {!searchQuery && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p className="text-sm">
+            Use the search box above to find a meal
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold mb-2">Adjust Quantity & Date</h3>
+        <p className="text-sm text-muted-foreground">
+          Set how much and when to log this meal
+        </p>
+      </div>
+
+      {/* Selected Meal Summary */}
+      {selectedMeal && (
+        <Card className="p-4 bg-primary/5">
+          <div className="space-y-2">
+            <h4 className="font-medium">{selectedMeal.meal_name}</h4>
+            <p className="text-sm text-muted-foreground">
+              Originally eaten on {formatDate(selectedMeal.eaten_on)}
+            </p>
+            <div className="flex gap-3 text-sm text-muted-foreground">
+              <span>{selectedMeal.macros?.calories?.toFixed(0) || 0} cal</span>
+              <span>P: {selectedMeal.macros?.protein?.toFixed(1) || 0}g</span>
+              <span>C: {selectedMeal.macros?.carbs?.toFixed(1) || 0}g</span>
+              <span>F: {selectedMeal.macros?.fat?.toFixed(1) || 0}g</span>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Quantity Multiplier */}
+      <div className="space-y-4">
+        <Label>Quantity Multiplier</Label>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => adjustMultiplier(-0.25)}
+            disabled={multiplier <= 0.25}
+            className={isMobile ? 'h-10 w-10 p-0' : ''}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 text-center">
+            <span className="text-xl font-bold">{multiplier}x</span>
+            <p className="text-xs text-muted-foreground">
+              ~{Math.round((selectedMeal?.macros?.calories || 0) * multiplier)} calories
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => adjustMultiplier(0.25)}
+            className={isMobile ? 'h-10 w-10 p-0' : ''}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[0.5, 1, 1.5, 2].map((value) => (
+            <Button
+              key={value}
+              type="button"
+              variant={multiplier === value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMultiplier(value)}
+              className={isMobile ? 'h-10' : ''}
+            >
+              {value}x
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Date Selection */}
+      <div className="space-y-3">
+        <Label htmlFor="eaten-on">Date to Log</Label>
+        <Input
+          id="eaten-on"
+          type="date"
+          value={eatenOn}
+          onChange={(e) => setEatenOn(e.target.value)}
+          className={isMobile ? 'h-12' : ''}
+        />
+      </div>
+
+      {/* Additional Notes */}
+      <div className="space-y-3">
+        <Label htmlFor="additional-notes">Additional Notes (Optional)</Label>
+        <Textarea
+          id="additional-notes"
+          placeholder="Add any notes about this re-logged meal..."
+          value={additionalNotes}
+          onChange={(e) => setAdditionalNotes(e.target.value)}
+          rows={3}
+        />
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold mb-2">Review & Confirm</h3>
+        <p className="text-sm text-muted-foreground">
+          Double-check the details before re-logging
+        </p>
+      </div>
+
+      {/* Final Review */}
+      {selectedMeal && (
+        <div className="space-y-4">
+          <Card className="p-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-lg">{selectedMeal.meal_name}</h4>
+                <p className="text-sm text-muted-foreground">
+                  Originally eaten on {formatDate(selectedMeal.eaten_on)}
+                </p>
+              </div>
+
+              {/* Items */}
+              {selectedMeal.items && selectedMeal.items.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Items:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedMeal.items.map((item, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {item}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Original Notes */}
+              {selectedMeal.notes && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Original Notes:</p>
+                  <p className="text-sm">{selectedMeal.notes}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Re-log Details */}
+          <Card className="p-4 bg-primary/5">
+            <h4 className="font-medium mb-3">Re-log Details</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Quantity:</span>
+                <span className="font-medium">{multiplier}x</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Date:</span>
+                <span className="font-medium">
+                  {eatenOn === getTodayLocalDate() ? 'Today' : formatDate(eatenOn)}
+                </span>
+              </div>
+              {additionalNotes && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Additional Notes:</span>
+                  <p className="text-sm mt-1">{additionalNotes}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Updated Nutrition */}
+          <Card className="p-4 bg-green-50 border-green-200">
+            <h4 className="font-medium mb-3 text-green-800">Updated Nutrition</h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-semibold text-lg text-green-700">
+                  {((selectedMeal.macros?.calories || 0) * multiplier).toFixed(0)} cal
+                </span>
+              </div>
+              <div className="space-y-1 text-green-700">
+                <div>Protein: {((selectedMeal.macros?.protein || 0) * multiplier).toFixed(1)}g</div>
+                <div>Carbs: {((selectedMeal.macros?.carbs || 0) * multiplier).toFixed(1)}g</div>
+                <div>Fat: {((selectedMeal.macros?.fat || 0) * multiplier).toFixed(1)}g</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`max-w-2xl ${isKeyboardVisible ? 'max-h-[50vh]' : 'max-h-[90vh]'} overflow-y-auto`}
-        style={isKeyboardVisible ? {
-          position: 'fixed',
-          top: '10px',
-          transform: 'translateX(-50%)',
-          left: '50%'
-        } : undefined}
+        className={`${isMobile ? 'max-w-[95vw] h-[90vh]' : 'max-w-2xl max-h-[85vh]'} flex flex-col`}
       >
-        <DialogHeader>
-          <DialogTitle>Re-log Previous Meal</DialogTitle>
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="text-center">
+            Re-log Previous Meal
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Search Section */}
-          <div className="space-y-2">
-            <Label htmlFor="meal-search">Search Meals</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                id="meal-search"
-                placeholder="Search by meal name or ingredient..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                autoComplete="off"
-                inputMode="search"
-              />
+        <div className="flex-1 overflow-y-auto px-1">
+          {renderStepIndicator()}
+
+          {currentStep === 1 && renderStep1()}
+          {currentStep === 2 && renderStep2()}
+          {currentStep === 3 && renderStep3()}
+        </div>
+
+        {/* Navigation Footer */}
+        <div className="flex-shrink-0 border-t pt-4 mt-4">
+          {currentStep < 3 ? (
+            <div className="flex gap-3">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevious}
+                  className={`${isMobile ? 'h-12' : ''} gap-2`}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              )}
+
+              <div className="flex-1" />
+
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={(currentStep === 1 && !canProceedToStep2) || (currentStep === 2 && !canProceedToStep3)}
+                className={`${isMobile ? 'h-12' : ''} gap-2`}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
+          ) : (
+            // Step 3: Stack buttons vertically on mobile for better fit
+            <div className={`${isMobile ? 'space-y-3' : 'flex gap-3'}`}>
+              {!isMobile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevious}
+                  className="gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              )}
 
-          {/* Search Results */}
-          {searchQuery && (
-            <div className="space-y-2">
-              <Label>
-                Search Results ({(serverResults.length || uniqueMeals.length)}) meals
-              </Label>
-              <div className={`${isKeyboardVisible ? 'max-h-32' : 'max-h-64'} overflow-y-auto space-y-2`}>
-                {(serverResults.length > 0 ? serverResults : uniqueMeals).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No meals found matching "{searchQuery}"
-                  </p>
-                ) : (
-                  (serverResults.length > 0 ? serverResults : uniqueMeals).map((meal) => (
-                    <Card
-                      key={meal.id}
-                      className={`p-3 cursor-pointer transition-colors ${
-                        selectedMeal?.id === meal.id
-                          ? 'border-primary bg-primary/5'
-                          : 'hover:bg-muted/50'
-                      }`}
-                      onClick={() => handleMealSelect(meal)}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-medium text-sm">{meal.meal_name}</h4>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {formatDate(meal.eaten_on)}
-                          </div>
-                        </div>
-
-                        {/* Items */}
-                        {meal.items && meal.items.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {meal.items.slice(0, 3).map((item, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {item.length > 15 ? item.substring(0, 15) + '...' : item}
-                              </Badge>
-                            ))}
-                            {meal.items.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{meal.items.length - 3} more
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Nutrition */}
-                        <div className="flex gap-3 text-xs text-muted-foreground">
-                          <span>{meal.macros?.calories?.toFixed(0) || 0} cal</span>
-                          <span>P: {meal.macros?.protein?.toFixed(1) || 0}g</span>
-                          <span>C: {meal.macros?.carbs?.toFixed(1) || 0}g</span>
-                          <span>F: {meal.macros?.fat?.toFixed(1) || 0}g</span>
-                        </div>
-                      </div>
-                    </Card>
-                  ))
+              <div className={`${isMobile ? 'grid grid-cols-2 gap-3' : 'flex gap-3 flex-1 justify-end'}`}>
+                {isMobile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePrevious}
+                    className="h-12 gap-2"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Back
+                  </Button>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Selected Meal Details */}
-          {selectedMeal && (
-            <div className="space-y-4 border-t pt-4">
-              <Label>Selected Meal Details</Label>
-
-              <Card className="p-4 bg-primary/5">
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-medium">{selectedMeal.meal_name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Originally eaten on {formatDate(selectedMeal.eaten_on)}
-                    </p>
-                  </div>
-
-                  {/* All Items */}
-                  {selectedMeal.items && selectedMeal.items.length > 0 && (
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Items:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedMeal.items.map((item, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {item}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Original Notes */}
-                  {selectedMeal.notes && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">Original Notes:</p>
-                      <p className="text-sm">{selectedMeal.notes}</p>
-                    </div>
-                  )}
-
-                  {/* Nutrition - Updated with multiplier */}
-                  <div className="flex gap-4 text-sm">
-                    <span className="font-medium">
-                      {((selectedMeal.macros?.calories || 0) * multiplier).toFixed(1)} cal
-                    </span>
-                    <span>P: {((selectedMeal.macros?.protein || 0) * multiplier).toFixed(1)}g</span>
-                    <span>C: {((selectedMeal.macros?.carbs || 0) * multiplier).toFixed(1)}g</span>
-                    <span>F: {((selectedMeal.macros?.fat || 0) * multiplier).toFixed(1)}g</span>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Quantity Multiplier */}
-              <div className="space-y-2">
-                <Label>Quantity Multiplier</Label>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => adjustMultiplier(-0.25)}
-                    disabled={multiplier <= 0.25}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <div className="flex-1 text-center">
-                    <span className="text-lg font-medium">{multiplier}x</span>
-                    <p className="text-xs text-muted-foreground">
-                      ~{Math.round((selectedMeal.macros?.calories || 0) * multiplier)} calories
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => adjustMultiplier(0.25)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  {[0.5, 1, 1.5, 2].map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      variant={multiplier === value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setMultiplier(value)}
-                      className="flex-1"
-                    >
-                      {value}x
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Date Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="eaten-on">Date to Log</Label>
-                <Input
-                  id="eaten-on"
-                  type="date"
-                  value={eatenOn}
-                  onChange={(e) => setEatenOn(e.target.value)}
-                />
-              </div>
-
-              {/* Additional Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="additional-notes">Additional Notes (Optional)</Label>
-                <Textarea
-                  id="additional-notes"
-                  placeholder="Add any notes about this re-logged meal..."
-                  value={additionalNotes}
-                  onChange={(e) => setAdditionalNotes(e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
-                  className="flex-1"
+                  className={`${isMobile ? 'h-12' : ''} ${isMobile ? 'col-span-1' : ''}`}
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleRelogMeal}
-                  disabled={isRelogging}
-                  className="flex-1"
-                >
-                  {isRelogging ? 'Re-logging...' : `Re-log ${multiplier}x`}
-                </Button>
               </div>
-            </div>
-          )}
 
-          {/* Instructions */}
-          {!selectedMeal && !searchQuery && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">
-                Search for a previously logged meal to re-log it with optional quantity adjustments.
-              </p>
+              <Button
+                type="button"
+                onClick={handleRelogMeal}
+                disabled={isRelogging}
+                className={`${isMobile ? 'h-12 w-full' : ''} gap-2`}
+              >
+                {isRelogging ? 'Re-logging...' : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Re-log {multiplier}x
+                  </>
+                )}
+              </Button>
             </div>
           )}
         </div>

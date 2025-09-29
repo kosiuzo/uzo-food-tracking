@@ -20,6 +20,18 @@ paths:
       description: Use when user asks "show my weekly nutrition trends", "average calories per week", "how did I eat this week
         vs last week". Shows weekly averages and days with data. Perfect for trend analysis.
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. week_start.desc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -35,11 +47,6 @@ paths:
           schema:
             type: string
             format: date
-        - name: select
-          in: query
-          required: false
-          schema:
-            type: string
         - name: limit
           in: query
           required: false
@@ -66,6 +73,18 @@ paths:
         nutrition breakdown". Pre-calculated daily totals - much faster than summing meal_logs. Filter by date for
         specific days.
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. date.desc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -81,11 +100,6 @@ paths:
           schema:
             type: string
             format: date
-        - name: select
-          in: query
-          required: false
-          schema:
-            type: string
         - name: limit
           in: query
           required: false
@@ -111,6 +125,18 @@ paths:
       description: Use when user asks "show my monthly nutrition patterns", "how did I eat this month", "monthly macro
         averages". Best for long-term tracking and monthly comparisons.
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. month_start.desc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -126,11 +152,6 @@ paths:
           schema:
             type: string
             format: date
-        - name: select
-          in: query
-          required: false
-          schema:
-            type: string
         - name: limit
           in: query
           required: false
@@ -156,6 +177,18 @@ paths:
       description: 'Find specific meals by ingredients/content. Use search_vector=fts.chicken for "meals with chicken". For
         re-logging: GET original meal, POST with new eaten_on. For analytics use cache endpoints instead.'
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. eaten_on.desc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -247,11 +280,6 @@ paths:
               summary: Has notes
               value: not.is.null
               description: "Find meals that have notes (not empty). Query: ?notes=not.is.null"
-        - name: select
-          in: query
-          required: false
-          schema:
-            type: string
         - name: limit
           in: query
           required: false
@@ -392,6 +420,18 @@ paths:
     get:
       operationId: getRecipes
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. name.asc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -411,11 +451,6 @@ paths:
           required: false
           schema:
             type: boolean
-        - name: select
-          in: query
-          required: false
-          schema:
-            type: string
         - name: limit
           in: query
           required: false
@@ -516,6 +551,18 @@ paths:
     get:
       operationId: getItems
       parameters:
+        - name: select
+          in: query
+          description: "Columns to retrieve (default: *)."
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Order clause, e.g. name.asc.
+          required: false
+          schema:
+            type: string
         - name: user_id
           in: query
           required: true
@@ -531,11 +578,6 @@ paths:
           schema:
             type: string
         - name: category
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: select
           in: query
           required: false
           schema:

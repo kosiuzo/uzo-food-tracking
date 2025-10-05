@@ -174,8 +174,9 @@ paths:
     get:
       operationId: getMealLogs
       summary: Find and retrieve specific meals
-      description: 'Find specific meals by ingredients/content. Use search_vector=fts.chicken for "meals with chicken". For
-        re-logging: GET original meal, POST with new eaten_on. For analytics use cache endpoints instead.'
+      description: 'Find meals by ingredients or notes. Use search_vector=fts.chicken for "meals with chicken". Results leverage
+        meal_logs.search_vector trigger and pg_trgm GIN indexes for fuzzy matches on meal_name, notes, and items. For analytics
+        use cache endpoints.'
       parameters:
         - name: select
           in: query
@@ -243,8 +244,10 @@ paths:
           in: query
           required: false
           description: 'Use for semantic food searches like "meals with chicken", "breakfast with eggs", "dinner without meat".
-            Searches across meal names, ingredients, and notes. Format: fts.chicken for single ingredient,
-            fts.chicken&vegetables for AND, fts.breakfast|lunch for OR.'
+            Searches across meal names, ingredients, and notes via the maintained meal_logs.search_vector column. Format:
+            fts.chicken for single ingredient, fts.chicken&vegetables for AND, fts.breakfast|lunch for OR. Combines with the
+            pg_trgm-backed ilike filters on meal_name/notes/items for substring-style fuzzy matching when you need "contains"
+            behavior.'
           schema:
             type: string
           examples:
@@ -419,6 +422,11 @@ paths:
   /recipes:
     get:
       operationId: getRecipes
+      summary: Search recipes by name, ingredients, or notes
+      description: >
+        Use for recipe discovery like "find vegetarian pasta", "show chicken soup ideas", "dishes with roasted vegetables".
+        Requests leverage the recipes.search_vector column maintained by the update_recipes_search_vector trigger so results
+        mirror the in-app Supabase full-text search.
       parameters:
         - name: select
           in: query
@@ -446,6 +454,29 @@ paths:
           required: false
           schema:
             type: string
+        - name: search_vector
+          in: query
+          required: false
+          description: >
+            Use Supabase full-text search for intent-style queries like "vegetarian dinner", "quick breakfast bowls" or "salmon
+            without dairy". Searches across recipe names, instructions, notes, ingredient_list text, and feedback comments
+            through the maintained recipes.search_vector column so it stays in sync with trigger updates. Combine with other
+            filters as needed, e.g. ?user_id=eq.{uuid}&search_vector=fts.vegetarian&search_vector=fts.quinoa for AND matches.
+          schema:
+            type: string
+          examples:
+            single_term:
+              summary: Single ingredient or concept
+              value: fts.vegetarian
+              description: "Find recipes mentioning 'vegetarian'. Query: ?user_id=eq.{uuid}&search_vector=fts.vegetarian"
+            multi_term_and:
+              summary: Require multiple ingredients
+              value: fts.chicken&rice
+              description: "Find recipes mentioning both chicken AND rice. Query: ?user_id=eq.{uuid}&search_vector=fts.chicken&rice"
+            exclude_term:
+              summary: Exclude an ingredient
+              value: fts.soup&!cream
+              description: "Find soups that do not mention cream. Query: ?user_id=eq.{uuid}&search_vector=fts.soup&!cream"
         - name: is_favorite
           in: query
           required: false

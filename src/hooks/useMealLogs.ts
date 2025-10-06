@@ -6,6 +6,7 @@ import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
 import { getTodayLocalDate } from '../lib/utils';
 import { processMealLogWithAI, processBatchMealLogsWithAI } from '../lib/mealLogAI';
+import { logger } from '../lib/logger';
 
 export function useMealLogs() {
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
@@ -22,39 +23,39 @@ export function useMealLogs() {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Attempting to load meal logs from Supabase...');
-      
+      logger.log('🔄 Attempting to load meal logs from Supabase...');
+
       // Try to connect to Supabase first
       const { data, error } = await supabase
         .from('meal_logs')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) {
-        console.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
+        logger.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
         // Fall back to mock data
         setMealLogs(mockMealLogs);
         setUsingMockData(true);
-        console.log('✅ Loaded mock data:', mockMealLogs.length, 'meal logs');
+        logger.log('✅ Loaded mock data:', mockMealLogs.length, 'meal logs');
         return;
       }
-      
+
       // Successfully connected to Supabase
-      console.log('✅ Connected to Supabase successfully');
-      
+      logger.log('✅ Connected to Supabase successfully');
+
       if (data && data.length > 0) {
-        console.log('✅ Loaded data from Supabase:', data.length, 'meal logs');
+        logger.log('✅ Loaded data from Supabase:', data.length, 'meal logs');
         const mappedMealLogs = data.map(dbMealLogToMealLog);
         setMealLogs(mappedMealLogs);
         setUsingMockData(false);
       } else {
         // Database is connected but empty - this is a valid state
-        console.log('ℹ️ Database is connected but empty');
+        logger.log('ℹ️ Database is connected but empty');
         setMealLogs([]);
         setUsingMockData(false);
       }
     } catch (err) {
-      console.warn('⚠️ Error loading meal logs, falling back to mock data:', err);
+      logger.warn('⚠️ Error loading meal logs, falling back to mock data:', err);
       // Fall back to mock data on any error
       setMealLogs(mockMealLogs);
       setUsingMockData(true);
@@ -173,7 +174,7 @@ export function useMealLogs() {
       setError(null);
 
       // Process the items through AI to get meal name and macros
-      console.log('🤖 Processing items with AI:', items);
+      logger.log('🤖 Processing items with AI:', items);
       const aiResult = await processMealLogWithAI(items);
 
       // Create meal log with AI-generated data
@@ -187,7 +188,7 @@ export function useMealLogs() {
         created_at: new Date().toISOString(),
       };
 
-      console.log('📝 Creating meal log:', mealLogData);
+      logger.log('📝 Creating meal log:', mealLogData);
       return await addMealLog(mealLogData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process meal with AI';
@@ -203,7 +204,7 @@ export function useMealLogs() {
       setError(null);
 
       // Process all meal entries through AI
-      console.log('🤖 Processing batch meals with AI:', mealEntries.length, 'meals');
+      logger.log('🤖 Processing batch meals with AI:', mealEntries.length, 'meals');
       const aiResults = await processBatchMealLogsWithAI(mealEntries);
 
       // Create meal logs with AI-generated data
@@ -218,7 +219,7 @@ export function useMealLogs() {
       }));
 
       // Add all meal logs to database
-      console.log('📝 Creating batch meal logs:', mealLogsToAdd.length, 'meals');
+      logger.log('📝 Creating batch meal logs:', mealLogsToAdd.length, 'meals');
       const addedMealLogs: MealLog[] = [];
 
       for (const mealLogData of mealLogsToAdd) {

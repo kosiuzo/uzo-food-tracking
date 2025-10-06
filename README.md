@@ -110,14 +110,20 @@ If you don't set the API key, AI actions will show a friendly error and no reque
 
 ## Screenshots
 
-**Inventory Management**
-![Inventory](public/screenshots/inventory.png)
+### Inventory Management
+<img src="public/screenshots/IMG_1839.PNG" width="250" alt="Inventory List" /> <img src="public/screenshots/IMG_1840.PNG" width="250" alt="Add/Edit Item" /> <img src="public/screenshots/IMG_1841.PNG" width="250" alt="Item Details" />
 
-**Recipes**
-![Recipes](public/screenshots/recipes.png)
+### Recipe Management
+<img src="public/screenshots/IMG_1842.PNG" width="250" alt="Recipe List" /> <img src="public/screenshots/IMG_1843.PNG" width="250" alt="Recipe Details" /> <img src="public/screenshots/IMG_1844.PNG" width="250" alt="Add/Edit Recipe" />
 
-**Meal Logging**
-![Meal Log](public/screenshots/meals.png)
+### Meal Logging & Analytics
+<img src="public/screenshots/IMG_1845.PNG" width="250" alt="Meal Log List" /> <img src="public/screenshots/IMG_1846.PNG" width="250" alt="Add Meal Log" /> <img src="public/screenshots/IMG_1847.PNG" width="250" alt="Analytics Dashboard" />
+
+### Settings & Tags
+<img src="public/screenshots/IMG_1848.PNG" width="250" alt="Settings" /> <img src="public/screenshots/IMG_1849.PNG" width="250" alt="Tag Management" />
+
+### AI Features
+<img src="public/screenshots/IMG_1850.PNG" width="250" alt="AI Recipe Generator" /> <img src="public/screenshots/IMG_1851.PNG" width="250" alt="AI Recipe Results" />
 
 ---
 

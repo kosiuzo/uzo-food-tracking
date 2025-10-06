@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { requireCurrentUserId } from '../lib/auth-helpers';
 import { Tag, DbTag } from '../types';
 import { dbTagToTag, tagToDbInsert } from '../lib/type-mappers';
+import { logger } from '@/lib/logger';
 
 // Mock data for offline development
 const mockTags: Tag[] = [
@@ -43,7 +44,7 @@ export function useTags() {
         .order('name');
 
       if (error) {
-        console.error('Error fetching tags:', error);
+        logger.error('Error fetching tags:', error);
         throw error;
       }
 

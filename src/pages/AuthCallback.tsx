@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 export const AuthCallback = () => {
   const navigate = useNavigate()
@@ -11,7 +12,7 @@ export const AuthCallback = () => {
       const { error } = await supabase.auth.getSession()
 
       if (error) {
-        console.error('Error during auth callback:', error)
+        logger.error('Error during auth callback:', error)
         navigate('/', { replace: true })
         return
       }

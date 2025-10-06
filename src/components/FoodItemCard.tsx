@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { QuickNoteDialog } from './QuickNoteDialog';
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -16,10 +16,16 @@ interface FoodItemCardProps {
   onUpdateItem?: (updates: Partial<FoodItem>) => void;
 }
 
-export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateItem }: FoodItemCardProps) {
+const FoodItemCardComponent = ({ item, onEdit, onDelete, onRatingChange, onUpdateItem }: FoodItemCardProps) => {
   const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
   const [isNotesExpanded, setIsNotesExpanded] = useState(false);
   const notesCount = item.notes?.length || 0;
+  const sortedNotes = useMemo(() => {
+    if (!item.notes) {
+      return [];
+    }
+    return [...item.notes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [item.notes]);
 
   return (
     <Card className="border rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 hover:-translate-y-0.5">
@@ -75,22 +81,19 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateI
           {/* Expanded Notes */}
           {isNotesExpanded && notesCount > 0 && (
             <div className="mt-3 space-y-2 pl-5 border-l-2 border-muted">
-              {item.notes
-                ?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((note, index) => (
-                  <div key={`${note.date}-${index}`} className="text-sm">
-                    <p className="text-foreground leading-relaxed">{note.text}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(note.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                ))
-              }
+              {sortedNotes.map((note, index) => (
+                <div key={`${note.date}-${index}`} className="text-sm">
+                  <p className="text-foreground leading-relaxed">{note.text}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(note.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              ))}
               {onUpdateItem && (
                 <Button
                   variant="ghost"
@@ -148,4 +151,8 @@ export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateI
       )}
     </Card>
   );
-}
+};
+
+FoodItemCardComponent.displayName = 'FoodItemCard';
+
+export const FoodItemCard = memo(FoodItemCardComponent);

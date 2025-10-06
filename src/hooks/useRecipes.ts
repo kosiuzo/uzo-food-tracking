@@ -165,10 +165,10 @@ const addRecipe = async (recipe: Omit<Recipe, 'id' | 'is_favorite'> & { selected
   };
 
 const updateRecipe = async (id: number, updates: Partial<Recipe> & { selectedTagIds?: string[] }) => {
-    console.log('🎯 updateRecipe called for ID:', id, 'Updates:', updates);
+    logger.debug('🎯 updateRecipe called for ID:', id, 'Updates:', updates);
     try {
       const { selectedTagIds, ...updatesWithoutTags } = updates;
-      console.log('📝 Updates includes ingredients?', !!updatesWithoutTags.ingredients, 'Ingredient count:', updatesWithoutTags.ingredients?.length);
+      logger.debug('📝 Updates includes ingredients?', !!updatesWithoutTags.ingredients, 'Ingredient count:', updatesWithoutTags.ingredients?.length);
 
       // Use the nutrition provided in updates (calculated by AddRecipeDialog)
       const nutritionToSave = updatesWithoutTags.nutrition;

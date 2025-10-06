@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 export type ServingUnitType = 'volume' | 'weight' | 'package';
 
 // Unit → Type mapping (app-side; authoritative)
@@ -278,7 +280,7 @@ export function calculateRecipeNutrition(
         totalFat += scaled.fat;
         
       } catch (error) {
-        console.warn(`Error calculating nutrition for ${item.name}:`, error);
+        logger.warn(`Error calculating nutrition for ${item.name}:`, error);
         // Fallback to simple gram calculation
         const factor = quantityInGrams / (item.serving_size || 100);
         totalCalories += item.nutrition.calories_per_serving * factor;

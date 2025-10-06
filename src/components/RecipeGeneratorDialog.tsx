@@ -17,6 +17,7 @@ import { RecipePreviewDialog } from './RecipePreviewDialog';
 import { parseFirstJsonObject } from '../lib/aiJson';
 import { openRouterClient, OpenRouterError, OpenRouterErrorType } from '../lib/openrouter';
 import { CUISINE_STYLES, DIETARY_RESTRICTIONS } from '../lib/constants';
+import { logger } from '@/lib/logger';
 
 interface RecipeGeneratorDialogProps {
   open: boolean;
@@ -265,7 +266,7 @@ Rules:
       setShowPreview(true);
       
     } catch (error) {
-      console.error('Recipe generation failed:', error);
+      logger.error('Recipe generation failed:', error);
 
       // Handle OpenRouterError with detailed messaging
       if (error instanceof Error && 'type' in error) {

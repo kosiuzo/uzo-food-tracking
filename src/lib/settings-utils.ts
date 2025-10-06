@@ -1,4 +1,5 @@
 import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, type AppSettings } from './settings-constants';
+import { logger } from './logger';
 
 export const getCalorieTarget = (): number => {
   const settings = getSettings();
@@ -26,7 +27,7 @@ export const getSettings = (): AppSettings => {
     try {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
     } catch (error) {
-      console.error('Failed to parse settings from localStorage:', error);
+      logger.warn('Failed to parse settings from localStorage:', error);
       return DEFAULT_SETTINGS;
     }
   }

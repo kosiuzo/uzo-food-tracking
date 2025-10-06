@@ -8,10 +8,11 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noImplicitAny": false,
+    "strict": true,
+    "noImplicitAny": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "allowJs": true,
+    "allowJs": false,
     "noUnusedLocals": true,
     "strictNullChecks": true
   }

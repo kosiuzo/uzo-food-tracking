@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ItemNote, Recipe } from '../types';
+import { logger } from '@/lib/logger';
 
 interface QuickFeedbackDialogProps {
   open: boolean;
@@ -28,7 +29,7 @@ export function QuickFeedbackDialog({ open, onOpenChange, recipe, onSave }: Quic
       setCommentText('');
       onOpenChange(false);
     } catch (err) {
-      console.error('Error saving feedback:', err);
+      logger.error('Error saving feedback:', err);
     } finally {
       setIsSubmitting(false);
     }

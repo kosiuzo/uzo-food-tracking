@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ItemNote, FoodItem } from '../types';
+import { logger } from '@/lib/logger';
 
 interface QuickNoteDialogProps {
   open: boolean;
@@ -36,7 +37,7 @@ export function QuickNoteDialog({ open, onOpenChange, item, onSave }: QuickNoteD
       setNoteText('');
       onOpenChange(false);
     } catch (error) {
-      console.error('Error saving note:', error);
+      logger.error('Error saving note:', error);
     } finally {
       setIsSubmitting(false);
     }

@@ -76,7 +76,7 @@ export function InventoryPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-4">
 
         {/* Action Row */}
         <div className="flex items-center justify-between gap-3">
@@ -220,7 +220,7 @@ export function InventoryPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : emptyStateContent ? emptyStateContent : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {items.map(item => (
               <FoodItemCard
                 key={item.id}

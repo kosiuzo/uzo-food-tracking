@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
+import { MacroRing } from '@/components/ui/macro-ring';
 import { Layout } from '../components/Layout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LogMealDialog } from '../components/LogMealDialog';
@@ -197,7 +198,7 @@ export default function Meals() {
       <div className="min-h-screen bg-background">
 
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-1.5">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-4">
 
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
@@ -443,83 +444,32 @@ export default function Meals() {
                   </Card>
                 </div>
 
-                {/* Macros Row - Compact */}
-                <div className="grid grid-cols-3 gap-2">
-                  <Card className="p-3 text-center">
-                    <div className="space-y-1">
-                      <div className="text-xs font-medium text-blue-600">Protein</div>
-                      <div className="text-lg font-bold">{totalProtein.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">
-                        {settings.proteinTargetEnabled
-                          ? `${proteinPercent.toFixed(0)}% of ${proteinTarget}g`
-                          : `${proteinPercentage.toFixed(0)}%`
-                        }
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-1">
-                        <div
-                          className="bg-blue-600 h-1 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(
-                              settings.proteinTargetEnabled ? proteinPercent : proteinPercentage,
-                              100
-                            )}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-3 text-center">
-                    <div className="space-y-1">
-                      <div className="text-xs font-medium text-orange-600">Carbs</div>
-                      <div className="text-lg font-bold">{totalCarbs.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">
-                        {settings.carbsTargetEnabled
-                          ? `${carbsPercent.toFixed(0)}% of ${carbsTarget}g`
-                          : `${carbsPercentage.toFixed(0)}%`
-                        }
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-1">
-                        <div
-                          className="bg-orange-600 h-1 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(
-                              settings.carbsTargetEnabled ? carbsPercent : carbsPercentage,
-                              100
-                            )}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </Card>
-                  <Card className="p-3 text-center">
-                    <div className="space-y-1">
-                      <div className="text-xs font-medium text-purple-600">Fat</div>
-                      <div className="text-lg font-bold">{totalFat.toFixed(0)}g</div>
-                      <div className="text-xs text-muted-foreground">
-                        {settings.fatTargetEnabled
-                          ? `${fatPercent.toFixed(0)}% of ${fatTarget}g`
-                          : `${fatPercentage.toFixed(0)}%`
-                        }
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-1">
-                        <div
-                          className="bg-purple-600 h-1 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(
-                              settings.fatTargetEnabled ? fatPercent : fatPercentage,
-                              100
-                            )}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </Card>
+                {/* Macros Row - Enhanced Circular Rings showing percentage distribution */}
+                <div className="flex justify-around items-center py-4">
+                  <MacroRing
+                    label="Protein"
+                    value={totalProtein}
+                    totalMacros={totalMacros}
+                    color="protein"
+                  />
+                  <MacroRing
+                    label="Carbs"
+                    value={totalCarbs}
+                    totalMacros={totalMacros}
+                    color="carbs"
+                  />
+                  <MacroRing
+                    label="Fat"
+                    value={totalFat}
+                    totalMacros={totalMacros}
+                    color="fat"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Scrollable Meal List */}
-            <div className="px-4 pt-4 pb-4 space-y-3">
+            <div className="px-4 pt-4 pb-4 space-y-4">
               
               {recentLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">

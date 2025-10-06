@@ -249,100 +249,107 @@ export default function Recipes() {
                 Filter
               </Button>
             </SheetTrigger>
-            <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90vh]" : ""}>
-              <SheetHeader>
-                <SheetTitle>Filter & Sort</SheetTitle>
-              </SheetHeader>
-            <div className="space-y-6 mt-6">
-              <div className="space-y-3">
-                <label className="text-sm font-medium">View</label>
-                <Select value={viewMode} onValueChange={setViewMode}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select view" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All recipes</SelectItem>
-                    <SelectItem value="favorites">Favorites only</SelectItem>
-                  </SelectContent>
-                </Select>
+            <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[80vh] p-0 flex flex-col" : ""}>
+              <div className="px-6 pt-4 pb-3 border-b">
+                <SheetHeader>
+                  <SheetTitle className="text-left pr-8">Filter & Sort</SheetTitle>
+                </SheetHeader>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Search</label>
-                <Input
-                  placeholder="Search name, ingredients, tags"
-                  value={filterSearchQuery}
-                  onChange={(e) => setFilterSearchQuery(e.target.value)}
-                  className="h-12"
-                />
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">View</label>
+                    <Select value={viewMode} onValueChange={setViewMode}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select view" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All recipes</SelectItem>
+                        <SelectItem value="favorites">Favorites only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Search</label>
+                    <Input
+                      placeholder="Search name, ingredients, tags"
+                      value={filterSearchQuery}
+                      onChange={(e) => setFilterSearchQuery(e.target.value)}
+                      className="h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Tags</label>
+                    <MultiSelect
+                      options={allTagsFromRecipes}
+                      onValueChange={setSelectedTagIds}
+                      defaultValue={selectedTagIds}
+                      placeholder="Select tags..."
+                      maxCount={3}
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Cook time</label>
+                    <Select value={timeFilter} onValueChange={setTimeFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Any">Any</SelectItem>
+                        <SelectItem value="<= 15 min">≤ 15 min</SelectItem>
+                        <SelectItem value="<= 30 min">≤ 30 min</SelectItem>
+                        <SelectItem value="<= 45 min">≤ 45 min</SelectItem>
+                        <SelectItem value="<= 60 min">≤ 60 min</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Servings</label>
+                    <Select value={servingsFilter} onValueChange={setServingsFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Any">Any</SelectItem>
+                        <SelectItem value="1–2">1–2</SelectItem>
+                        <SelectItem value="3–4">3–4</SelectItem>
+                        <SelectItem value="5+">5+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Sort by</label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A–Z">A–Z</SelectItem>
+                        <SelectItem value="Recently added">Recently added</SelectItem>
+                        <SelectItem value="Cook time">Cook time</SelectItem>
+                        <SelectItem value="Favorites">Favorites</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Tags</label>
-                <MultiSelect
-                  options={allTagsFromRecipes}
-                  onValueChange={setSelectedTagIds}
-                  defaultValue={selectedTagIds}
-                  placeholder="Select tags..."
-                  maxCount={3}
-                />
+              <div className="px-6 py-4 border-t bg-background">
+                <div className="flex gap-3">
+                  <Button onClick={handleFilterApply} className="flex-1">
+                    Apply
+                  </Button>
+                  <Button variant="outline" onClick={handleFilterReset}>
+                    Reset
+                  </Button>
+                </div>
               </div>
-
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Cook time</label>
-                <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Any">Any</SelectItem>
-                    <SelectItem value="<= 15 min">≤ 15 min</SelectItem>
-                    <SelectItem value="<= 30 min">≤ 30 min</SelectItem>
-                    <SelectItem value="<= 45 min">≤ 45 min</SelectItem>
-                    <SelectItem value="<= 60 min">≤ 60 min</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Servings</label>
-                <Select value={servingsFilter} onValueChange={setServingsFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Any">Any</SelectItem>
-                    <SelectItem value="1–2">1–2</SelectItem>
-                    <SelectItem value="3–4">3–4</SelectItem>
-                    <SelectItem value="5+">5+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Sort by</label>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A–Z">A–Z</SelectItem>
-                    <SelectItem value="Recently added">Recently added</SelectItem>
-                    <SelectItem value="Cook time">Cook time</SelectItem>
-                    <SelectItem value="Favorites">Favorites</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleFilterApply} className="flex-1">
-                  Apply
-                </Button>
-                <Button variant="outline" onClick={handleFilterReset}>
-                  Reset
-                </Button>
-              </div>
-            </div>
             </SheetContent>
           </Sheet>
 
@@ -366,13 +373,13 @@ export default function Recipes() {
           </DropdownMenu>
         </div>
 
-        {/* Tag Scroller */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        {/* Tag Filter - Multi-row wrap */}
+        <div className="flex flex-wrap gap-2">
           {predefinedTags.map(tag => (
             <Badge
               key={tag}
               variant={activeTagFilter === tag ? 'default' : 'secondary'}
-              className="whitespace-nowrap cursor-pointer rounded-full"
+              className="cursor-pointer rounded-full"
               onClick={() => setActiveTagFilter(tag)}
             >
               {tag}
@@ -406,16 +413,16 @@ export default function Recipes() {
       {/* Content */}
       <div className="px-4 sm:px-6 pb-20 pt-4">
         {emptyStateContent ? emptyStateContent : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredRecipes.map(recipe => (
-              <Card key={recipe.id} className="border rounded-xl hover:shadow-sm transition-shadow">
+              <Card key={recipe.id} className="border rounded-xl shadow-soft hover:shadow-medium transition-all duration-200">
                 <div className="flex gap-3 p-4 items-start">
                   {/* Clickable area: content */}
                   <Link to={`/recipes/${recipe.id}`} className="flex-1 min-w-0">
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      {/* Title */}
-                      <h3 className="font-bold text-base line-clamp-2 leading-tight">{recipe.name}</h3>
+                      {/* Title - Allow wrapping on mobile */}
+                      <h3 className="font-bold text-base leading-tight break-words">{recipe.name}</h3>
 
                       {/* Meta Row: Servings + Time */}
                       <div className="flex items-center gap-4 mt-1">

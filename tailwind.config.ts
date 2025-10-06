@@ -61,7 +61,26 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				category: {
+					protein: 'hsl(var(--category-protein))',
+					vegetables: 'hsl(var(--category-vegetables))',
+					grains: 'hsl(var(--category-grains))',
+					dairy: 'hsl(var(--category-dairy))',
+					oils: 'hsl(var(--category-oils))',
+					fruits: 'hsl(var(--category-fruits))',
+					meat: 'hsl(var(--category-meat))'
+				},
+				macro: {
+					protein: 'hsl(var(--macro-protein))',
+					carbs: 'hsl(var(--macro-carbs))',
+					fat: 'hsl(var(--macro-fat))'
 				}
+			},
+			boxShadow: {
+				'soft': '0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
+				'medium': '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06)',
+				'large': '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

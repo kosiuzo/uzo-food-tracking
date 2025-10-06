@@ -1,4 +1,4 @@
-import { MoreVertical, Edit, Trash2, MessageSquare, Plus, StickyNote } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Plus, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FoodItem } from '../types';
 import { StarRating } from './StarRating';
 import { QuickNoteDialog } from './QuickNoteDialog';
-import { getFoodItemImage, getDefaultImageByCategory } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -19,49 +17,13 @@ interface FoodItemCardProps {
 }
 
 export function FoodItemCard({ item, onEdit, onDelete, onRatingChange, onUpdateItem }: FoodItemCardProps) {
-  const [hasTriedFallback, setHasTriedFallback] = useState(false);
   const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
   const [isNotesExpanded, setIsNotesExpanded] = useState(false);
-
-  // Reset error state when item.image_url changes
-  useEffect(() => {
-    setHasTriedFallback(false);
-  }, [item.image_url, item.id]);
-
-  // Only show image if the item has a real image_url (not empty/null)
-  const hasRealImage = item.image_url && item.image_url.trim() !== '';
-  const currentImageUrl = getFoodItemImage(item.image_url, item.category);
   const notesCount = item.notes?.length || 0;
 
   return (
-    <Card className="border rounded-xl hover:shadow-sm transition-shadow">
+    <Card className="border rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 hover:-translate-y-0.5">
       <div className="flex gap-3 p-4">
-        {/* Thumbnail */}
-        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-          {hasRealImage ? (
-            <img
-              src={currentImageUrl}
-              alt={item.name}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (!hasTriedFallback && item.image_url && item.image_url.trim() !== '') {
-                  setHasTriedFallback(true);
-                  target.src = getDefaultImageByCategory(item.category);
-                }
-              }}
-              onLoad={() => {
-                setHasTriedFallback(false);
-              }}
-              key={item.image_url || 'default'}
-            />
-          ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <StickyNote className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-        </div>
-
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Title and Brand */}

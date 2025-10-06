@@ -530,15 +530,17 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`${isMobile ? 'max-w-[95vw] h-[90vh]' : 'max-w-2xl max-h-[85vh]'} flex flex-col`}
+        className={`${isMobile ? 'max-w-[95vw] h-[80vh] p-0' : 'max-w-2xl max-h-[85vh]'} flex flex-col`}
       >
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-center">
-            Re-log Previous Meal
-          </DialogTitle>
-        </DialogHeader>
+        <div className={`${isMobile ? 'px-6 pt-4 pb-3' : 'px-6 pt-6'} border-b flex-shrink-0`}>
+          <DialogHeader>
+            <DialogTitle className={`${isMobile ? 'text-left pr-8' : 'text-center'}`}>
+              Re-log Previous Meal
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-1">
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-6 py-4' : 'px-6 pt-4'}`}>
           {renderStepIndicator()}
 
           {currentStep === 1 && renderStep1()}
@@ -547,7 +549,7 @@ export function MealRelogDialog({ open, onOpenChange, mealLogs, onRelogMeal }: M
         </div>
 
         {/* Navigation Footer */}
-        <div className="flex-shrink-0 border-t pt-4 mt-4">
+        <div className={`flex-shrink-0 border-t bg-background ${isMobile ? 'px-6 py-4' : 'px-6 pt-4'}`}>
           {currentStep < 3 ? (
             <div className="flex gap-3">
               {currentStep > 1 && (

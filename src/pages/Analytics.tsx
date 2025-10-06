@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { formatAppDateForDisplay, parseAppDate, formatDateToIsoString } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface AnalyticsData {
   daily_averages: {
@@ -109,7 +110,7 @@ export default function Analytics() {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 Loading analytics data from cache system...');
+      logger.info('🔄 Loading analytics data from cache system...');
 
       // Check if we're in bypass mode and need to pass user_id
       const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
@@ -156,11 +157,11 @@ export default function Analytics() {
         throw new Error(`Recent months error: ${recentMonthsResult.error.message}`);
       }
 
-      console.log('✅ Analytics data loaded successfully');
-      console.log('📊 Analytics summary:', analyticsResult.data);
-      console.log('📅 Recent days:', recentDaysResult.data?.length);
-      console.log('📅 Recent weeks:', recentWeeksResult.data?.length);
-      console.log('📅 Recent months:', recentMonthsResult.data?.length);
+      logger.info('✅ Analytics data loaded successfully');
+      logger.debug('📊 Analytics summary:', analyticsResult.data);
+      logger.debug('📅 Recent days:', recentDaysResult.data?.length);
+      logger.debug('📅 Recent weeks:', recentWeeksResult.data?.length);
+      logger.debug('📅 Recent months:', recentMonthsResult.data?.length);
 
       setAnalytics(analyticsResult.data);
       setRecentDays(recentDaysResult.data || []);
@@ -169,7 +170,7 @@ export default function Analytics() {
       setUsingMockData(false);
 
     } catch (error) {
-      console.error('❌ Error loading analytics:', error);
+      logger.error('❌ Error loading analytics:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
       // TODO: Could fallback to mock data here if needed
       setUsingMockData(false);

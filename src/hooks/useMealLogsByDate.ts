@@ -6,6 +6,7 @@ import { dbMealLogToMealLog, mealLogToDbInsert } from '../lib/type-mappers';
 import { mockMealLogs } from '../data/mockData';
 import { getTodayLocalDate } from '../lib/utils';
 import { processMealLogWithAI, processBatchMealLogsWithAI } from '../lib/mealLogAI';
+import { logger } from '@/lib/logger';
 
 interface UseMealLogsByDateOptions {
   startDate: string;
@@ -27,7 +28,7 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
       const queryStartDate = customStartDate || startDate;
       const queryEndDate = customEndDate || endDate;
 
-      console.log(`🔄 Loading meal logs from ${queryStartDate} to ${queryEndDate}...`);
+      logger.info(`🔄 Loading meal logs from ${queryStartDate} to ${queryEndDate}...`);
 
       // Query meal logs for the specific date range
       const { data, error } = await supabase
@@ -39,33 +40,33 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
         .order('created_at', { ascending: false }); // Secondary sort by creation time
 
       if (error) {
-        console.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
+        logger.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
         // Filter mock data to the date range
         const filteredMockData = mockMealLogs.filter(log =>
           log.eaten_on >= queryStartDate && log.eaten_on <= queryEndDate
         );
         setMealLogs(filteredMockData);
         setUsingMockData(true);
-        console.log('✅ Loaded filtered mock data:', filteredMockData.length, 'meal logs');
+        logger.info('✅ Loaded filtered mock data:', filteredMockData.length, 'meal logs');
         return;
       }
 
       // Successfully connected to Supabase
-      console.log('✅ Connected to Supabase successfully');
+      logger.info('✅ Connected to Supabase successfully');
 
       if (data) {
-        console.log(`✅ Loaded ${data.length} meal logs for date range ${queryStartDate} to ${queryEndDate}`);
+        logger.info(`✅ Loaded ${data.length} meal logs for date range ${queryStartDate} to ${queryEndDate}`);
         const mappedMealLogs = data.map(dbMealLogToMealLog);
         setMealLogs(mappedMealLogs);
         setUsingMockData(false);
       } else {
         // Database is connected but no data for this range
-        console.log(`ℹ️ No meal logs found for date range ${queryStartDate} to ${queryEndDate}`);
+        logger.info(`ℹ️ No meal logs found for date range ${queryStartDate} to ${queryEndDate}`);
         setMealLogs([]);
         setUsingMockData(false);
       }
     } catch (err) {
-      console.warn('⚠️ Error loading meal logs, falling back to mock data:', err);
+      logger.warn('⚠️ Error loading meal logs, falling back to mock data:', err);
       // Filter mock data to the date range on error
       const filteredMockData = mockMealLogs.filter(log =>
         log.eaten_on >= (customStartDate || startDate) &&
@@ -191,7 +192,7 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
       setError(null);
 
       // Process the items through AI to get meal name and macros
-      console.log('🤖 Processing items with AI:', items);
+      logger.info('🤖 Processing items with AI:', items);
       const aiResult = await processMealLogWithAI(items);
 
       // Create meal log with AI-generated data
@@ -205,7 +206,7 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
         created_at: new Date().toISOString(),
       };
 
-      console.log('📝 Creating meal log:', mealLogData);
+      logger.info('📝 Creating meal log:', mealLogData);
       return await addMealLog(mealLogData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process meal with AI';
@@ -221,7 +222,7 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
       setError(null);
 
       // Process all meal entries through AI
-      console.log('🤖 Processing batch meals with AI:', mealEntries.length, 'meals');
+      logger.info('🤖 Processing batch meals with AI:', mealEntries.length, 'meals');
       const aiResults = await processBatchMealLogsWithAI(mealEntries);
 
       // Create meal logs with AI-generated data
@@ -236,7 +237,7 @@ export function useMealLogsByDate({ startDate, endDate, autoLoad = true }: UseMe
       }));
 
       // Add all meal logs to database
-      console.log('📝 Creating batch meal logs:', mealLogsToAdd.length, 'meals');
+      logger.info('📝 Creating batch meal logs:', mealLogsToAdd.length, 'meals');
       const addedMealLogs: MealLog[] = [];
 
       for (const mealLogData of mealLogsToAdd) {

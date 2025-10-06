@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  searchItems, 
-  searchRecipes, 
+import {
+  searchItems,
+  searchRecipes,
   searchTags, 
   searchMealLogs,
   globalSearch,
@@ -13,6 +13,7 @@ import {
   GlobalSearchResult 
 } from '../lib/search';
 import { FoodItem, Recipe, Tag, MealLog } from '../types';
+import { logger } from '@/lib/logger';
 
 /**
  * Enhanced search hook for food items with debouncing and caching
@@ -301,7 +302,7 @@ export function useRecentSearches(maxItems = 10) {
       try {
         setRecentSearches(JSON.parse(stored));
       } catch (error) {
-        console.warn('Failed to parse recent searches from localStorage');
+        logger.warn('Failed to parse recent searches from localStorage');
       }
     }
   }, []);
@@ -318,7 +319,7 @@ export function useRecentSearches(maxItems = 10) {
       try {
         localStorage.setItem('recentSearches', JSON.stringify(updated));
       } catch (error) {
-        console.warn('Failed to save recent searches to localStorage');
+        logger.warn('Failed to save recent searches to localStorage');
       }
       
       return updated;
@@ -333,7 +334,7 @@ export function useRecentSearches(maxItems = 10) {
       try {
         localStorage.setItem('recentSearches', JSON.stringify(updated));
       } catch (error) {
-        console.warn('Failed to save recent searches to localStorage');
+        logger.warn('Failed to save recent searches to localStorage');
       }
       
       return updated;

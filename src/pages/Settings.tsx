@@ -10,6 +10,7 @@ import { Settings as SettingsIcon, Target, Save, LogOut, User } from 'lucide-rea
 import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, type AppSettings } from '@/lib/settings-constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthDialog } from '@/components/AuthDialog';
+import { logger } from '@/lib/logger';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -36,7 +37,7 @@ export default function Settings() {
         setCarbsInput(mergedSettings.carbsTarget.toString());
         setFatInput(mergedSettings.fatTarget.toString());
       } catch (error) {
-        console.error('Error loading settings:', error);
+        logger.error('Error loading settings:', error);
         // Use defaults if parsing fails
         setCalorieInput(DEFAULT_SETTINGS.calorieTarget.toString());
         setProteinInput(DEFAULT_SETTINGS.proteinTarget.toString());

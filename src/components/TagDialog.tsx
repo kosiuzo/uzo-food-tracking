@@ -11,6 +11,7 @@ import { useTags } from '../hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { Tag } from '../types';
 import { ConfirmDialog } from './ConfirmDialog';
+import { logger } from '@/lib/logger';
 
 interface TagManagementDialogProps {
   open: boolean;
@@ -77,7 +78,7 @@ function TagFormDialog({ open, onOpenChange, onSave, editingTag }: TagFormDialog
       setColor('#3b82f6');
       setDescription('');
     } catch (error) {
-      console.error('Failed to save tag:', error);
+      logger.error('Failed to save tag:', error);
     } finally {
       setIsSubmitting(false);
     }

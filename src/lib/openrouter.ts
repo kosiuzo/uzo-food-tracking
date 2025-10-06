@@ -2,6 +2,8 @@
  * Shared OpenRouter API client with comprehensive error handling and logging
  */
 
+import { logger } from './logger';
+
 // Error types for different failure categories
 export enum OpenRouterErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',
@@ -174,8 +176,8 @@ export class OpenRouterClient {
       details: error.details
     };
 
-    console.group(`🚨 OpenRouter Error - ${context}`);
-    console.error('Error Summary:', {
+    logger.group(`🚨 OpenRouter Error - ${context}`);
+    logger.error('Error Summary:', {
       type: error.type,
       message: error.message,
       httpStatus: error.httpStatus,
@@ -183,12 +185,12 @@ export class OpenRouterClient {
     });
 
     if (error.shouldRetry) {
-      console.warn(`💡 Retry recommended after ${error.retryAfter || 5} seconds`);
+      logger.warn(`💡 Retry recommended after ${error.retryAfter || 5} seconds`);
     } else {
-      console.error('❌ This error should not be retried');
+      logger.error('❌ This error should not be retried');
     }
 
-    console.log('Request Context:', {
+    logger.log('Request Context:', {
       model: request.model,
       messageCount: request.messages.length,
       temperature: request.temperature,
@@ -196,14 +198,14 @@ export class OpenRouterClient {
     });
 
     if (error.details) {
-      console.log('Error Details:', error.details);
+      logger.log('Error Details:', error.details);
     }
 
     if (error.rawResponse) {
-      console.log('Raw Response:', error.rawResponse);
+      logger.log('Raw Response:', error.rawResponse);
     }
 
-    console.groupEnd();
+    logger.groupEnd();
 
     // In development, also store in sessionStorage for debugging
     if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
@@ -227,7 +229,7 @@ export class OpenRouterClient {
       timestamp: new Date().toISOString()
     };
 
-    console.log(`✅ OpenRouter Success - ${context}`, {
+    logger.log(`✅ OpenRouter Success - ${context}`, {
       duration: `${duration}ms`,
       model: request.model,
       usage: response.usage
@@ -255,7 +257,7 @@ export class OpenRouterClient {
     const requestTimeout = timeout || this.defaultTimeout;
 
     try {
-      console.log(`🤖 OpenRouter Request - ${context}`, {
+      logger.log(`🤖 OpenRouter Request - ${context}`, {
         model: request.model,
         messageCount: request.messages.length,
         temperature: request.temperature,
@@ -406,7 +408,7 @@ export class OpenRouterClient {
         }
 
         const waitTime = (lastError.retryAfter || 5) * 1000;
-        console.log(`⏳ Retrying in ${waitTime/1000}s (attempt ${attempt + 1}/${maxRetries + 1})`);
+        logger.log(`⏳ Retrying in ${waitTime/1000}s (attempt ${attempt + 1}/${maxRetries + 1})`);
 
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
@@ -444,7 +446,7 @@ export class OpenRouterClient {
     if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
       sessionStorage.removeItem('openrouter-errors');
       sessionStorage.removeItem('openrouter-success');
-      console.log('🧹 OpenRouter debug logs cleared');
+      logger.log('🧹 OpenRouter debug logs cleared');
     }
   }
 }

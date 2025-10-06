@@ -196,23 +196,3 @@ export function tagToDbInsert(tag: Partial<Tag>): Database['public']['Tables']['
   };
 }
 
-/**
- * Utility to safely convert string ID to number (for backward compatibility)
- * @deprecated Use number IDs directly
- */
-export function stringIdToNumber(id: string | number): number {
-  if (typeof id === 'number') return id;
-  const parsed = parseInt(id, 10);
-  if (isNaN(parsed)) {
-    throw new Error(`Invalid ID format: ${id}`);
-  }
-  return parsed;
-}
-
-/**
- * Utility to safely convert number ID to string (for backward compatibility)
- * @deprecated Use number IDs directly
- */
-export function numberIdToString(id: number | string): string {
-  return id.toString();
-}

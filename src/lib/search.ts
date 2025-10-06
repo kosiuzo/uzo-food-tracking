@@ -4,6 +4,7 @@ import { getCurrentUserId } from './auth-helpers';
 import { FoodItem, Recipe, Tag, MealLog } from '../types';
 import type { Database } from '../types/database';
 import { dbItemToFoodItem, dbRecipeToRecipe, dbTagToTag, dbMealLogToMealLog } from './type-mappers';
+import { logger } from './logger';
 
 export interface SearchOptions {
   limit?: number;
@@ -95,7 +96,7 @@ export async function searchItems(
       hasMore: (count || 0) > items.length
     };
   } catch (error) {
-    console.error('Search items error:', error);
+    logger.error('Search items error:', error);
     throw error;
   }
 }
@@ -206,7 +207,7 @@ export async function searchRecipes(
       hasMore: (count || 0) > recipes.length
     };
   } catch (error) {
-    console.error('Search recipes error:', error);
+    logger.error('Search recipes error:', error);
     throw error;
   }
 }
@@ -266,7 +267,7 @@ export async function searchTags(
       hasMore: (count || 0) > tags.length
     };
   } catch (error) {
-    console.error('Search tags error:', error);
+    logger.error('Search tags error:', error);
     throw error;
   }
 }
@@ -350,7 +351,7 @@ export async function searchMealLogs(
 
     return { items, total, hasMore: total > items.length };
   } catch (error) {
-    console.error('Search meal logs error:', error);
+    logger.error('Search meal logs error:', error);
     throw error;
   }
 }
@@ -391,7 +392,7 @@ export async function globalSearch(
       total: itemsResult.total + recipesResult.total + tagsResult.total + mealLogsResult.total
     };
   } catch (error) {
-    console.error('Global search error:', error);
+    logger.error('Global search error:', error);
     throw error;
   }
 }
@@ -463,7 +464,7 @@ export async function getSearchSuggestions(
 
     return Array.from(suggestions).slice(0, 8);
   } catch (error) {
-    console.error('Get search suggestions error:', error);
+    logger.error('Get search suggestions error:', error);
     return [];
   }
 }

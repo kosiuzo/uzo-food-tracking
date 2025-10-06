@@ -1,5 +1,6 @@
 import { parseFirstJsonObject } from './aiJson';
 import { openRouterClient, OpenRouterError, OpenRouterErrorType } from './openrouter';
+import { logger } from './logger';
 
 /**
  * Response format expected from the LLM for meal log processing
@@ -233,7 +234,7 @@ export async function processBatchMealLogsWithAI(
       const result = await processMealLogWithAI(mealEntries[i].items);
       results.push(result);
     } catch (error) {
-      console.error(`Failed to process meal entry ${i + 1}:`, error);
+      logger.error(`Failed to process meal entry ${i + 1}:`, error);
       // Re-throw with context
       throw new Error(`Failed to process meal ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

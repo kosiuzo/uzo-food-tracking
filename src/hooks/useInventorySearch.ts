@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { requireCurrentUserId } from '../lib/auth-helpers';
@@ -6,6 +6,7 @@ import { FoodItem, DbItem } from '../types';
 import { dbItemToFoodItem, foodItemToDbInsert } from '../lib/type-mappers';
 import { mockFoodItems } from '../data/mockData';
 import { useDebounce } from '../lib/search';
+import { logger } from '@/lib/logger';
 
 interface InventoryFilters {
   category: string;
@@ -66,7 +67,7 @@ export function useInventorySearch(): UseInventorySearchResult {
   } = useQuery({
     queryKey: ['inventory-items'],
     queryFn: async () => {
-      console.log('🔄 Loading items from Supabase...');
+      logger.info('🔄 Loading items from Supabase...');
       
       const { data, error } = await supabase
         .from('items')
@@ -74,19 +75,19 @@ export function useInventorySearch(): UseInventorySearchResult {
         .order('name');
       
       if (error) {
-        console.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
+        logger.warn('⚠️ Supabase connection failed, falling back to mock data:', error.message);
         setUsingMockData(true);
         setMockItems(mockFoodItems);
         return mockFoodItems;
       }
       
       if (data && data.length > 0) {
-        console.log('✅ Loaded data from Supabase:', data.length, 'items');
+        logger.info('✅ Loaded data from Supabase:', data.length, 'items');
         const mappedItems = data.map(dbItemToFoodItem);
         setUsingMockData(false);
         return mappedItems;
       } else {
-        console.log('ℹ️ Database is empty, using mock data');
+        logger.info('ℹ️ Database is empty, using mock data');
         setUsingMockData(true);
         setMockItems(mockFoodItems);
         return mockFoodItems;
@@ -194,7 +195,7 @@ export function useInventorySearch(): UseInventorySearchResult {
       }
 
       // Fall back to local mock mode
-      console.warn('Add item failed, falling back to local mock mode:', err);
+      logger.warn('Add item failed, falling back to local mock mode:', err);
       const now = new Date().toISOString();
       const newItem: FoodItem = {
         ...itemData,

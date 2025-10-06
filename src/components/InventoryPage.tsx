@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search, Filter, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,20 +32,128 @@ export function InventoryPage() {
 
   const isMobile = useIsMobile();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<number | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'recent'>('name');
+  const listParentRef = useRef<HTMLDivElement | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
+  const estimatedRowHeight = useMemo(() => (isMobile ? 312 : 260), [isMobile]);
+  const shouldVirtualize = useMemo(() => items.length > 20, [items.length]);
+  const listMaxHeight = useMemo(
+    () => (isMobile ? 'calc(100vh - 15rem)' : 'calc(100vh - 18rem)'),
+    [isMobile]
+  );
 
-  const handleFilterApply = () => {
+  const sortOptions = useMemo(
+    () => [
+      { value: 'name' as const, label: 'Name A-Z' },
+      { value: 'rating' as const, label: 'Rating' },
+      { value: 'recent' as const, label: 'Recently added' }
+    ],
+    []
+  );
+
+  const displayedItems = useMemo(() => {
+    const sorted = [...items];
+    switch (sortBy) {
+      case 'rating':
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'recent':
+        return sorted.sort((a, b) => {
+          const aDate = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
+          const bDate = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
+          return bDate - aDate;
+        });
+      case 'name':
+      default:
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }, [items, sortBy]);
+
+  useEffect(() => {
+    if (!shouldVirtualize) {
+      setScrollOffset(0);
+      setContainerHeight(0);
+      return;
+    }
+
+    const element = listParentRef.current;
+    if (!element) {
+      return;
+    }
+
+    const handleScroll = () => {
+      setScrollOffset(element.scrollTop);
+    };
+
+    const handleResize = () => {
+      setContainerHeight(element.clientHeight);
+    };
+
+    handleResize();
+
+    element.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      element.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [shouldVirtualize]);
+
+  useEffect(() => {
+    if (!shouldVirtualize) {
+      const element = listParentRef.current;
+      if (element) {
+        element.scrollTop = 0;
+      }
+    }
+  }, [shouldVirtualize, sortBy, categoryFilter, ratingFilter]);
+
+  const overscan = 5;
+
+  const virtualList = useMemo(() => {
+    if (!shouldVirtualize) {
+      return {
+        items: displayedItems,
+        topPadding: 0,
+        bottomPadding: 0,
+      };
+    }
+
+    const viewportItemCount = containerHeight > 0
+      ? Math.ceil(containerHeight / estimatedRowHeight)
+      : 10;
+    const startIndex = Math.max(0, Math.floor(scrollOffset / estimatedRowHeight) - overscan);
+    const endIndex = Math.min(
+      displayedItems.length,
+      startIndex + viewportItemCount + overscan * 2
+    );
+
+    const topPadding = startIndex * estimatedRowHeight;
+    const bottomPadding = Math.max(
+      0,
+      (displayedItems.length - endIndex) * estimatedRowHeight
+    );
+
+    return {
+      items: displayedItems.slice(startIndex, endIndex),
+      topPadding,
+      bottomPadding,
+    };
+  }, [shouldVirtualize, containerHeight, estimatedRowHeight, scrollOffset, displayedItems, overscan]);
+
+  const handleFilterApply = useCallback(() => {
     setIsFilterSheetOpen(false);
-  };
+  }, []);
 
-  const handleFilterReset = () => {
+  const handleFilterReset = useCallback(() => {
     setCategoryFilter('all');
     setRatingFilter('all');
     setSortBy('name');
-  };
+  }, [setCategoryFilter, setRatingFilter]);
 
   const emptyStateContent = items.length === 0 && !loading ? (
     searchQuery || categoryFilter !== 'all' || ratingFilter !== 'all' ? (
@@ -134,11 +242,7 @@ export function InventoryPage() {
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm">Sort</h4>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: 'name', label: 'Name A-Z' },
-                      { value: 'rating', label: 'Rating' },
-                      { value: 'recent', label: 'Recently added' }
-                    ].map(sort => (
+                    {sortOptions.map(sort => (
                       <Badge
                         key={sort.value}
                         variant={sortBy === sort.value ? 'default' : 'secondary'}
@@ -220,18 +324,41 @@ export function InventoryPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : emptyStateContent ? emptyStateContent : (
-          <div className="space-y-4">
-            {items.map(item => (
-              <FoodItemCard
-                key={item.id}
-                item={item}
-                onEdit={() => setEditingItem(item.id)}
-                onDelete={() => deleteItem(item.id)}
-                onRatingChange={(rating) => updateItem(item.id, { rating })}
-                onUpdateItem={(updates) => updateItem(item.id, updates)}
-              />
-            ))}
-          </div>
+          shouldVirtualize ? (
+            <div
+              ref={listParentRef}
+              className="overflow-auto pr-2"
+              style={{ maxHeight: listMaxHeight }}
+            >
+              <div style={{ height: virtualList.topPadding }} />
+              <div className="space-y-4 py-1">
+                {virtualList.items.map(item => (
+                  <FoodItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => setEditingItem(item.id)}
+                    onDelete={() => deleteItem(item.id)}
+                    onRatingChange={(rating) => updateItem(item.id, { rating })}
+                    onUpdateItem={(updates) => updateItem(item.id, updates)}
+                  />
+                ))}
+              </div>
+              <div style={{ height: virtualList.bottomPadding }} />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displayedItems.map(item => (
+                <FoodItemCard
+                  key={item.id}
+                  item={item}
+                  onEdit={() => setEditingItem(item.id)}
+                  onDelete={() => deleteItem(item.id)}
+                  onRatingChange={(rating) => updateItem(item.id, { rating })}
+                  onUpdateItem={(updates) => updateItem(item.id, updates)}
+                />
+              ))}
+            </div>
+          )
         )}
       </div>
 
